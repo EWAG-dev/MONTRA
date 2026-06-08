@@ -1,4 +1,5 @@
 import SwiftUI
+import MapKit
 
 struct SessionDetailView: View {
     let session: SessionItem
@@ -46,6 +47,8 @@ struct SessionDetailView: View {
                 .padding(16)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .montraCard(radius: 16)
+
+                SessionLiveTrackingCard(session: session)
 
                 // ── Quick actions ─────────────────────────────────────
                 HStack(spacing: 0) {
@@ -192,6 +195,182 @@ struct SessionDetailView: View {
 
 // MARK: - Supporting Views
 
+private struct SessionLiveTrackingCard: View {
+    let session: SessionItem
+
+    @State private var progress: Double = 0.24
+
+    private let updateTimer = Timer.publish(every: 3.2, on: .main, in: .common).autoconnect()
+
+    private var route: SessionTrackingRoute {
+        SessionTrackingRoute(session: session)
+    }
+
+    private var trainerCoordinate: CLLocationCoordinate2D {
+        route.coordinate(at: progress)
+    }
+
+    private var etaMinutes: Int {
+        max(2, Int(round((1 - progress) * 22)))
+    }
+
+    private var milesAway: Double {
+        let trainerLocation = CLLocation(latitude: trainerCoordinate.latitude, longitude: trainerCoordinate.longitude)
+        let destinationLocation = CLLocation(latitude: route.destination.latitude, longitude: route.destination.longitude)
+        return trainerLocation.distance(from: destinationLocation) / 1609.34
+    }
+
+    private var progressLabel: String {
+        if progress >= 0.98 {
+            return "Arriving now"
+        }
+        if progress >= 0.8 {
+            return "Pulling up to your address"
+        }
+        if progress >= 0.5 {
+            return "Nearby and on schedule"
+        }
+        return "En route to your session"
+    }
+
+    private var addressLabel: String {
+        session.address ?? "Your home session address"
+    }
+
+    private var mapRegion: MKCoordinateRegion {
+        let latitudes = [route.origin.latitude, route.destination.latitude]
+        let longitudes = [route.origin.longitude, route.destination.longitude]
+        let center = CLLocationCoordinate2D(
+            latitude: (latitudes.min()! + latitudes.max()!) / 2,
+            longitude: (longitudes.min()! + longitudes.max()!) / 2
+        )
+        let span = MKCoordinateSpan(
+            latitudeDelta: max(abs(latitudes.max()! - latitudes.min()!) * 1.85, 0.018),
+            longitudeDelta: max(abs(longitudes.max()! - longitudes.min()!) * 1.85, 0.018)
+        )
+        return MKCoordinateRegion(center: center, span: span)
+    }
+
+    private var annotations: [TrackingAnnotation] {
+        [
+            TrackingAnnotation(id: "trainer", title: session.trainer, icon: "figure.walk", tint: .montraOrange, coordinate: trainerCoordinate),
+            TrackingAnnotation(id: "home", title: "You", icon: "house.fill", tint: Color(hex: "#22C55E"), coordinate: route.destination)
+        ]
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("LIVE ARRIVAL")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.montraTextSecondary)
+                        .kerning(1.2)
+
+                    Text(progressLabel)
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(.montraTextPrimary)
+                }
+
+                Spacer()
+
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(Color(hex: "#22C55E"))
+                        .frame(width: 8, height: 8)
+                    Text("Location shared")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.montraTextPrimary)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .background(Color(hex: "#22C55E").opacity(0.14))
+                .clipShape(Capsule())
+            }
+
+            Map(coordinateRegion: .constant(mapRegion), interactionModes: [.pan, .zoom], annotationItems: annotations) { item in
+                MapAnnotation(coordinate: item.coordinate) {
+                    VStack(spacing: 6) {
+                        Image(systemName: item.icon)
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(.black)
+                            .frame(width: 34, height: 34)
+                            .background(item.tint)
+                            .clipShape(Circle())
+                            .overlay(Circle().stroke(Color.black.opacity(0.28), lineWidth: 1))
+
+                        Text(item.title)
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundColor(.montraTextPrimary)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.black.opacity(0.72))
+                            .clipShape(Capsule())
+                    }
+                }
+            }
+            .frame(height: 210)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.montraCardBorder, lineWidth: 0.8)
+            )
+
+            VStack(spacing: 10) {
+                HStack(spacing: 10) {
+                    TrackingMetricPill(title: "ETA", value: "\(etaMinutes) min")
+                    TrackingMetricPill(title: "DISTANCE", value: String(format: "%.1f mi", milesAway))
+                    TrackingMetricPill(title: "DESTINATION", value: "Home")
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("\(session.trainer) is heading to")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.montraTextPrimary)
+                        Spacer()
+                        Text("\(Int(progress * 100))% there")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.montraOrange)
+                    }
+
+                    Text(addressLabel)
+                        .font(.system(size: 13))
+                        .foregroundColor(.montraTextSecondary)
+
+                    GeometryReader { geometry in
+                        ZStack(alignment: .leading) {
+                            Capsule()
+                                .fill(Color.white.opacity(0.08))
+                            Capsule()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color(hex: "#FFB13B"), Color.montraOrange],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .frame(width: max(18, geometry.size.width * progress))
+                        }
+                    }
+                    .frame(height: 8)
+                }
+                .padding(14)
+                .background(Color.white.opacity(0.04))
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+        }
+        .padding(16)
+        .montraCard(radius: 16)
+        .onReceive(updateTimer) { _ in
+            guard progress < 0.98 else { return }
+            withAnimation(.easeInOut(duration: 2.8)) {
+                progress = min(progress + 0.065, 0.98)
+            }
+        }
+    }
+}
+
 struct QuickActionButton: View {
     let icon: String
     let label: String
@@ -211,6 +390,70 @@ struct QuickActionButton: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
         }
+    }
+}
+
+private struct TrackingMetricPill: View {
+    let title: String
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(title)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundColor(.montraTextSecondary)
+                .kerning(0.8)
+            Text(value)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(.montraTextPrimary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(Color.white.opacity(0.04))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.montraCardBorder, lineWidth: 0.7)
+        )
+    }
+}
+
+private struct TrackingAnnotation: Identifiable {
+    let id: String
+    let title: String
+    let icon: String
+    let tint: Color
+    let coordinate: CLLocationCoordinate2D
+}
+
+private struct SessionTrackingRoute {
+    let origin: CLLocationCoordinate2D
+    let destination: CLLocationCoordinate2D
+
+    init(session: SessionItem) {
+        switch session.location.lowercased() {
+        case let location where location.contains("new york"):
+            origin = CLLocationCoordinate2D(latitude: 40.7242, longitude: -73.9987)
+            destination = CLLocationCoordinate2D(latitude: 40.7424, longitude: -73.9738)
+        case let location where location.contains("rhode"):
+            origin = CLLocationCoordinate2D(latitude: 41.8075, longitude: -71.4427)
+            destination = CLLocationCoordinate2D(latitude: 41.8240, longitude: -71.4128)
+        case let location where location.contains("connecticut"):
+            origin = CLLocationCoordinate2D(latitude: 41.7520, longitude: -72.6909)
+            destination = CLLocationCoordinate2D(latitude: 41.7657, longitude: -72.6734)
+        default:
+            origin = CLLocationCoordinate2D(latitude: 42.3361, longitude: -71.0589)
+            destination = CLLocationCoordinate2D(latitude: 42.3587, longitude: -71.0856)
+        }
+    }
+
+    func coordinate(at progress: Double) -> CLLocationCoordinate2D {
+        let clampedProgress = min(max(progress, 0), 1)
+        return CLLocationCoordinate2D(
+            latitude: origin.latitude + ((destination.latitude - origin.latitude) * clampedProgress),
+            longitude: origin.longitude + ((destination.longitude - origin.longitude) * clampedProgress)
+        )
     }
 }
 

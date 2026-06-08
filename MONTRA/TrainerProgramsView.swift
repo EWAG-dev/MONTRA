@@ -1,10 +1,12 @@
 import SwiftUI
 
 struct TrainerProgramsView: View {
+    @AppStorage("app.liveDataConnected") private var liveDataConnected = false
+    @State private var showTrainerMenu = false
 
     // Sample programs — replaced when Firestore data model is wired up
     private let programs: [TrainerProgram] = [
-        TrainerProgram(id: 1, name: "Strength Builder",    description: "Progressive overload program focused on compound lifts.", weeks: 8,  sessionsPerWeek: 3, clientCount: 3, color: Color(hex: "#E8621A")),
+        TrainerProgram(id: 1, name: "Strength Builder",    description: "Progressive overload program focused on compound lifts.", weeks: 8,  sessionsPerWeek: 3, clientCount: 3, color: Color(hex: "#FF6A00")),
         TrainerProgram(id: 2, name: "HIIT Conditioning",   description: "High-intensity intervals to build cardio and stamina.",    weeks: 6,  sessionsPerWeek: 2, clientCount: 2, color: Color(hex: "#4CAF50")),
         TrainerProgram(id: 3, name: "Mobility Reset",      description: "Restore range of motion, posture, and joint health.",     weeks: 4,  sessionsPerWeek: 2, clientCount: 1, color: Color(hex: "#4A90D9")),
         TrainerProgram(id: 4, name: "Athletic Performance",description: "Sport-specific training to peak physical output.",         weeks: 12, sessionsPerWeek: 4, clientCount: 1, color: Color(hex: "#9B59B6")),
@@ -14,22 +16,29 @@ struct TrainerProgramsView: View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 18) {
-
-                    // MARK: Header
-                    HStack {
-                        Text("Programs")
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundColor(.montraTextPrimary)
-                        Spacer()
-                        Button {
-                            // New program action
-                        } label: {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.system(size: 26))
-                                .foregroundColor(.montraOrange)
-                        }
+                    TrainerCompactTopBar(
+                        title: "Programs",
+                        onMenuTap: { showTrainerMenu = true },
+                        trailingIcon: "plus"
+                    ) {
+                        // New program action
                     }
-                    .padding(.top, 8)
+
+                    if !liveDataConnected {
+                        HStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.triangle")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(.montraOrange)
+                            Text("Preview data only. Live trainer program data is not connected yet.")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.montraTextSecondary)
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .background(Color.white.opacity(0.05))
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
 
                     // MARK: Stats Row
                     HStack(spacing: 12) {
@@ -52,6 +61,9 @@ struct TrainerProgramsView: View {
                 .padding(.horizontal, 20)
             }
             .background(Color.montraBackground)
+        }
+        .sheet(isPresented: $showTrainerMenu) {
+            ProfileMenuSheet(isClient: false)
         }
     }
 }

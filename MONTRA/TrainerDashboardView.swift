@@ -3,6 +3,7 @@ import SwiftUI
 struct TrainerDashboardView: View {
 
     @EnvironmentObject private var auth: AuthManager
+    @AppStorage("app.liveDataConnected") private var liveDataConnected = false
 
     // Sample data — replaced when trainer-side data model is wired up
     private let todaySessions: [TrainerClientSession] = [
@@ -22,34 +23,26 @@ struct TrainerDashboardView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 22) {
+                TrainerCompactTopBar(
+                    title: "Dashboard",
+                    onMenuTap: { showProfileSheet = true }
+                )
 
-                // MARK: Header
-                HStack(alignment: .center) {
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("TRAINER")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundColor(.montraTextSecondary)
-                            .kerning(1.4)
-                        Text("DASHBOARD")
-                            .font(.system(size: 28, weight: .black))
+                if !liveDataConnected {
+                    HStack(spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.montraOrange)
-                            .kerning(0.8)
+                        Text("Preview data only. Live trainer data sync is not connected yet.")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.montraTextSecondary)
+                        Spacer(minLength: 0)
                     }
-                    Spacer()
-                    Button { showProfileSheet = true } label: {
-                        Circle()
-                            .fill(Color.montraSurface)
-                            .frame(width: 42, height: 42)
-                            .overlay(
-                                Text("T")
-                                    .font(.system(size: 16, weight: .bold))
-                                    .foregroundColor(.montraOrange)
-                            )
-                            .overlay(Circle().stroke(Color.montraOrange, lineWidth: 1.5))
-                    }
-                    .buttonStyle(.plain)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(Color.white.opacity(0.05))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
-                .padding(.top, 8)
 
                 // MARK: Quick Stats
                 HStack(spacing: 12) {
@@ -121,35 +114,10 @@ struct TrainerDashboardView: View {
     }
 }
 
-// MARK: - Supporting Views
-
-struct TrainerStatTile: View {
-    let value: String
-    let label: String
-    let icon: String
-    let color: Color
-
-    var body: some View {
-        VStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.system(size: 18))
-                .foregroundColor(color)
-            Text(value)
-                .font(.system(size: 22, weight: .black))
-                .foregroundColor(.montraTextPrimary)
-            Text(label)
-                .font(.system(size: 10, weight: .medium))
-                .foregroundColor(.montraTextSecondary)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 16)
-        .montraCard(radius: 14)
-    }
-}
-
 struct TrainerSessionRow: View {
     let session: TrainerClientSession
+    var showsDuration: Bool = false
+    var showsCompleteAction: Bool = false
 
     var body: some View {
         HStack(spacing: 14) {
@@ -160,6 +128,12 @@ struct TrainerSessionRow: View {
                 Text(session.type)
                     .font(.system(size: 12))
                     .foregroundColor(.montraTextSecondary)
+
+                if showsDuration {
+                    Text("\(session.durationMin) min")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.montraTextSecondary)
+                }
             }
 
             Spacer()
@@ -175,6 +149,16 @@ struct TrainerSessionRow: View {
                     .padding(.vertical, 3)
                     .background((session.status == .confirmed ? Color.green : Color.white).opacity(0.12))
                     .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                if showsCompleteAction {
+                    Button {
+                    } label: {
+                        Image(systemName: "checkmark.circle")
+                            .font(.system(size: 20))
+                            .foregroundColor(.montraOrange)
+                    }
+                    .buttonStyle(.plain)
+                }
             }
         }
         .padding(.vertical, 4)

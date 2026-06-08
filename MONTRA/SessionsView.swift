@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 // MARK: - Sessions / Booking View
 
@@ -10,6 +11,8 @@ struct SessionsView: View {
     @State private var selectedDate: Date = Calendar.current.startOfDay(for: Date())
     @State private var pendingSlot: BookingSlot? = nil
     @State private var showConfirm = false
+    @State private var showProfileSheet = false
+    @State private var showNotifications = false
 
     @AppStorage("sessions.booked")           private var bookedRaw: String = ""
     @AppStorage("client.schedule.days")      private var scheduleDaysRaw: String = ""
@@ -93,13 +96,11 @@ struct SessionsView: View {
                 VStack(alignment: .leading, spacing: 20) {
 
                     // ── Header ────────────────────────────────────────
-                    HStack {
-                        Text("Book a Session")
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundColor(.montraTextPrimary)
-                        Spacer()
-                    }
-                    .padding(.top, 8)
+                    ClientMessagesStyleHeader(
+                        title: "Sessions",
+                        onNotificationTap: { showNotifications = true },
+                        onProfileTap: { showProfileSheet = true }
+                    )
 
                     // ── Trainer banner ────────────────────────────────
                     HStack(spacing: 12) {
@@ -235,6 +236,12 @@ struct SessionsView: View {
             if let slot = pendingSlot {
                 Text("\(longDateLabel(slot.date)) · 60 min")
             }
+        }
+        .sheet(isPresented: $showProfileSheet) {
+            ProfileMenuSheet(isClient: true)
+        }
+        .sheet(isPresented: $showNotifications) {
+            NotificationsView()
         }
     }
 
@@ -480,19 +487,6 @@ struct BookedSessionRow: View {
     }
 }
 
-// MARK: - Supporting structs (kept for SessionDetailView)
-
-struct SectionHeader: View {
-    let title: String
-
-    var body: some View {
-        Text(title)
-            .font(.system(size: 12, weight: .semibold))
-            .foregroundColor(.montraTextSecondary)
-            .kerning(1.2)
-    }
-}
-
 struct SessionItem: Identifiable {
     let id: Int
     let day: String
@@ -567,40 +561,6 @@ struct SessionCard: View {
     }
 }
 
-struct ClassProgram: Identifiable {
-    let id: Int; let title: String; let subtitle: String; let focus: String; let duration: String
-}
-
 #Preview {
     SessionsView(onOpenCoachChat: {})
-}
-// MARK: - Legacy ProgramCard (kept for reference)
-struct ProgramCard: View {
-    let program: ClassProgram
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(program.title)
-                .font(.system(size: 17, weight: .bold))
-                .foregroundColor(.montraTextPrimary)
-            Text(program.subtitle)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(.montraOrange)
-            Text(program.focus)
-                .font(.system(size: 13))
-                .foregroundColor(.montraTextSecondary)
-                .lineLimit(2)
-            Spacer(minLength: 0)
-            Text(program.duration)
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundColor(.montraTextSecondary)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color.montraBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 7))
-        }
-        .padding(14)
-        .frame(width: 210, height: 132)
-        .montraCard(radius: 14)
-    }
 }

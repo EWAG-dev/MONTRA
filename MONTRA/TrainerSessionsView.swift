@@ -2,7 +2,10 @@ import SwiftUI
 
 struct TrainerSessionsView: View {
 
+    @Environment(\.colorScheme) private var colorScheme
+    @AppStorage("app.liveDataConnected") private var liveDataConnected = false
     @State private var selectedFilter: SessionFilter = .upcoming
+    @State private var showTrainerMenu = false
 
     enum SessionFilter: String, CaseIterable {
         case upcoming = "Upcoming"
@@ -24,22 +27,29 @@ struct TrainerSessionsView: View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 18) {
-
-                    // MARK: Header
-                    HStack {
-                        Text("Sessions")
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundColor(.montraTextPrimary)
-                        Spacer()
-                        Button {
-                            // Add session action — wired when booking is built
-                        } label: {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.system(size: 26))
-                                .foregroundColor(.montraOrange)
-                        }
+                    TrainerCompactTopBar(
+                        title: "Sessions",
+                        onMenuTap: { showTrainerMenu = true },
+                        trailingIcon: "plus"
+                    ) {
+                        // Add session action — wired when booking is built
                     }
-                    .padding(.top, 8)
+
+                    if !liveDataConnected {
+                        HStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.triangle")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(.montraOrange)
+                            Text("Preview data only. Live trainer session data is not connected yet.")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.montraTextSecondary)
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .background(Color.white.opacity(0.05))
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
 
                     // MARK: Filter Pills
                     HStack(spacing: 8) {
@@ -47,20 +57,54 @@ struct TrainerSessionsView: View {
                             Button { selectedFilter = filter } label: {
                                 Text(filter.rawValue)
                                     .font(.system(size: 13, weight: .semibold))
-                                    .foregroundColor(selectedFilter == filter ? .black : .montraTextSecondary)
+                                    .foregroundColor(
+                                        selectedFilter == filter
+                                            ? (colorScheme == .light ? .montraOrange : .black)
+                                            : .montraTextSecondary
+                                    )
                                     .padding(.horizontal, 16)
                                     .padding(.vertical, 8)
-                                    .background(selectedFilter == filter ? Color.montraOrange : Color.white.opacity(0.07))
+                                    .background(
+                                        selectedFilter == filter
+                                            ? (colorScheme == .light ? Color.montraAccentFrost : Color.montraOrange)
+                                            : (colorScheme == .light ? Color.montraFrostedSurface : Color.white.opacity(0.07))
+                                    )
                                     .clipShape(RoundedRectangle(cornerRadius: 10))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .stroke(
+                                                selectedFilter == filter
+                                                    ? (colorScheme == .light ? Color.montraAccentBorder : Color.clear)
+                                                    : (colorScheme == .light ? Color.montraCardBorder : Color.clear),
+                                                lineWidth: colorScheme == .light ? 1 : 0
+                                            )
+                                    )
                             }
                         }
                     }
 
                     // MARK: Session Cards
-                    VStack(spacing: 12) {
-                        ForEach(allSessions) { session in
-                            TrainerFullSessionCard(session: session)
+                    VStack(alignment: .leading, spacing: 14) {
+                        SectionHeader(title: "SESSION LIST")
+
+                        VStack(spacing: 0) {
+                            ForEach(Array(allSessions.enumerated()), id: \.element.id) { index, session in
+                                TrainerSessionRow(
+                                    session: session,
+                                    showsDuration: true,
+                                    showsCompleteAction: true
+                                )
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 10)
+
+                                if index < allSessions.count - 1 {
+                                    Divider()
+                                        .background(Color.montraDivider)
+                                        .padding(.horizontal, 16)
+                                }
+                            }
                         }
+                        .montraCard(radius: 16)
                     }
 
                     Spacer(minLength: 90)
@@ -69,63 +113,9 @@ struct TrainerSessionsView: View {
             }
             .background(Color.montraBackground)
         }
-    }
-}
-
-// MARK: - Full Session Card
-
-struct TrainerFullSessionCard: View {
-    let session: TrainerClientSession
-
-    var body: some View {
-        HStack(spacing: 16) {
-            // Client initial badge
-            Circle()
-                .fill(Color.montraOrange.opacity(0.15))
-                .frame(width: 48, height: 48)
-                .overlay(
-                    Text(String(session.clientName.prefix(1)))
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.montraOrange)
-                )
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(session.clientName)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(.montraTextPrimary)
-                Text(session.type)
-                    .font(.system(size: 13))
-                    .foregroundColor(.montraTextSecondary)
-                HStack(spacing: 10) {
-                    Label(session.time, systemImage: "clock")
-                    Label("\(session.durationMin) min", systemImage: "timer")
-                }
-                .font(.system(size: 11))
-                .foregroundColor(.montraTextSecondary)
-            }
-
-            Spacer()
-
-            VStack(alignment: .trailing, spacing: 6) {
-                Text(session.status == .confirmed ? "Confirmed" : "Scheduled")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(session.status == .confirmed ? .green : .montraTextSecondary)
-                    .padding(.horizontal, 9)
-                    .padding(.vertical, 4)
-                    .background((session.status == .confirmed ? Color.green : Color.white).opacity(0.12))
-                    .clipShape(RoundedRectangle(cornerRadius: 7))
-
-                Button {
-                    // Mark complete action
-                } label: {
-                    Image(systemName: "checkmark.circle")
-                        .font(.system(size: 20))
-                        .foregroundColor(.montraOrange)
-                }
-            }
+        .sheet(isPresented: $showTrainerMenu) {
+            ProfileMenuSheet(isClient: false)
         }
-        .padding(16)
-        .montraCard(radius: 16)
     }
 }
 

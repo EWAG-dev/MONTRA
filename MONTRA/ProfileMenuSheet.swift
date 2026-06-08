@@ -1,5 +1,6 @@
 import SwiftUI
 import PhotosUI
+import UIKit
 
 struct ProfileMenuSheet: View {
     @EnvironmentObject private var auth: AuthManager
@@ -12,6 +13,9 @@ struct ProfileMenuSheet: View {
     @State private var selectedPhotoItem: PhotosPickerItem? = nil
     @State private var showPersonalInfo      = false
     @State private var showNotificationPrefs = false
+    @State private var showAppearanceSheet   = false
+    @State private var showGiftShareSheet    = false
+    @State private var showReferShareSheet   = false
 
     private var displayName: String {
         isClient ? (quizFirstName.isEmpty ? "Member" : quizFirstName) : "Alex Morgan"
@@ -33,7 +37,7 @@ struct ProfileMenuSheet: View {
                         .font(.system(size: 28, weight: .bold))
                         .foregroundColor(.montraTextPrimary)
                     Spacer()
-                    Button {} label: {
+                    Button { showAppearanceSheet = true } label: {
                         Image(systemName: "gearshape")
                             .font(.system(size: 20))
                             .foregroundColor(.montraTextSecondary)
@@ -131,6 +135,20 @@ struct ProfileMenuSheet: View {
                             ProfileRow(icon: "lock.fill",         label: "Privacy & Security")
                         }
 
+                        if isClient {
+                            ProfileSectionCard(title: "PERKS") {
+                                Button { showGiftShareSheet = true } label: {
+                                    ProfileRow(icon: "gift.fill", label: "Gift a Session")
+                                }
+                                .buttonStyle(.plain)
+                                rowDivider
+                                Button { showReferShareSheet = true } label: {
+                                    ProfileRow(icon: "person.2.fill", label: "Refer a Friend")
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+
                         // ── Sign out section ──────────────────────────
                         ProfileSectionCard(title: "") {
                             Button {
@@ -163,6 +181,17 @@ struct ProfileMenuSheet: View {
         }
         .sheet(isPresented: $showPersonalInfo)      { PersonalInfoSheet() }
         .sheet(isPresented: $showNotificationPrefs) { NotificationPrefsSheet() }
+        .sheet(isPresented: $showAppearanceSheet)   { AppearanceSettingsSheet() }
+        .sheet(isPresented: $showGiftShareSheet) {
+            ShareSheet(activityItems: [
+                "I gifted you a MONTRA personal training session. Redeem here: https://elitehomefitness.com"
+            ])
+        }
+        .sheet(isPresented: $showReferShareSheet) {
+            ShareSheet(activityItems: [
+                "Train with me on MONTRA. Join here: https://elitehomefitness.com"
+            ])
+        }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
         .presentationBackground(Color.montraBackground)
@@ -202,9 +231,19 @@ struct ProfileMenuSheet: View {
     }
 }
 
+private struct ShareSheet: UIViewControllerRepresentable {
+    let activityItems: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+}
+
 // MARK: - Section Card
 
-private struct ProfileSectionCard<Content: View>: View {
+struct ProfileSectionCard<Content: View>: View {
     let title: String
     @ViewBuilder let content: Content
 
@@ -233,7 +272,7 @@ private struct ProfileSectionCard<Content: View>: View {
 
 // MARK: - Row
 
-private struct ProfileRow: View {
+struct ProfileRow: View {
     let icon: String
     let label: String
     var tint: Color = .montraTextPrimary
@@ -445,5 +484,124 @@ private struct NotifToggleRow: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+    }
+}
+
+struct AppearanceSettingsSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @AppStorage("app.appearanceMode") private var appearanceMode: String = "dark"
+
+    private func iconName(for mode: String) -> String? {
+        switch mode {
+        case "dark":
+            return "AppIconDark"
+        case "light":
+            return "AppIconLight"
+        default:
+            return nil
+        }
+    }
+
+    private func applyAppIcon(for mode: String) {
+        guard UIApplication.shared.supportsAlternateIcons else { return }
+        let targetIcon = iconName(for: mode)
+        guard UIApplication.shared.alternateIconName != targetIcon else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            UIApplication.shared.setAlternateIconName(targetIcon) { _ in }
+        }
+    }
+
+    var body: some View {
+        ZStack {
+            Color.montraBackground.ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                HStack {
+                    Spacer().frame(width: 44)
+                    Spacer()
+                    Text("Appearance")
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundColor(.montraTextPrimary)
+                    Spacer()
+                    Button("Done") { dismiss() }
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.montraOrange)
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 24)
+                .padding(.bottom, 20)
+
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 20) {
+                        ProfileSectionCard(title: "THEME") {
+                            appearanceRow(title: "Dark", value: "dark")
+                            Divider().background(Color.white.opacity(0.06)).padding(.leading, 52)
+                            appearanceRow(title: "Light", value: "light")
+                            Divider().background(Color.white.opacity(0.06)).padding(.leading, 52)
+                            appearanceRow(title: "System", value: "system")
+                        }
+
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Preview")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(.montraTextSecondary)
+                                .kerning(1)
+
+                            HStack(spacing: 12) {
+                                MontraAIBotAvatar(size: 50)
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("MONTRA AI")
+                                        .font(.system(size: 15, weight: .bold))
+                                        .foregroundColor(.montraTextPrimary)
+                                    Text("Light mode uses a clean, high-contrast style inspired by your AI assistant visual.")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.montraTextSecondary)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                Spacer()
+                            }
+                            .padding(14)
+                            .montraCard(radius: 14)
+                        }
+
+                        Spacer(minLength: 30)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 4)
+                }
+            }
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+        .presentationBackground(Color.montraBackground)
+    }
+
+    @ViewBuilder
+    private func appearanceRow(title: String, value: String) -> some View {
+        Button {
+            appearanceMode = value
+            applyAppIcon(for: value)
+        } label: {
+            HStack(spacing: 14) {
+                Image(systemName: value == "dark" ? "moon.fill" : value == "light" ? "sun.max.fill" : "gearshape.2.fill")
+                    .font(.system(size: 14))
+                    .foregroundColor(.montraTextPrimary)
+                    .frame(width: 28)
+
+                Text(title)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(.montraTextPrimary)
+
+                Spacer()
+
+                Image(systemName: appearanceMode == value ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(appearanceMode == value ? .montraOrange : .montraTextSecondary)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+        }
+        .buttonStyle(.plain)
     }
 }

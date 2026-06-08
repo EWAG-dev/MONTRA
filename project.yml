@@ -1,6 +1,6 @@
 name: MONTRA
 options:
-  bundleIdPrefix: com.montra
+  bundleIdPrefix: com.elitehomefitness
   deploymentTarget:
     iOS: "17.0"
 packages:
@@ -12,9 +12,12 @@ targets:
     type: application
     platform: iOS
     sources:
-      - MONTRA
+      - path: MONTRA
+        excludes:
+          - .git/**
     resources:
       - MONTRA/Assets.xcassets
+      - MONTRA/GoogleService-Info.plist
     info:
       path: MONTRA/Info.plist
       properties:
@@ -28,9 +31,14 @@ targets:
         product: FirebaseAuth
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.montra.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.elitehomefitness.montra
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES:
+          - AppIconDark
+          - AppIconLight
         SWIFT_VERSION: "5.0"
         IPHONEOS_DEPLOYMENT_TARGET: "17.0"
         CODE_SIGN_STYLE: Automatic
-        CODE_SIGNING_REQUIRED: "NO"
-        CODE_SIGNING_ALLOWED: "NO"
+        CODE_SIGNING_REQUIRED: "YES"
+        CODE_SIGNING_ALLOWED: "YES"
+        DEVELOPMENT_TEAM: X29HP9D526

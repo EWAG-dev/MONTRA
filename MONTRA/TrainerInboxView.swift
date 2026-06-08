@@ -1,10 +1,14 @@
 import SwiftUI
+import UIKit
 
 struct TrainerInboxView: View {
 
     @EnvironmentObject private var auth: AuthManager
+    @AppStorage("app.liveDataConnected") private var liveDataConnected = false
     @State private var selectedSegment: Segment = .messages
     @State private var messageText = ""
+    @State private var showTrainerMenu = false
+    @AppStorage("trainer.profileImageData") private var trainerProfileImageData: Data = Data()
 
     enum Segment: String, CaseIterable {
         case messages      = "Messages"
@@ -13,10 +17,10 @@ struct TrainerInboxView: View {
 
     // Sample data — replaced when Firestore messaging is wired up
     private let conversations: [TrainerConversation] = [
-        TrainerConversation(id: 1, clientName: "Jessica R.",  lastMessage: "See you tomorrow at 10!", time: "2m",        unread: true),
-        TrainerConversation(id: 2, clientName: "Marcus D.",   lastMessage: "Can we move Friday's session?", time: "1h", unread: true),
-        TrainerConversation(id: 3, clientName: "Priya S.",    lastMessage: "Thanks for the program notes.", time: "3h", unread: false),
-        TrainerConversation(id: 4, clientName: "Dwayne K.",   lastMessage: "Feeling good after yesterday!", time: "Yesterday", unread: false),
+        TrainerConversation(id: 1, clientName: "Jessica R.",  lastMessage: "See you tomorrow at 10!", time: "2m",        unread: true, tint: Color(hex: "#F97316")),
+        TrainerConversation(id: 2, clientName: "Marcus D.",   lastMessage: "Can we move Friday's session?", time: "1h", unread: true, tint: Color(hex: "#3B82F6")),
+        TrainerConversation(id: 3, clientName: "Priya S.",    lastMessage: "Thanks for the program notes.", time: "3h", unread: false, tint: Color(hex: "#A855F7")),
+        TrainerConversation(id: 4, clientName: "Dwayne K.",   lastMessage: "Feeling good after yesterday!", time: "Yesterday", unread: false, tint: Color(hex: "#10B981")),
     ]
 
     private let notifications: [AppNotification] = [
@@ -30,17 +34,48 @@ struct TrainerInboxView: View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 18) {
 
+                TrainerCompactTopBar(
+                    title: "Inbox",
+                    onMenuTap: { showTrainerMenu = true }
+                )
+
+                if !liveDataConnected {
+                    HStack(spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.montraOrange)
+                        Text("Preview data only. Live trainer inbox data is not connected yet.")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.montraTextSecondary)
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(Color.white.opacity(0.05))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+
                 // MARK: Profile Header
                 HStack(spacing: 14) {
-                    Circle()
-                        .fill(Color.montraOrange.opacity(0.15))
-                        .frame(width: 54, height: 54)
-                        .overlay(
-                            Text("T")
-                                .font(.system(size: 20, weight: .bold))
-                                .foregroundColor(.montraOrange)
-                        )
-                        .overlay(Circle().stroke(Color.montraOrange, lineWidth: 1.5))
+                    ZStack {
+                        if let image = UIImage(data: trainerProfileImageData), !trainerProfileImageData.isEmpty {
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 54, height: 54)
+                                .clipShape(Circle())
+                        } else {
+                            Circle()
+                                .fill(Color.montraOrange.opacity(0.15))
+                                .frame(width: 54, height: 54)
+                                .overlay(
+                                    Text("T")
+                                        .font(.system(size: 20, weight: .bold))
+                                        .foregroundColor(.montraOrange)
+                                )
+                        }
+                    }
+                    .overlay(Circle().stroke(Color.montraOrange, lineWidth: 1.5))
 
                     VStack(alignment: .leading, spacing: 3) {
                         Text("Alex Morgan")
@@ -85,6 +120,9 @@ struct TrainerInboxView: View {
             .padding(.horizontal, 20)
         }
         .background(Color.montraBackground)
+        .sheet(isPresented: $showTrainerMenu) {
+            ProfileMenuSheet(isClient: false)
+        }
     }
 
     // MARK: - Messages
@@ -119,13 +157,14 @@ struct ConversationRow: View {
         HStack(spacing: 14) {
             ZStack(alignment: .topTrailing) {
                 Circle()
-                    .fill(Color.montraOrange.opacity(0.12))
+                    .fill(convo.tint.opacity(0.15))
                     .frame(width: 46, height: 46)
                     .overlay(
-                        Text(String(convo.clientName.prefix(1)))
-                            .font(.system(size: 17, weight: .bold))
-                            .foregroundColor(.montraOrange)
+                        Text(convo.initials)
+                            .font(.system(size: 13, weight: .black))
+                            .foregroundColor(convo.tint)
                     )
+                    .overlay(Circle().stroke(convo.tint.opacity(0.8), lineWidth: 1))
                 if convo.unread {
                     Circle()
                         .fill(Color.montraOrange)
@@ -163,6 +202,16 @@ struct TrainerConversation: Identifiable {
     let lastMessage: String
     let time: String
     let unread: Bool
+    let tint: Color
+
+    var initials: String {
+        clientName
+            .split(separator: " ")
+            .compactMap { $0.first }
+            .prefix(2)
+            .map(String.init)
+            .joined()
+    }
 }
 
 #Preview {

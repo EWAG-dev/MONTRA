@@ -10,8 +10,13 @@ struct DashboardView: View {
 
     @Binding var selectedTab: ContentView.Tab
     let onOpenCoachChat: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
     @State private var showProfileSheet = false
     @State private var showNotifications = false
+    @State private var mapButtonOffset: CGSize = .zero
+    @State private var mapButtonDragOffset: CGSize = .zero
+    @State private var mapButtonDidDrag = false
+    @State private var showFloatingMap = false
     @AppStorage("dashboardProfileImageData") private var profileImageData: Data = Data()
     @AppStorage("progress.selectedGoals") private var selectedGoalsStorage: String = "Build Strength"
     @AppStorage("progress.currentWeight") private var currentWeight: String = ""
@@ -23,6 +28,10 @@ struct DashboardView: View {
     @AppStorage("progress.goal.performanceMonthlySessions") private var performanceMonthlyTarget: String = "12"
     @AppStorage("progress.goal.consistencyPercent") private var consistencyPercentTarget: String = "90"
     @AppStorage("quiz.firstName") private var firstName: String = ""
+    @AppStorage("onboarding.completed") private var onboardingCompleted: Bool = true
+    @AppStorage("onboarding.rematchActive") private var rematchActive: Bool = false
+    @AppStorage("quiz.requestedTrainer") private var requestedTrainerId: String = ""
+    @AppStorage("quiz.requestedTrainerName") private var requestedTrainerName: String = ""
     private let viewerRole: ViewerRole = .user
 
     private var timeGreeting: String {
@@ -34,34 +43,28 @@ struct DashboardView: View {
         }
     }
 
+    private var montraLogoAsset: String {
+        colorScheme == .dark ? "MontraLogoDark" : "MontraLogoLight"
+    }
+
     var body: some View {
         NavigationStack {
         ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 22) {
+            VStack(alignment: .leading, spacing: 18) {
 
                 // ── Top nav ──────────────────────────────────────────
                 HStack(alignment: .center) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("WHAT'S YOUR")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundColor(.montraTextSecondary)
-                            .padding(.leading, 6)
-                        Image("MontraLogo")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 34)
-                    }
-                    .fixedSize(horizontal: false, vertical: true)
+                    Image(montraLogoAsset)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 94, height: 40)
+                        .opacity(0.88)
+
                     Spacer()
+
                     HStack(spacing: 14) {
                         // Notifications (next to profile photo)
-                        Button { showNotifications = true } label: {
-                            Image(systemName: "bell.badge.fill")
-                                .symbolRenderingMode(.palette)
-                                .foregroundStyle(.red, .white)
-                                .font(.system(size: 22, weight: .semibold))
-                        }
-                        .buttonStyle(.plain)
+                        NotificationBellButton(action: { showNotifications = true }, size: 38)
 
                         Button { showProfileSheet = true } label: {
                             ZStack {
@@ -69,12 +72,12 @@ struct DashboardView: View {
                                     Image(uiImage: uiImage)
                                         .resizable()
                                         .scaledToFill()
-                                        .frame(width: 42, height: 42)
+                                        .frame(width: 40, height: 40)
                                         .clipShape(Circle())
                                 } else {
                                     Circle()
                                         .fill(Color.montraSurface)
-                                        .frame(width: 42, height: 42)
+                                        .frame(width: 40, height: 40)
                                         .overlay(
                                             Group {
                                                 if viewerRole == .user {
@@ -97,31 +100,58 @@ struct DashboardView: View {
                         .buttonStyle(.plain)
                     }
                 }
-                .padding(.top, 8)
+                .padding(.top, 4)
 
                 // ── Greeting ─────────────────────────────────────────
                 VStack(alignment: .leading, spacing: 4) {
                     Text("\(timeGreeting), \(firstName.isEmpty ? "there" : firstName)! 👋")
-                        .font(.system(size: 26, weight: .bold))
+                        .font(.system(size: 20, weight: .bold))
                         .foregroundColor(.montraTextPrimary)
                     Text("Ready to crush your goals today?")
-                        .font(.system(size: 15))
+                        .font(.system(size: 13))
                         .foregroundColor(.montraTextSecondary)
                 }
 
                 // ── CTA Buttons ───────────────────────────────────────
-                Button { selectedTab = .sessions } label: {
-                    HStack(spacing: 6) {
-                        Text("Book a Session")
-                            .font(.system(size: 14, weight: .semibold))
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 12, weight: .semibold))
+                HStack(spacing: 10) {
+                    Button { selectedTab = .sessions } label: {
+                        HStack(spacing: 6) {
+                            Text("Book a Session")
+                                .font(.system(size: 14, weight: .semibold))
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 12, weight: .semibold))
+                        }
+                        .foregroundColor(colorScheme == .light ? .montraOrange : .white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(colorScheme == .light ? Color.montraFrostedOrangeFill : Color.montraOrange)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(
+                                    colorScheme == .light ? Color.montraFrostedOrangeStroke : Color.clear,
+                                    lineWidth: colorScheme == .light ? 1 : 0
+                                )
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(Color.montraOrange)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                    Button {
+                        requestedTrainerId = ""
+                        requestedTrainerName = ""
+                        rematchActive = true
+                        onboardingCompleted = false
+                    } label: {
+                        Text("Rematch")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.montraOrange)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(Color.clear)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.montraOrange, lineWidth: 1.5)
+                            )
+                    }
                 }
 
                 // ── This Week's Progress ──────────────────────────────
@@ -272,6 +302,82 @@ struct DashboardView: View {
             .padding(.horizontal, 20)
         }
         .background(Color.montraBackground)
+        .overlay {
+            GeometryReader { proxy in
+                let buttonSize = CGSize(width: 86, height: 40)
+                let baseX = proxy.size.width - 22 - (buttonSize.width / 2)
+                let baseBottomInset = max(140, proxy.safeAreaInsets.bottom + 110)
+                let baseY = proxy.size.height - baseBottomInset - (buttonSize.height / 2)
+                let rawX = baseX + mapButtonOffset.width + mapButtonDragOffset.width
+                let rawY = baseY + mapButtonOffset.height + mapButtonDragOffset.height
+
+                let minX = buttonSize.width / 2 + 12
+                let maxX = proxy.size.width - (buttonSize.width / 2) - 12
+                let minY = buttonSize.height / 2 + 72
+                let maxY = proxy.size.height - (buttonSize.height / 2) - 96
+
+                Button {
+                    if !mapButtonDidDrag {
+                        showFloatingMap = true
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "map.fill")
+                            .font(.system(size: 14, weight: .bold))
+                        Text("Map")
+                            .font(.system(size: 13, weight: .semibold))
+                    }
+                    .foregroundColor(colorScheme == .light ? .montraPrimaryButtonText : .black)
+                    .frame(width: buttonSize.width, height: buttonSize.height)
+                    .background(colorScheme == .light ? Color.montraFrostedOrangeFill : Color.montraOrange)
+                    .overlay(
+                        Capsule()
+                            .stroke(
+                                colorScheme == .light ? Color.montraFrostedOrangeStroke : Color.clear,
+                                lineWidth: colorScheme == .light ? 1 : 0
+                            )
+                    )
+                    .clipShape(Capsule())
+                    .shadow(color: Color.black.opacity(0.22), radius: 8, x: 0, y: 4)
+                }
+                .buttonStyle(.plain)
+                .position(
+                    x: min(max(rawX, minX), maxX),
+                    y: min(max(rawY, minY), maxY)
+                )
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { value in
+                            mapButtonDragOffset = value.translation
+                            let dragDistance = hypot(value.translation.width, value.translation.height)
+                            if dragDistance > 8 {
+                                mapButtonDidDrag = true
+                            }
+                        }
+                        .onEnded { value in
+                            let proposed = CGSize(
+                                width: mapButtonOffset.width + value.translation.width,
+                                height: mapButtonOffset.height + value.translation.height
+                            )
+
+                            let clampedX = min(max(baseX + proposed.width, minX), maxX) - baseX
+                            let clampedY = min(max(baseY + proposed.height, minY), maxY) - baseY
+
+                            mapButtonOffset = CGSize(width: clampedX, height: clampedY)
+                            mapButtonDragOffset = .zero
+                            DispatchQueue.main.async {
+                                mapButtonDidDrag = false
+                            }
+                        }
+                )
+            }
+        }
+        .navigationDestination(isPresented: $showFloatingMap) {
+            SessionDetailView(
+                session: nextSession,
+                onOpenCoachChat: onOpenCoachChat
+            )
+        }
         .sheet(isPresented: $showNotifications) {
             NotificationsView()
         }

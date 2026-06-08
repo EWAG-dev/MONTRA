@@ -29,3 +29,16 @@ fastlane/test_output
 
 # Build output
 /tmp/montra_dd/
+build.log
+build_full.log
+build_output.log
+build_output.txt
+website/node_modules/
+website/dist/
+
+# Local migration backups
+MONTRA/.git_backup_*/
+
+# Local env files
+backend/.env
+website/.env

@@ -3,17 +3,21 @@ import SwiftUI
 struct LoginView: View {
 
     @EnvironmentObject private var auth: AuthManager
+    @Environment(\.colorScheme) private var colorScheme
     @AppStorage("onboarding.completed") private var onboardingCompleted = false
+    @AppStorage("onboarding.preAuthActive") private var preAuthOnboardingActive = false
 
-    @State private var isSignUp = false
     @State private var email = ""
     @State private var password = ""
-    @State private var confirmPassword = ""
     @State private var isLoading = false
     @State private var errorMessage: String? = nil
     @State private var showForgotPassword = false
     @State private var forgotEmail = ""
     @State private var resetSent = false
+
+    private var montraLogoAsset: String {
+        colorScheme == .dark ? "MontraLogoDark" : "MontraLogoLight"
+    }
 
     var body: some View {
         ZStack {
@@ -28,71 +32,42 @@ struct LoginView: View {
                             Circle()
                                 .stroke(
                                     LinearGradient(
-                                        colors: [Color(hex: "#FFCE7A"), Color(hex: "#FF6820"), Color(hex: "#FF9C40")],
+                                        colors: [Color(hex: "#FFCE7A"), Color(hex: "#FF6A00"), Color(hex: "#FF9C40")],
                                         startPoint: .topLeading,
                                         endPoint: .bottomTrailing
                                     ),
                                     lineWidth: 2
                                 )
                                 .frame(width: 72, height: 72)
-                            Image("MontraLogo")
+                            Image(montraLogoAsset)
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 38, height: 38)
                         }
                         .padding(.bottom, 4)
 
-                        Image("MontraLogo")
+                        Image(montraLogoAsset)
                             .resizable()
                             .scaledToFit()
                             .frame(height: 44)
-                            .padding(.top, 4)
 
                         Text("Your personal training platform")
                             .font(.system(size: 14))
                             .foregroundColor(.montraTextSecondary)
                     }
                     .padding(.top, 72)
-                    .padding(.bottom, 48)
+                    .padding(.bottom, 34)
 
                     // MARK: Form
-                    VStack(spacing: 14) {
+                    VStack(spacing: 12) {
+                        Text("Log in")
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundColor(.montraTextPrimary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
 
-                        // Sign In / Sign Up toggle pills
-                        HStack(spacing: 0) {
-                            ForEach(["Sign In", "Create Account"], id: \.self) { label in
-                                let active = (label == "Sign In") == !isSignUp
-                                Button {
-                                    withAnimation(.easeInOut(duration: 0.2)) {
-                                        isSignUp = label == "Create Account"
-                                        errorMessage = nil
-                                    }
-                                } label: {
-                                    Text(label)
-                                        .font(.system(size: 13, weight: .semibold))
-                                        .foregroundColor(active ? .black : .montraTextSecondary)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 10)
-                                        .background(active ? Color(hex: "#FF6820") : Color.clear)
-                                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                                }
-                            }
-                        }
-                        .padding(4)
-                        .background(Color.white.opacity(0.06))
-                        .clipShape(RoundedRectangle(cornerRadius: 13))
-                        .padding(.bottom, 6)
-
-                        // Email
                         MontraInputField(placeholder: "Email address", text: $email, keyboardType: .emailAddress, isSecure: false)
 
-                        // Password
                         MontraInputField(placeholder: "Password", text: $password, keyboardType: .default, isSecure: true)
-
-                        // Confirm password (sign up only)
-                        if isSignUp {
-                            MontraInputField(placeholder: "Confirm password", text: $confirmPassword, keyboardType: .default, isSecure: true)
-                        }
 
                         // Error message
                         if let error = errorMessage {
@@ -110,38 +85,61 @@ struct LoginView: View {
                             ZStack {
                                 if isLoading {
                                     ProgressView()
-                                        .tint(.black)
+                                        .tint(colorScheme == .light ? .montraOrange : .black)
                                 } else {
-                                    Text(isSignUp ? "Create Account" : "Sign In")
+                                    Text("Log in")
                                         .font(.system(size: 16, weight: .bold))
-                                        .foregroundColor(.black)
+                                        .foregroundColor(colorScheme == .light ? .montraOrange : .black)
                                 }
                             }
                             .frame(maxWidth: .infinity)
-                            .frame(height: 52)
-                            .background(Color(hex: "#FF6820"))
+                            .frame(height: 50)
+                            .background(colorScheme == .light ? Color.montraAccentFrost : Color(hex: "#FF6A00"))
                             .clipShape(RoundedRectangle(cornerRadius: 14))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .stroke(colorScheme == .light ? Color.montraAccentBorder : Color.clear, lineWidth: 1)
+                            )
                         }
                         .disabled(isLoading)
                         .padding(.top, 4)
 
-                        // Forgot password (sign in only)
-                        if !isSignUp {
-                            Button {
-                                forgotEmail = email
-                                resetSent = false
-                                showForgotPassword = true
-                            } label: {
-                                Text("Forgot password?")
-                                    .font(.system(size: 13, weight: .medium))
-                                    .foregroundColor(.montraTextSecondary)
-                            }
+                        Button {
+                            forgotEmail = email
+                            resetSent = false
+                            showForgotPassword = true
+                        } label: {
+                            Text("Forgot password?")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(.montraTextSecondary)
                         }
+                        .padding(.top, 8)
+
+                        Button {
+                            resetQuizDraft()
+                            onboardingCompleted = false
+                            preAuthOnboardingActive = true
+                        } label: {
+                            Text("Create new account")
+                                .font(.system(size: 17, weight: .semibold))
+                                .foregroundColor(.montraOrange)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 50)
+                                .background(Color.clear)
+                                .clipShape(RoundedRectangle(cornerRadius: 14))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 14)
+                                        .stroke(Color.montraOrange, lineWidth: 1.2)
+                                )
+                        }
+                        .padding(.top, 24)
                     }
                     .padding(.horizontal, 24)
+                    .frame(maxWidth: 470)
 
                     Spacer(minLength: 40)
 
+                    #if DEBUG
                     // MARK: Demo Buttons
                     VStack(spacing: 10) {
                         Text("Try a demo")
@@ -178,6 +176,7 @@ struct LoginView: View {
                         }
                     }
                     .padding(.horizontal, 24)
+                    #endif
 
                 }
             }
@@ -193,6 +192,16 @@ struct LoginView: View {
             ForgotPasswordSheet(email: $forgotEmail, resetSent: $resetSent)
                 .environmentObject(auth)
         }
+        .fullScreenCover(isPresented: $preAuthOnboardingActive) {
+            OnboardingQuizView()
+                .environmentObject(auth)
+        }
+        .onAppear {
+            if auth.user == nil {
+                // Always start unauthenticated users at Login/Signup choice.
+                preAuthOnboardingActive = false
+            }
+        }
     }
 
     // MARK: - Submit
@@ -207,26 +216,11 @@ struct LoginView: View {
             return
         }
 
-        if isSignUp {
-            guard trimmedPassword == confirmPassword else {
-                errorMessage = "Passwords don't match."
-                return
-            }
-            guard trimmedPassword.count >= 8 else {
-                errorMessage = "Password must be at least 8 characters."
-                return
-            }
-        }
-
         isLoading = true
         defer { isLoading = false }
 
         do {
-            if isSignUp {
-                try await auth.createAccount(email: trimmedEmail, password: trimmedPassword)
-            } else {
-                try await auth.signIn(email: trimmedEmail, password: trimmedPassword)
-            }
+            try await auth.signIn(email: trimmedEmail, password: trimmedPassword)
         } catch {
             errorMessage = firebaseErrorMessage(error)
         }
@@ -242,6 +236,36 @@ struct LoginView: View {
         case 17026: return "Password must be at least 6 characters."
         case 17010: return "Too many attempts. Please try again later."
         default:    return error.localizedDescription
+        }
+    }
+
+    private func resetQuizDraft() {
+        let keys = [
+            "quiz.goal",
+            "quiz.experience",
+            "quiz.location",
+            "quiz.equipmentAccess",
+            "quiz.injuries",
+            "quiz.lifestyleDays",
+            "quiz.stressLevel",
+            "quiz.sleepRange",
+            "quiz.nutritionHabits",
+            "quiz.nutritionChallenges",
+            "quiz.why",
+            "quiz.accountability",
+            "quiz.communicationStyle",
+            "quiz.commitmentReadiness",
+            "quiz.schedule",
+            "quiz.frequency",
+            "quiz.coachPreference",
+            "quiz.firstName",
+            "quiz.requestedTrainer",
+            "quiz.requestedTrainerName",
+            "quiz.matchChecklistShown"
+        ]
+
+        for key in keys {
+            UserDefaults.standard.removeObject(forKey: key)
         }
     }
 }
@@ -268,11 +292,11 @@ struct MontraInputField: View {
         .font(.system(size: 15))
         .foregroundColor(.montraTextPrimary)
         .padding(.horizontal, 16)
-        .padding(.vertical, 14)
+        .padding(.vertical, 13)
         .background(Color.white.opacity(0.06))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: 14))
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: 14)
                 .stroke(Color.montraCardBorder, lineWidth: 0.8)
         )
     }
@@ -295,7 +319,7 @@ struct ForgotPasswordSheet: View {
                     VStack(spacing: 12) {
                         Image(systemName: "envelope.badge.checkmark.fill")
                             .font(.system(size: 48))
-                            .foregroundColor(Color(hex: "#FF6820"))
+                            .foregroundColor(Color(hex: "#FF6A00"))
                         Text("Check your email")
                             .font(.system(size: 22, weight: .bold))
                             .foregroundColor(.montraTextPrimary)
@@ -340,7 +364,7 @@ struct ForgotPasswordSheet: View {
                         }
                         .frame(maxWidth: .infinity)
                         .frame(height: 50)
-                        .background(Color(hex: "#FF6820"))
+                        .background(Color(hex: "#FF6A00"))
                         .clipShape(RoundedRectangle(cornerRadius: 13))
                     }
                     .disabled(isLoading)
@@ -354,7 +378,7 @@ struct ForgotPasswordSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") { dismiss() }.foregroundColor(Color(hex: "#FF6820"))
+                    Button("Done") { dismiss() }.foregroundColor(Color(hex: "#FF6A00"))
                 }
             }
         }
