@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { randomBytes } from "crypto";
 import cors from "cors";
 import express from "express";
 import { getAuth, initFirebaseAdmin } from "./firebase.js";
@@ -140,6 +141,52 @@ app.post("/api/trainers/apply", requireFirebaseAuth, async (req, res) => {
     });
   } catch (error) {
     res.status(400).json({ error: error.message || "Unable to submit trainer application" });
+  }
+});
+
+app.post("/api/trainers/provision", async (req, res) => {
+  try {
+    const { firstName, lastName, email, phone, specialties, certifications, coachingStyle, experienceYears } = req.body || {};
+
+    if (!firstName || !lastName || !email) {
+      res.status(400).json({ error: "firstName, lastName, and email are required" });
+      return;
+    }
+
+    const name = `${String(firstName).trim()} ${String(lastName).trim()}`;
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const tempPassword = randomBytes(16).toString("base64url");
+
+    let authUser;
+    try {
+      authUser = await getAuth().createUser({
+        email: normalizedEmail,
+        password: tempPassword,
+        displayName: name,
+      });
+    } catch (authError) {
+      if (authError.code === "auth/email-already-exists") {
+        res.status(409).json({ error: "An account with this email already exists." });
+        return;
+      }
+      throw authError;
+    }
+
+    const trainer = await createTrainer({
+      name,
+      email: normalizedEmail,
+      phone: String(phone || "").trim(),
+      specialties: Array.isArray(specialties) ? specialties : [],
+      certification: String(certifications || "").trim(),
+      bio: String(coachingStyle || "").trim(),
+      accountUid: authUser.uid,
+      status: "pending",
+      experienceYears: Number.isFinite(Number(experienceYears)) ? Number(experienceYears) : 0,
+    });
+
+    res.status(201).json({ ok: true, trainerId: trainer.id, email: authUser.email });
+  } catch (error) {
+    res.status(500).json({ error: error.message || "Failed to provision trainer account" });
   }
 });
 
