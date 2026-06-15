@@ -696,6 +696,24 @@ struct OnboardingQuizView: View {
                                 .animation(.easeInOut(duration: 0.2), value: selectedTrainer?.id)
                         }
                         .disabled(selectedTrainer == nil)
+                           if matches.isEmpty {
+                               VStack(spacing: 12) {
+                                   Image(systemName: "exclamationmark.triangle.fill")
+                                       .font(.system(size: 32))
+                                       .foregroundColor(.yellow)
+                                   Text("No trainers in your area")
+                                       .font(.system(size: 18, weight: .bold))
+                                       .foregroundColor(.montraTextPrimary)
+                                   Text("We're actively expanding our trainer network. Check back soon!")
+                                       .font(.system(size: 14))
+                                       .foregroundColor(.montraTextSecondary)
+                                       .multilineTextAlignment(.center)
+                               }
+                               .frame(maxWidth: .infinity)
+                               .padding(24)
+                               .background(Color.white.opacity(0.05))
+                               .clipShape(RoundedRectangle(cornerRadius: 14))
+                           }
 
                         Spacer(minLength: 40)
                     }
