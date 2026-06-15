@@ -10,7 +10,6 @@
 		013E5BBCA0F00499D645A757 /* MONTRAApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC384F94972FB8ABF7F4047A /* MONTRAApp.swift */; };
 		04C760A869614C38E0511915 /* TrainerInboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C1747AB14811CAFAC6BD65 /* TrainerInboxView.swift */; };
 		07D6A9A4E4D74A2DBB2F3B11 /* LiveDataConnectivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F9A8C2F2F7D4E6A9D3C5F21 /* LiveDataConnectivity.swift */; };
-		0B5B368675D96420F05FF3D1 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 7E774ACCC55BF37AAE9812EC /* GoogleService-Info.plist */; };
 		0CB25A3063729E0FCFA7307F /* ProgressProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF31AFC30C8CE4F651820006 /* ProgressProfileView.swift */; };
 		11B32CB05329DE0D5B193684 /* ProfileMenuSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58248E8AFB62D6F27B3C82F4 /* ProfileMenuSheet.swift */; };
 		16C4BE4BA8BD2500C54B0C80 /* TrainerTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3C060E3A69A93327AF0A025 /* TrainerTabView.swift */; };
@@ -23,6 +22,7 @@
 		6F143A4FA58A2A01D6847DA4 /* OnboardingQuizView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C31E6B650BAA18062C8E862 /* OnboardingQuizView.swift */; };
 		70C6192DF40EF400FD8C689B /* ClientSchedulesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F223686D574CF3903786E95 /* ClientSchedulesView.swift */; };
 		8A4A0DF89D00297F68849F65 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1AD8584BC907F0E9AAA1BBA /* AuthManager.swift */; };
+		92C4651E2FE06AD500A6B649 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 92C4651D2FE06AD500A6B649 /* GoogleService-Info.plist */; };
 		97515F6D3A0CFF1439585311 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 862A677FF5122F8C56A8F460 /* LoginView.swift */; };
 		A454CD533725A1DCDF1B5452 /* ProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22FC335F43503AFBD39D9B67 /* ProgressView.swift */; };
 		A6958B59C26198F93F9ABA3A /* TrainerProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3CACE5834CF2C04AD3C45C /* TrainerProgress.swift */; };
@@ -51,11 +51,11 @@
 		6CE961CD047FDE66F2DF35D4 /* MessagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesView.swift; sourceTree = "<group>"; };
 		6F9A8C2F2F7D4E6A9D3C5F21 /* LiveDataConnectivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveDataConnectivity.swift; sourceTree = "<group>"; };
 		71F506439AA346F5E43B5C4C /* NotificationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsView.swift; sourceTree = "<group>"; };
-		7E774ACCC55BF37AAE9812EC /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		816B0C9B88470822F0525D2C /* TrainerProgramsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainerProgramsView.swift; sourceTree = "<group>"; };
 		862A677FF5122F8C56A8F460 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		8C31E6B650BAA18062C8E862 /* OnboardingQuizView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingQuizView.swift; sourceTree = "<group>"; };
 		8CD8FCDB2943F6D915C973C5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		92C4651D2FE06AD500A6B649 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		9D5593F7A430E689CBF764A2 /* SessionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionsView.swift; sourceTree = "<group>"; };
 		9F223686D574CF3903786E95 /* ClientSchedulesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientSchedulesView.swift; sourceTree = "<group>"; };
 		B5136A81B3A141BC939C5F89 /* MontraCompactTopBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MontraCompactTopBar.swift; sourceTree = "<group>"; };
@@ -103,7 +103,7 @@
 				9F223686D574CF3903786E95 /* ClientSchedulesView.swift */,
 				CD0F9AFAE98C400E81F11FB1 /* ContentView.swift */,
 				29AFF0C6AFD11FE7FCF767AF /* DashboardView.swift */,
-				7E774ACCC55BF37AAE9812EC /* GoogleService-Info.plist */,
+				92C4651D2FE06AD500A6B649 /* GoogleService-Info.plist */,
 				8CD8FCDB2943F6D915C973C5 /* Info.plist */,
 				862A677FF5122F8C56A8F460 /* LoginView.swift */,
 				6F9A8C2F2F7D4E6A9D3C5F21 /* LiveDataConnectivity.swift */,
@@ -195,7 +195,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				27290A86FDF7900D3CF1504C /* Assets.xcassets in Resources */,
-				0B5B368675D96420F05FF3D1 /* GoogleService-Info.plist in Resources */,
+				92C4651E2FE06AD500A6B649 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
