@@ -40,5 +40,7 @@
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>MONTRA_API_BASE_URL</key>
+	<string>https://montra-production.up.railway.app</string>
 </dict>
 </plist>
