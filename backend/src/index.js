@@ -155,22 +155,6 @@ app.post("/api/trainers/provision", async (req, res) => {
 
     const name = `${String(firstName).trim()} ${String(lastName).trim()}`;
     const normalizedEmail = String(email).trim().toLowerCase();
-    const tempPassword = randomBytes(16).toString("base64url");
-
-    let authUser;
-    try {
-      authUser = await getAuth().createUser({
-        email: normalizedEmail,
-        password: tempPassword,
-        displayName: name,
-      });
-    } catch (authError) {
-      if (authError.code === "auth/email-already-exists") {
-        res.status(409).json({ error: "An account with this email already exists." });
-        return;
-      }
-      throw authError;
-    }
 
     const trainer = await createTrainer({
       name,
@@ -179,14 +163,13 @@ app.post("/api/trainers/provision", async (req, res) => {
       specialties: Array.isArray(specialties) ? specialties : [],
       certification: String(certifications || "").trim(),
       bio: String(coachingStyle || "").trim(),
-      accountUid: authUser.uid,
       status: "pending",
       experienceYears: Number.isFinite(Number(experienceYears)) ? Number(experienceYears) : 0,
     });
 
-    res.status(201).json({ ok: true, trainerId: trainer.id, email: authUser.email });
+    res.status(201).json({ ok: true, applicationId: trainer.id });
   } catch (error) {
-    res.status(500).json({ error: error.message || "Failed to provision trainer account" });
+    res.status(500).json({ error: error.message || "Failed to submit application" });
   }
 });
 
@@ -326,6 +309,37 @@ app.post("/api/admin/trainers/:id/approve", requireFirebaseAuth, requireAdmin, a
     res.status(404).json({ error: "Trainer not found" });
     return;
   }
+
+  // Create Firebase Auth account and send password setup email if not yet provisioned
+  if (!trainer.accountUid && trainer.email) {
+    try {
+      const tempPassword = randomBytes(16).toString("base64url");
+      const authUser = await getAuth().createUser({
+        email: trainer.email,
+        password: tempPassword,
+        displayName: trainer.name,
+      });
+      await updateTrainer(trainer.id, { accountUid: authUser.uid });
+      trainer.accountUid = authUser.uid;
+
+      const webApiKey = process.env.FIREBASE_WEB_API_KEY;
+      if (webApiKey) {
+        await fetch(
+          `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${webApiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ requestType: "PASSWORD_RESET", email: trainer.email }),
+          }
+        );
+      }
+    } catch (authError) {
+      if (authError.code !== "auth/email-already-exists") {
+        console.error("Failed to provision trainer auth account:", authError.message);
+      }
+    }
+  }
+
   res.status(200).json({ trainer });
 });
 
