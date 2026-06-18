@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find a Coach | Elite Home Fitness</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { brand: '#E85D04' }, fontFamily: { sans: ['Inter','sans-serif'] } } }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .coach-card {
+      height: 100%;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+    .coach-card:hover {
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.10);
+      transform: translateY(-2px);
+    }
+    .coach-meta-label {
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #6b7280;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .coach-tag {
+      font-size: 10px;
+      font-weight: 700;
+      color: #E85D04;
+      background: #fff3eb;
+      border: 1px solid #ffd3bd;
+      border-radius: 6px;
+      padding: 2px 6px;
+      line-height: 1;
+    }
+    .coach-fav {
+      width: 22px;
+      height: 22px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #9ca3af;
+    }
+    .coach-specialties {
+      font-size: 11px;
+      color: #6b7280;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .coach-region {
+      font-size: 11px;
+      color: #4b5563;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .coach-grid { align-items: stretch; }
+    input[type=range] { accent-color: #E85D04; }
+    .active-nav {
+      color: #E85D04 !important;
+      font-weight: 600;
+      border-bottom: 2px solid #E85D04;
+      padding-bottom: 0.25rem;
+    }
+    nav.dark-nav { background-color: #000000 !important; border-color: #1f2937 !important; }
+    nav.dark-nav .text-gray-700 { color: #d1d5db !important; }
+    nav.dark-nav .text-gray-900 { color: #ffffff !important; }
+    nav.dark-nav .text-gray-400 { color: #9ca3af !important; }
+    nav.dark-nav .border-gray-200 { border-color: #374151 !important; }
+    nav.dark-nav .border-gray-300 { border-color: #4b5563 !important; }
+    nav.dark-nav .hover\:bg-gray-50:hover { background-color: #1f2937 !important; color: #ffffff; }
+  </style>
+</head>
+<body class="bg-white text-gray-900 antialiased">
+
+  <!-- NAV -->
+  <nav class="dark-nav bg-white border-b border-gray-100 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto pl-2 pr-6 lg:pl-2 lg:pr-8">
+      <div class="flex items-center justify-between h-16">
+        <a href="index.html" class="flex items-center gap-3 flex-shrink-0">
+          <img src="assets/images/logo.png" alt="Elite Home Fitness" class="h-12"/>
+          <div class="border-l border-gray-600 pl-3 leading-tight">
+            <div class="text-[9px] text-gray-400 leading-none tracking-wide">POWERED BY</div>
+            <div class="text-brand font-bold text-sm leading-tight">MONTRA</div>
+          </div>
+        </a>
+        <div class="hidden md:flex items-center gap-7">
+          <a href="find-a-coach.html" class="text-sm font-bold text-brand border-b-2 border-brand pb-0.5">Find a Coach</a>
+          <a href="how-it-works.html" class="text-sm font-medium text-gray-700 hover:text-brand transition-colors">How It Works</a>
+          <a href="services.html" class="text-sm font-medium text-gray-700 hover:text-brand transition-colors">Services</a>
+          <a href="pricing.html" class="text-sm font-medium text-gray-700 hover:text-brand transition-colors">Prices</a>
+          <a href="for-trainers.html" class="text-sm font-medium text-gray-700 hover:text-brand transition-colors">Become a Trainer</a>
+        </div>
+        <div class="flex items-center gap-3">
+          <a href="quiz.html" class="bg-brand !text-white rounded-lg px-4 py-2 text-sm font-bold hover:bg-orange-700 transition-colors">Book Now</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="relative bg-[#0f0f0f] text-white overflow-hidden min-h-[520px]">
+    <div class="absolute right-0 top-0 bottom-0 w-1/2">
+      <img src="assets/images/coach-hero.png" alt="Coach training client at home" class="w-full h-full object-cover object-center"/>
+      <div class="absolute inset-0 bg-gradient-to-r from-[#0f0f0f] via-[#0f0f0f]/60 to-transparent"></div>
+    </div>
+    <div class="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-16 lg:py-24">
+      <!-- Breadcrumb -->
+      <div class="text-xs text-gray-500 mb-6 flex items-center gap-2">
+        <a href="index.html" class="hover:text-white transition-colors">Home</a>
+        <span>›</span>
+        <span class="text-gray-300">Coaches</span>
+      </div>
+      <h1 class="text-5xl font-black leading-tight mb-4">
+        Find the right coach.<br>
+        <span class="text-brand">Any goal. Any style. Anytime.</span>
+      </h1>
+      <p class="text-gray-300 text-lg mb-8 max-w-lg">All Elite coaches are certified, background-checked, and rated by real clients. Discover the perfect match and book in minutes.</p>
+
+      <!-- Search bar -->
+      <div class="flex gap-3 flex-wrap max-w-2xl">
+        <div class="relative flex-1 min-w-[200px]">
+          <div class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2">
+            <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+          </div>
+          <input id="location-input" type="text" placeholder="Detecting your location…" class="w-full bg-white text-gray-700 text-sm rounded-lg pl-10 pr-10 py-3 outline-none border-0"/>
+          <button id="locate-btn" onclick="locateUser()" title="Use my location" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          </button>
+        </div>
+        <div class="relative">
+          <select class="appearance-none bg-white text-gray-700 text-sm rounded-lg pl-4 pr-10 py-3 outline-none border-0 min-w-[180px]">
+            <option>All Services</option>
+            <option>Personal Training</option>
+            <option>Boxing</option>
+            <option>Yoga</option>
+            <option>Pilates</option>
+            <option>Strength & Conditioning</option>
+            <option>Mobility & Stretch</option>
+            <option>Running Coach</option>
+            <option>Kickboxing</option>
+            <option>Nutrition Coaching</option>
+            <option>Sports-Specific Coaching</option>
+            <option>Weight Loss</option>
+          </select>
+          <svg class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <button class="bg-brand hover:bg-orange-700 text-white px-6 py-3 rounded-lg text-sm font-bold transition-colors">Search Coaches</button>
+      </div>
+
+      <!-- Count + review -->
+      <div class="flex items-center justify-between mt-6 max-w-2xl">
+        <p class="text-gray-400 text-sm">100+ certified trainers across MA, RI, NJ, CT & NY</p>
+      </div>
+    </div>
+
+    <!-- PROCESS STRIP -->
+    <div class="absolute bottom-0 left-0 right-0 bg-black/50 backdrop-blur-sm border-t border-white/10">
+      <div class="max-w-7xl mx-auto px-6 lg:px-8 py-4">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-brand rounded-lg flex items-center justify-center flex-shrink-0"><span class="text-white font-black text-sm">1</span></div>
+            <div><p class="text-white font-bold text-sm leading-tight">Find Your Coach</p><p class="text-gray-400 text-xs">Browse. Compare. Connect.</p></div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-brand rounded-lg flex items-center justify-center flex-shrink-0"><span class="text-white font-black text-sm">2</span></div>
+            <div><p class="text-white font-bold text-sm leading-tight">Book Your Session</p><p class="text-gray-400 text-xs">Simple. Secure. Seamless.</p></div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-brand rounded-lg flex items-center justify-center flex-shrink-0"><span class="text-white font-black text-sm">3</span></div>
+            <div><p class="text-white font-bold text-sm leading-tight">Train &amp; Transform</p><p class="text-gray-400 text-xs">In-Person or Online.</p></div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-brand rounded-lg flex items-center justify-center flex-shrink-0"><span class="text-white font-black text-sm">4</span></div>
+            <div><p class="text-white font-bold text-sm leading-tight">Ongoing Support</p><p class="text-gray-400 text-xs">We're With You.</p></div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-brand rounded-lg flex items-center justify-center flex-shrink-0"><span class="text-white font-black text-sm">5</span></div>
+            <div><p class="text-white font-bold text-sm leading-tight">Protected Experience</p><p class="text-gray-400 text-xs">Your Goals. Our Guarantee.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NOT SURE CTA -->
+  <div class="max-w-7xl mx-auto px-6 lg:px-8 pt-8">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-gray-50 rounded-2xl px-6 py-4">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 bg-brand/10 rounded-xl flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        </div>
+        <div>
+          <span class="font-bold text-sm">Not sure who's right for you?</span>
+          <span class="text-gray-500 text-sm ml-2">Answer a few questions and we'll match you with the perfect coach.</span>
+        </div>
+      </div>
+      <a href="quiz.html" class="bg-brand hover:bg-orange-700 text-white px-6 py-2 rounded-xl font-bold text-sm transition-colors flex-shrink-0">Take The Quiz</a>
+    </div>
+  </div>
+
+  <!-- POPULAR COACHES NEAR YOU -->
+  <section class="max-w-7xl mx-auto px-6 lg:px-8 pt-10 pb-4">
+    <div class="flex items-center justify-between mb-5">
+      <p class="text-xs font-bold tracking-widest text-gray-500 uppercase">Popular Coaches Near You</p>
+      <a href="#all-coaches" class="text-brand text-sm font-semibold hover:underline">View all coaches →</a>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <!-- Coach 1 -->
+      <div class="bg-[#111] rounded-2xl overflow-hidden">
+        <div class="relative">
+          <div class="bg-[#1a1a1a] h-36 flex items-center justify-center">
+            <span class="text-brand font-black text-3xl">MJ</span>
+          </div>
+          <span class="absolute top-3 left-3 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">Online Now</span>
+          <button class="absolute top-3 right-3 w-7 h-7 bg-black/40 rounded-full flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+          </button>
+        </div>
+        <div class="p-4">
+          <p class="text-white font-bold text-sm">Marcus Johnson</p>
+          <p class="text-gray-400 text-xs mb-2">Strength &bull; Athletic Performance</p>
+          <div class="flex items-center justify-between text-xs text-gray-400 mb-3">
+            <span class="text-yellow-400 font-bold">★ 4.9 <span class="text-gray-500 font-normal">(128)</span></span>
+            <span id="dist-MJ">Boston MA • 0.8 mi</span>
+          </div>
+          <div class="flex gap-2">
+            <a href="coach-profile.html" class="flex-1 text-center border border-gray-600 text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-gray-800 transition-colors">View Profile</a>
+            <a href="quiz.html" class="flex-1 text-center bg-brand text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-orange-700 transition-colors">Book Now</a>
+          </div>
+        </div>
+      </div>
+      <!-- Coach 2 -->
+      <div class="bg-[#111] rounded-2xl overflow-hidden">
+        <div class="relative">
+          <div class="bg-[#1a1a1a] h-36 flex items-center justify-center">
+            <span class="text-brand font-black text-3xl">SM</span>
+          </div>
+          <span class="absolute top-3 left-3 bg-yellow-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">Available Tomorrow</span>
+          <button class="absolute top-3 right-3 w-7 h-7 bg-black/40 rounded-full flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+          </button>
+        </div>
+        <div class="p-4">
+          <p class="text-white font-bold text-sm">Sarah Martinez</p>
+          <p class="text-gray-400 text-xs mb-2">Lose Weight &bull; General Fitness</p>
+          <div class="flex items-center justify-between text-xs text-gray-400 mb-3">
+            <span class="text-yellow-400 font-bold">★ 4.9 <span class="text-gray-500 font-normal">(96)</span></span>
+            <span id="dist-SM">Boston MA • 1.2 mi</span>
+          </div>
+          <div class="flex gap-2">
+            <a href="coach-profile.html" class="flex-1 text-center border border-gray-600 text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-gray-800 transition-colors">View Profile</a>
+            <a href="quiz.html" class="flex-1 text-center bg-brand text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-orange-700 transition-colors">Book Now</a>
+          </div>
+        </div>
+      </div>
+      <!-- Coach 3 -->
+      <div class="bg-[#111] rounded-2xl overflow-hidden">
+        <div class="relative">
+          <div class="bg-[#1a1a1a] h-36 flex items-center justify-center">
+            <span class="text-brand font-black text-3xl">AK</span>
+          </div>
+          <span class="absolute top-3 left-3 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">Online Now</span>
+          <button class="absolute top-3 right-3 w-7 h-7 bg-black/40 rounded-full flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+          </button>
+        </div>
+        <div class="p-4">
+          <p class="text-white font-bold text-sm">Alex Kim</p>
+          <p class="text-gray-400 text-xs mb-2">Flexibility &bull; Mobility &bull; General Fitness</p>
+          <div class="flex items-center justify-between text-xs text-gray-400 mb-3">
+            <span class="text-yellow-400 font-bold">★ 5.0 <span class="text-gray-500 font-normal">(86)</span></span>
+            <span id="dist-AK">New Jersey NJ • 1.5 mi</span>
+          </div>
+          <div class="flex gap-2">
+            <a href="coach-profile.html" class="flex-1 text-center border border-gray-600 text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-gray-800 transition-colors">View Profile</a>
+            <a href="quiz.html" class="flex-1 text-center bg-brand text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-orange-700 transition-colors">Book Now</a>
+          </div>
+        </div>
+      </div>
+      <!-- Coach 4 -->
+      <div class="bg-[#111] rounded-2xl overflow-hidden">
+        <div class="relative">
+          <div class="bg-[#1a1a1a] h-36 flex items-center justify-center">
+            <span class="text-brand font-black text-3xl">LD</span>
+          </div>
+          <span class="absolute top-3 left-3 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">Available Today</span>
+          <button class="absolute top-3 right-3 w-7 h-7 bg-black/40 rounded-full flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+          </button>
+        </div>
+        <div class="p-4">
+          <p class="text-white font-bold text-sm">Luis Demo</p>
+          <p class="text-gray-400 text-xs mb-2">Build Muscle</p>
+          <div class="flex items-center justify-between text-xs text-gray-400 mb-3">
+            <span class="text-yellow-400 font-bold">★ 4.8 <span class="text-gray-500 font-normal">(74)</span></span>
+            <span id="dist-LD">Boston MA • 0.6 mi</span>
+          </div>
+          <div class="flex gap-2">
+            <a href="coach-profile.html" class="flex-1 text-center border border-gray-600 text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-gray-800 transition-colors">View Profile</a>
+            <a href="quiz.html" class="flex-1 text-center bg-brand text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-orange-700 transition-colors">Book Now</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEAREST COACH BANNER (shown when user is far from all coaches) -->
+  <div id="nearest-coach-banner" class="hidden max-w-7xl mx-auto px-6 lg:px-8 mt-2 mb-2">
+    <div class="flex items-center gap-3 bg-orange-50 border border-orange-200 rounded-xl px-5 py-3">
+      <svg class="w-5 h-5 text-brand flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <p id="nearest-coach-text" class="text-sm text-gray-700 flex-1"></p>
+      <a href="#all-coaches" class="text-brand text-sm font-bold hover:underline flex-shrink-0">View All →</a>
+    </div>
+  </div>
+
+  <!-- MAIN: SIDEBAR + COACHES -->
+  <section id="all-coaches" class="max-w-7xl mx-auto px-6 lg:px-8 py-12">
+    <div class="flex gap-8">
+
+      <!-- Sidebar -->
+      <aside class="w-60 flex-shrink-0">
+        <div class="flex items-center justify-between mb-5">
+          <span class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Filters</span>
+          <button id="clear-filters" class="text-xs text-brand hover:underline">Clear all</button>
+        </div>
+
+        <!-- Service -->
+        <div class="mb-6">
+          <button class="flex items-center justify-between w-full text-sm font-bold mb-3">
+            Service <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+          </button>
+          <div class="space-y-2.5">
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" checked data-filter="service" class="w-4 h-4 accent-brand rounded"/>
+              <span class="text-sm text-gray-700">All Services</span>
+            </label>
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" data-filter="service" class="w-4 h-4 rounded"/>
+              <span class="text-sm text-gray-600">Personal Training</span>
+            </label>
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" data-filter="service" class="w-4 h-4 rounded"/>
+              <span class="text-sm text-gray-600">Boxing</span>
+            </label>
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" data-filter="service" class="w-4 h-4 rounded"/>
+              <span class="text-sm text-gray-600">Yoga</span>
+            </label>
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" data-filter="service" class="w-4 h-4 rounded"/>
+              <span class="text-sm text-gray-600">Pilates</span>
+            </label>
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" data-filter="service" class="w-4 h-4 rounded"/>
+              <span class="text-sm text-gray-600">Strength & Conditioning</span>
+            </label>
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" data-filter="service" class="w-4 h-4 rounded"/>
+              <span class="text-sm text-gray-600">Weight Loss</span>
+            </label>
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" data-filter="service" class="w-4 h-4 rounded"/>
+              <span class="text-sm text-gray-600">Mobility & Stretch</span>
+            </label>
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" data-filter="service" class="w-4 h-4 rounded"/>
+              <span class="text-sm text-gray-600">Running Coach</span>
+            </label>
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" data-filter="service" class="w-4 h-4 rounded"/>
+              <span class="text-sm text-gray-600">Sports Performance</span>
+            </label>
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" data-filter="service" class="w-4 h-4 rounded"/>
+              <span class="text-sm text-gray-600">Nutrition Coaching</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-100 mb-6"></div>
+
+        <!-- Availability -->
+        <div class="mb-6">
+          <button class="flex items-center justify-between w-full text-sm font-bold mb-3">
+            Availability <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+          </button>
+          <div class="space-y-2.5">
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" checked data-filter="availability" class="w-4 h-4 accent-brand"/>
+              <span class="text-sm text-gray-700">Anytime</span>
+            </label>
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" data-filter="availability" class="w-4 h-4"/>
+              <span class="text-sm text-gray-600">Today</span>
+            </label>
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" data-filter="availability" class="w-4 h-4"/>
+              <span class="text-sm text-gray-600">This Week</span>
+            </label>
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" data-filter="availability" class="w-4 h-4"/>
+              <span class="text-sm text-gray-600">Weekend</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-100 mb-6"></div>
+
+        <!-- Gender Preference -->
+        <div class="mb-6">
+          <button class="flex items-center justify-between w-full text-sm font-bold mb-3">
+            Gender Preference <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+          </button>
+          <div class="space-y-2.5">
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="radio" name="gender" checked class="w-4 h-4 accent-brand"/>
+              <span class="text-sm text-gray-700">No Preference</span>
+            </label>
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="radio" name="gender" class="w-4 h-4 accent-brand"/>
+              <span class="text-sm text-gray-600">Male</span>
+            </label>
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="radio" name="gender" class="w-4 h-4 accent-brand"/>
+              <span class="text-sm text-gray-600">Female</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-100 mb-6"></div>
+
+        <!-- Price Range -->
+        <div class="mb-6">
+          <button class="flex items-center justify-between w-full text-sm font-bold mb-4">
+            Price Range (per session) <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+          </button>
+          <input type="range" min="60" max="250" value="250" class="w-full mb-2"/>
+          <div class="flex justify-between text-xs text-gray-500">
+            <span>$60</span>
+            <span>$250+</span>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-100 mb-6"></div>
+
+        <!-- Sort By -->
+        <div class="mb-6">
+          <button class="flex items-center justify-between w-full text-sm font-bold mb-3">
+            Sort By <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+          </button>
+          <select id="sort-select" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none">
+            <option>Highest Rated</option>
+            <option>Price: Low to High</option>
+            <option>Price: High to Low</option>
+            <option>Most Reviews</option>
+            <option>Newest</option>
+          </select>
+        </div>
+
+        <!-- Tier quick guide -->
+        <div class="border-t border-gray-100 pt-6">
+          <p class="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">Coach Tiers</p>
+          <div class="space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-semibold text-yellow-600">Elite Signature</span>
+              <span class="text-xs text-gray-500">$180–$350+</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-semibold text-brand">Elite Pro</span>
+              <span class="text-xs text-gray-500">$120–$180</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-semibold text-gray-500">Elite Certified</span>
+              <span class="text-xs text-gray-500">$70–$120</span>
+            </div>
+          </div>
+          <a href="pricing.html" class="text-xs text-brand hover:underline mt-2 inline-block">View all tiers →</a>
+        </div>
+      </aside>
+
+      <!-- Coach Grid -->
+      <div class="flex-1">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-bold">Top Rated Coaches</h2>
+          <a href="#" class="text-brand text-sm font-semibold hover:underline">View all coaches →</a>
+        </div>
+
+        <div id="coach-grid" class="coach-grid grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ELITE STANDARD -->
+  <section class="bg-[#111] text-white py-14">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <div class="flex flex-col lg:flex-row items-center gap-12">
+        <div class="lg:w-72 flex-shrink-0">
+          <h2 class="text-2xl font-black mb-2">Every Coach.<br>Elite Standard.</h2>
+          <p class="text-gray-400 text-sm">We don't just accept anyone. Every coach on Elite is:</p>
+        </div>
+        <div class="flex-1 grid grid-cols-2 sm:grid-cols-5 gap-6 text-center">
+          <div>
+            <div class="w-12 h-12 rounded-full border border-brand/40 flex items-center justify-center mx-auto mb-2">
+              <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            </div>
+            <p class="text-xs font-semibold">Background<br>Checked</p>
+          </div>
+          <div>
+            <div class="w-12 h-12 rounded-full border border-brand/40 flex items-center justify-center mx-auto mb-2">
+              <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
+            </div>
+            <p class="text-xs font-semibold">Certified<br>& Insured</p>
+          </div>
+          <div>
+            <div class="w-12 h-12 rounded-full border border-brand/40 flex items-center justify-center mx-auto mb-2">
+              <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <p class="text-xs font-semibold">Experienced<br>Professionals</p>
+          </div>
+          <div>
+            <div class="w-12 h-12 rounded-full border border-brand/40 flex items-center justify-center mx-auto mb-2">
+              <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+            </div>
+            <p class="text-xs font-semibold">Rated by<br>Real Clients</p>
+          </div>
+          <div>
+            <div class="w-12 h-12 rounded-full border border-brand/40 flex items-center justify-center mx-auto mb-2">
+              <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            </div>
+            <p class="text-xs font-semibold">Ongoing Education<br>& Training</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="bg-[#0a0a0a] text-white pt-16 pb-8 border-t border-gray-800">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-10 mb-12">
+        <div class="col-span-2 md:col-span-1">
+          <a href="index.html" class="flex items-center gap-2 mb-4">
+            <img src="assets/images/logo.png" alt="Elite Home Fitness" class="h-10"/>
+            <div class="border-l border-gray-600 pl-2"><div class="text-[8px] text-gray-500">POWERED BY</div><div class="text-brand font-bold text-xs">MONTRA</div></div>
+          </a>
+          <p class="text-gray-500 text-xs leading-relaxed mb-5">Premium in-home personal training.<br>Elite results. Unmatched convenience.</p>
+          <div class="flex gap-3 text-gray-500">
+            <a href="#" class="hover:text-white">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+            </a>
+            <a href="#" class="hover:text-white">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            </a>
+            <a href="#" class="hover:text-white">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+            </a>
+          </div>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">Company</h4>
+          <ul class="space-y-2.5 text-sm text-gray-400">
+            <li><a href="about.html" class="hover:text-white">About Us</a></li>
+            <li><a href="#" class="hover:text-white">Careers</a></li>
+            <li><a href="#" class="hover:text-white">Blog</a></li>
+            <li><a href="#" class="hover:text-white">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">Support</h4>
+          <ul class="space-y-2.5 text-sm text-gray-400">
+            <li><a href="#" class="hover:text-white">Help Center</a></li>
+            <li><a href="#" class="hover:text-white">FAQ</a></li>
+            <li><a href="#" class="hover:text-white">Safety</a></li>
+            <li><a href="#" class="hover:text-white">Cancellation Policy</a></li>
+            <li><a href="#" class="hover:text-white">Privacy Policy</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">For Clients</h4>
+          <ul class="space-y-2.5 text-sm text-gray-400">
+            <li><a href="services.html" class="hover:text-white">Training Options</a></li>
+            <li><a href="pricing.html" class="hover:text-white">Prices</a></li>
+            <li><a href="#" class="hover:text-white">Gift Cards</a></li>
+            <li><a href="#" class="hover:text-white">Refer a Friend</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">For Trainers</h4>
+          <ul class="space-y-2.5 text-sm text-gray-400 mb-6">
+            <li><a href="for-trainers.html" class="hover:text-white">Become a Coach</a></li>
+            <li><a href="#" class="hover:text-white">Coach Login</a></li>
+            <li><a href="#" class="hover:text-white">Resources</a></li>
+          </ul>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Download the App</h4>
+          <div class="space-y-2">
+            <a href="#" class="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 rounded-xl px-3 py-2 transition-colors">
+              <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+              <div><div class="text-[10px] text-gray-500">Download on the</div><div class="text-xs font-semibold">App Store</div></div>
+            </a>
+            <a href="#" class="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 rounded-xl px-3 py-2 transition-colors">
+              <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M3.18 23.76c.3.17.66.19.98.06l.06-.04 11.2-6.47-2.44-2.44-9.8 8.89zm-1.02-20.9c-.1.21-.16.44-.16.69v19.9c0 .25.06.48.16.69l.04.06 11.15-11.15v-.26L2.2 2.8l-.04.06zM20.38 10.9L17.8 9.4l-2.7 2.7 2.7 2.7 2.6-1.51c.74-.43.74-1.13 0-1.56l-.02.07zM4.16.28L15.36 6.75l-2.44 2.44-9.8-8.9.04.01z"/></svg>
+              <div><div class="text-[10px] text-gray-500">GET IT ON</div><div class="text-xs font-semibold">Google Play</div></div>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="border-t border-gray-800 pt-6 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-gray-600">
+        <span>© 2024 Elite Home Fitness. All rights reserved.</span>
+        <div class="flex gap-4">
+          <a href="#" class="hover:text-gray-400">Terms of Use</a>
+          <a href="#" class="hover:text-gray-400">Privacy Policy</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+  <script>
+    let allCoaches = [];
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function createEmptyCard() {
+      return `
+        <div class="col-span-full flex flex-col items-center justify-center py-20 text-center">
+          <div class="w-16 h-16 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center mb-4">
+            <svg class="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+            </svg>
+          </div>
+          <p class="font-bold text-gray-400 text-base mb-1">No trainers added yet</p>
+          <p class="text-gray-400 text-sm">Trainers will appear here once they've been added.</p>
+        </div>
+      `;
+    }
+
+    function toCoachCard(trainer) {
+      const specialties = (trainer.specialties || []).slice(0, 3).map(escapeHtml);
+      const specialtiesText = specialties.join(' • ');
+      const primaryRegion = escapeHtml((trainer.locations && trainer.locations[0]) || 'Region TBD');
+      const safeName = escapeHtml(trainer.name || 'Coach');
+      const isTopRated = (trainer.clientCount || 0) >= 100;
+      const avatar = trainer.photoDataUrl
+        ? `<img src="${trainer.photoDataUrl}" alt="${safeName}" class="w-full h-full object-cover"/>`
+        : `<div class="w-full h-full bg-brand/10 text-brand flex items-center justify-center font-black text-lg">${escapeHtml(trainer.initials || 'EH')}</div>`;
+
+      return `
+        <article class="coach-card flex flex-col">
+          <div class="relative h-44 bg-gray-100">
+            ${avatar}
+            <div class="absolute left-2 top-2">${isTopRated ? '<span class="coach-tag">Top Rated</span>' : ''}</div>
+            <button type="button" class="absolute right-2 top-2 coach-fav" aria-label="Save coach">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            </button>
+          </div>
+          <div class="p-3 flex flex-col gap-2 flex-1">
+            <div class="min-h-[44px]">
+              <h3 class="font-bold text-gray-900 leading-tight text-[15px]">${safeName}</h3>
+              <p class="coach-specialties">${specialtiesText}</p>
+            </div>
+            <div class="min-h-[20px]">
+              <p class="coach-region">
+                <svg class="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                ${primaryRegion}
+              </p>
+            </div>
+            <div class="mt-auto pt-1">
+              <a href="quiz.html" class="block text-center bg-black hover:bg-gray-900 text-white text-xs font-bold py-2 rounded-md transition-colors">View Profile</a>
+              </div>
+            </div>
+        </article>
+      `;
+    }
+
+    function readStoredProfiles() {
+      const profiles = JSON.parse(localStorage.getItem('trainerProfiles') || '[]');
+      const latest = JSON.parse(localStorage.getItem('trainerProfile') || 'null');
+      if (latest && !profiles.some((profile) => (profile.name || '').trim().toLowerCase() === (latest.name || '').trim().toLowerCase())) {
+        profiles.push(latest);
+      }
+      return profiles;
+    }
+
+    function getLabelText(input) {
+      return input?.parentElement?.querySelector('span')?.textContent?.trim() || '';
+    }
+
+    function parseAvailabilityDate(dateStr) {
+      if (!dateStr) return null;
+      const date = new Date(`${dateStr} ${new Date().getFullYear()}`);
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    function matchesAvailability(coach, selectedAvailability) {
+      if (selectedAvailability.length === 0 || selectedAvailability.includes('Anytime')) {
+        return true;
+      }
+
+      const slots = coach.availability || [];
+      if (slots.length === 0) return false;
+
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      return slots.some((slot) => {
+        const slotDate = parseAvailabilityDate(slot.date);
+        if (!slotDate) return false;
+        const slotDayStart = new Date(slotDate.getFullYear(), slotDate.getMonth(), slotDate.getDate());
+        const daysAway = Math.floor((slotDayStart - startOfToday) / (1000 * 60 * 60 * 24));
+
+        if (selectedAvailability.includes('Today') && daysAway === 0) return true;
+        if (selectedAvailability.includes('This Week') && daysAway >= 0 && daysAway <= 7) return true;
+        if (selectedAvailability.includes('Weekend')) {
+          const day = slotDayStart.getDay();
+          if (day === 0 || day === 6) return true;
+        }
+        return false;
+      });
+    }
+
+    function matchesService(coach, selectedServices) {
+      if (selectedServices.length === 0 || selectedServices.includes('All Services')) {
+        return true;
+      }
+
+      const specialties = (coach.specialties || []).map((s) => String(s).toLowerCase());
+      const synonyms = {
+        'Personal Training': ['general fitness', 'build muscle', 'lose weight', 'personal training'],
+        'Sports Performance': ['athletic performance', 'sports-specific coaching', 'strength'],
+        'Weight Loss': ['weight loss', 'lose weight'],
+        'Mobility & Stretch': ['mobility', 'flexibility & wellness', 'mobility & stretch'],
+        'Strength & Conditioning': ['strength', 'build muscle', 'strength & conditioning'],
+        'Running Coach': ['running coach'],
+        'Nutrition Coaching': ['nutrition coaching'],
+        'Boxing': ['boxing', 'combat sports', 'kickboxing'],
+        'Yoga': ['yoga'],
+        'Pilates': ['pilates']
+      };
+
+      return selectedServices.some((service) => {
+        const terms = synonyms[service] || [service.toLowerCase()];
+        return terms.some((term) => specialties.some((spec) => spec.includes(term)));
+      });
+    }
+
+    function sortCoaches(coaches) {
+      const sortValue = document.getElementById('sort-select')?.value || 'Highest Rated';
+      const sorted = [...coaches];
+
+      if (sortValue === 'Highest Rated' || sortValue === 'Most Reviews') {
+        sorted.sort((a, b) => (b.clientCount || 0) - (a.clientCount || 0));
+      } else if (sortValue === 'Newest') {
+        sorted.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      } else {
+        sorted.sort((a, b) => (b.clientCount || 0) - (a.clientCount || 0));
+      }
+
+      return sorted;
+    }
+
+    function renderGrid(coaches) {
+      const grid = document.getElementById('coach-grid');
+      if (!grid) return;
+
+      if (coaches.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full text-center py-16">
+            <p class="text-gray-600 font-semibold mb-2">No coaches match those filters.</p>
+            <p class="text-gray-400 text-sm">Try clearing filters or selecting different services.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = coaches.map(toCoachCard).join('');
+    }
+
+    function applyFilters() {
+      const selectedServices = Array.from(document.querySelectorAll('input[data-filter="service"]:checked')).map(getLabelText);
+      const selectedAvailability = Array.from(document.querySelectorAll('input[data-filter="availability"]:checked')).map(getLabelText);
+
+      const filtered = allCoaches
+        .filter((coach) => matchesService(coach, selectedServices))
+        .filter((coach) => matchesAvailability(coach, selectedAvailability));
+
+      renderGrid(sortCoaches(filtered));
+    }
+
+    function attachFilterEvents() {
+      const serviceInputs = Array.from(document.querySelectorAll('input[data-filter="service"]'));
+      const availabilityInputs = Array.from(document.querySelectorAll('input[data-filter="availability"]'));
+      const sortSelect = document.getElementById('sort-select');
+      const clearButton = document.getElementById('clear-filters');
+
+      const allServicesInput = serviceInputs.find((input) => getLabelText(input) === 'All Services');
+      const serviceSpecificInputs = serviceInputs.filter((input) => getLabelText(input) !== 'All Services');
+
+      if (allServicesInput) {
+        allServicesInput.addEventListener('change', () => {
+          if (allServicesInput.checked) {
+            serviceSpecificInputs.forEach((input) => { input.checked = false; });
+          }
+          applyFilters();
+        });
+      }
+
+      serviceSpecificInputs.forEach((input) => {
+        input.addEventListener('change', () => {
+          if (input.checked && allServicesInput) {
+            allServicesInput.checked = false;
+          }
+          if (allServicesInput && serviceSpecificInputs.every((item) => !item.checked)) {
+            allServicesInput.checked = true;
+          }
+          applyFilters();
+        });
+      });
+
+      availabilityInputs.forEach((input) => {
+        input.addEventListener('change', () => {
+          const label = getLabelText(input);
+          if (label === 'Anytime' && input.checked) {
+            availabilityInputs.forEach((item) => {
+              if (item !== input) item.checked = false;
+            });
+          } else if (label !== 'Anytime' && input.checked) {
+            const anytime = availabilityInputs.find((item) => getLabelText(item) === 'Anytime');
+            if (anytime) anytime.checked = false;
+          }
+
+          const anyChecked = availabilityInputs.some((item) => item.checked);
+          if (!anyChecked) {
+            const anytime = availabilityInputs.find((item) => getLabelText(item) === 'Anytime');
+            if (anytime) anytime.checked = true;
+          }
+          applyFilters();
+        });
+      });
+
+      sortSelect?.addEventListener('change', applyFilters);
+
+      clearButton?.addEventListener('click', () => {
+        serviceInputs.forEach((input) => {
+          input.checked = getLabelText(input) === 'All Services';
+        });
+        availabilityInputs.forEach((input) => {
+          input.checked = getLabelText(input) === 'Anytime';
+        });
+        if (sortSelect) sortSelect.value = 'Highest Rated';
+        applyFilters();
+      });
+    }
+
+    // ─── Geolocation & Distance ─────────────────────────────────────────────
+    const TRAINER_COORDS = {
+      'Boston MA':       { lat: 42.3601, lng: -71.0589, label: 'Boston, MA' },
+      'New York NY':     { lat: 40.7128, lng: -74.0060, label: 'New York, NY' },
+      'Rhode Island RI': { lat: 41.8240, lng: -71.4128, label: 'Providence, RI' },
+      'New Jersey NJ':   { lat: 40.7282, lng: -74.0776, label: 'New Jersey' },
+      'Connecticut CT':  { lat: 41.6032, lng: -73.0877, label: 'Hartford, CT' }
+    };
+
+    const POPULAR_COACHES_GEO = [
+      { id: 'MJ', name: 'Marcus Johnson', locations: ['Boston MA', 'New York NY'] },
+      { id: 'SM', name: 'Sarah Martinez', locations: ['Boston MA', 'Rhode Island RI'] },
+      { id: 'AK', name: 'Alex Kim',       locations: ['New Jersey NJ', 'Connecticut CT'] },
+      { id: 'LD', name: 'Luis Demo',      locations: ['Boston MA'] }
+    ];
+
+    function haversine(lat1, lng1, lat2, lng2) {
+      const R = 3958.8;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) ** 2 +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function getNearestForCoach(coach, userLat, userLng) {
+      let best = null;
+      for (const locKey of coach.locations) {
+        const loc = TRAINER_COORDS[locKey];
+        if (!loc) continue;
+        const dist = haversine(userLat, userLng, loc.lat, loc.lng);
+        if (!best || dist < best.dist) best = { dist, loc };
+      }
+      return best;
+    }
+
+    function fmtMiles(m) {
+      return m < 1 ? 'Less than 1 mi away' : `${Math.round(m)} mi away`;
+    }
+
+    function updatePopularDistances(userLat, userLng) {
+      for (const coach of POPULAR_COACHES_GEO) {
+        const span = document.getElementById(`dist-${coach.id}`);
+        if (!span) continue;
+        const result = getNearestForCoach(coach, userLat, userLng);
+        if (result) span.textContent = `${result.loc.label} • ${fmtMiles(result.dist)}`;
+      }
+    }
+
+    function maybeShowNearestBanner(userLat, userLng) {
+      const THRESHOLD_MI = 30;
+      let nearest = null;
+      for (const coach of POPULAR_COACHES_GEO) {
+        const result = getNearestForCoach(coach, userLat, userLng);
+        if (!result) continue;
+        if (!nearest || result.dist < nearest.dist)
+          nearest = { name: coach.name, dist: result.dist, loc: result.loc };
+      }
+      if (!nearest) return;
+      const banner = document.getElementById('nearest-coach-banner');
+      const text   = document.getElementById('nearest-coach-text');
+      if (!banner || !text) return;
+      if (nearest.dist > THRESHOLD_MI) {
+        text.innerHTML = `No coaches available in your area yet. Nearest coach: <strong>${nearest.name}</strong> — ${Math.round(nearest.dist)} mi away in ${nearest.loc.label}.`;
+        banner.classList.remove('hidden');
+      }
+    }
+
+    async function resolveLocationName(lat, lng) {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+          { headers: { 'Accept-Language': 'en' } }
+        );
+        if (!res.ok) return null;
+        const data = await res.json();
+        const city  = data.address?.city || data.address?.town || data.address?.village || data.address?.county || '';
+        const state = data.address?.state || '';
+        return city && state ? `${city}, ${state}` : (city || state || null);
+      } catch { return null; }
+    }
+
+    function locateUser() {
+      const input = document.getElementById('location-input');
+      const btn   = document.getElementById('locate-btn');
+      if (!navigator.geolocation) {
+        if (input) input.placeholder = 'Location unavailable in this browser';
+        return;
+      }
+      if (input) { input.value = ''; input.placeholder = 'Locating…'; }
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const { latitude: lat, longitude: lng } = pos.coords;
+          const cityName = await resolveLocationName(lat, lng);
+          if (input) {
+            input.value = cityName || '';
+            input.placeholder = 'Enter your location';
+          }
+          updatePopularDistances(lat, lng);
+          maybeShowNearestBanner(lat, lng);
+        },
+        () => {
+          if (input) { input.value = ''; input.placeholder = 'Enter your location'; }
+        },
+        { timeout: 8000 }
+      );
+    }
+
+    // Auto-detect location on load
+    locateUser();
+    // ─────────────────────────────────────────────────────────────────────────
+
+    async function loadCoaches() {
+      const grid = document.getElementById('coach-grid');
+      if (!grid) return;
+
+      let baseTrainers = [];
+      try {
+        const response = await fetch('/data/trainers.json');
+        if (response.ok) {
+          baseTrainers = await response.json();
+        }
+      } catch (error) {
+        console.warn('Unable to load base trainer data:', error);
+      }
+
+      const storedProfiles = readStoredProfiles();
+      const merged = [...baseTrainers];
+
+      storedProfiles.forEach((profile) => {
+        const matchIndex = merged.findIndex((trainer) => (trainer.name || '').trim().toLowerCase() === (profile.name || '').trim().toLowerCase());
+        if (matchIndex >= 0) {
+          merged[matchIndex] = { ...merged[matchIndex], ...profile };
+        } else {
+          merged.push(profile);
+        }
+      });
+
+      allCoaches = merged;
+
+      if (allCoaches.length === 0) {
+        grid.innerHTML = createEmptyCard();
+        return;
+      }
+
+      attachFilterEvents();
+      applyFilters();
+    }
+
+    loadCoaches();
+  </script>
+</body>
+</html>

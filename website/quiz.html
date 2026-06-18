@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find My Coach | Elite Home Fitness</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { 'brand': '#E85D04' },
+          fontFamily: { sans: ['Inter', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    nav.dark-nav { background-color: #000000 !important; border-color: #1f2937 !important; }
+    nav.dark-nav .text-gray-700 { color: #d1d5db !important; }
+    nav.dark-nav .text-gray-400 { color: #9ca3af !important; }
+    nav.dark-nav .border-gray-600 { border-color: #4b5563 !important; }
+
+    .option-btn { transition: all 0.15s ease; cursor: pointer; border: 1px solid #2a2a2a; background: #141414; color: #e5e5e5; }
+    .option-btn.selected { border-color: #E85D04 !important; background-color: #1a0d00; color: #fff; }
+    .option-btn:not(.selected):hover { border-color: #444; background: #1c1c1c; }
+    .step { display: none; }
+    .step.active { display: block; }
+    .progress-bar { transition: width 0.4s ease; }
+  </style>
+</head>
+<body class="bg-white text-gray-900 antialiased">
+
+  <!-- NAV -->
+  <nav class="dark-nav bg-white border-b border-gray-100 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto pl-2 pr-6 lg:pl-2 lg:pr-8">
+      <div class="flex items-center justify-between h-16">
+        <a href="index.html" class="flex items-center gap-3 flex-shrink-0">
+          <img src="assets/images/logo.png" alt="Elite Home Fitness" class="h-12"/>
+          <div class="border-l border-gray-600 pl-3 leading-tight">
+            <div class="text-[9px] text-gray-400 leading-none tracking-wide">POWERED BY</div>
+            <div class="text-brand font-bold text-sm leading-tight">MONTRA</div>
+          </div>
+        </a>
+        <div class="hidden md:flex items-center gap-7">
+          <a href="find-a-coach.html" class="text-sm font-medium text-gray-700 hover:text-brand transition-colors">Find a Coach</a>
+          <a href="how-it-works.html" class="text-sm font-medium text-gray-700 hover:text-brand transition-colors">How It Works</a>
+          <a href="services.html" class="text-sm font-medium text-gray-700 hover:text-brand transition-colors">Services</a>
+          <a href="pricing.html" class="text-sm font-medium text-gray-700 hover:text-brand transition-colors">Prices</a>
+          <a href="for-trainers.html" class="text-sm font-medium text-gray-700 hover:text-brand transition-colors">Become a Trainer</a>
+        </div>
+        <div class="flex items-center gap-3">
+          <a href="quiz.html" class="bg-brand !text-white rounded-lg px-4 py-2 text-sm font-bold hover:bg-orange-700 transition-colors">Book Now</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- QUIZ WRAPPER -->
+  <div class="bg-[#0a0a0a] flex flex-col lg:flex-row" style="min-height:calc(100vh - 64px)">
+
+    <!-- Left panel: branding & summary -->
+    <div class="hidden lg:flex lg:w-[28%] bg-white border-r border-gray-200 flex-col justify-between p-8">
+      <div>
+        <p class="text-brand text-xs font-bold uppercase tracking-widest mb-8">Find My Coach</p>
+        <h2 class="text-3xl font-black text-gray-900 leading-tight mb-4">Your perfect trainer is closer than you think.</h2>
+        <p class="text-gray-600 text-sm leading-relaxed">Answer 7 quick questions and we'll hand-match you with a certified in-home trainer built around your goals.</p>
+      </div>
+      
+      <!-- Answers summary -->
+      <div id="answers-summary" class="space-y-3 mb-8">
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">Your Answers</p>
+        <div id="answer-goal" class="pb-3 border-b border-gray-200"><div class="text-xs text-gray-500">Goal</div><div class="text-sm font-semibold text-gray-900">—</div></div>
+        <div id="answer-exp" class="pb-3 border-b border-gray-200"><div class="text-xs text-gray-500">Experience</div><div class="text-sm font-semibold text-gray-900">—</div></div>
+        <div id="answer-loc" class="pb-3 border-b border-gray-200"><div class="text-xs text-gray-500">Location</div><div class="text-sm font-semibold text-gray-900">—</div></div>
+        <div id="answer-time" class="pb-3 border-b border-gray-200"><div class="text-xs text-gray-500">Schedule</div><div class="text-sm font-semibold text-gray-900">—</div></div>
+        <div id="answer-freq" class="pb-3 border-b border-gray-200"><div class="text-xs text-gray-500">Frequency</div><div class="text-sm font-semibold text-gray-900">—</div></div>
+        <div id="answer-gender" class="pb-3"><div class="text-xs text-gray-500">Coach Preference</div><div class="text-sm font-semibold text-gray-900">—</div></div>
+      </div>
+      
+      <div class="space-y-4">
+        <div class="flex items-center gap-3 text-sm text-gray-600">
+          <div class="w-6 h-6 rounded-full bg-brand/10 flex items-center justify-center flex-shrink-0"><svg class="w-3 h-3 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div>
+          100+ certified trainers across 5 states
+        </div>
+        <div class="flex items-center gap-3 text-sm text-gray-600">
+          <div class="w-6 h-6 rounded-full bg-brand/10 flex items-center justify-center flex-shrink-0"><svg class="w-3 h-3 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div>
+          90-min trial session, no commitment
+        </div>
+        <div class="flex items-center gap-3 text-sm text-gray-600">
+          <div class="w-6 h-6 rounded-full bg-brand/10 flex items-center justify-center flex-shrink-0"><svg class="w-3 h-3 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div>
+          Background checked & personally vetted
+        </div>
+      </div>
+    </div>
+
+    <!-- Right panel: quiz -->
+    <div class="flex-1 flex flex-col justify-center px-6 py-12 lg:px-16">
+      <div class="w-full max-w-lg mx-auto">
+
+      <!-- Progress bar -->
+      <div class="h-0.5 bg-white/10 mb-8 rounded-full">
+        <div id="progress-bar" class="progress-bar h-full bg-brand rounded-full" style="width: 14.28%"></div>
+      </div>
+
+      <!-- Step counter + back -->
+      <div class="flex items-center justify-between mb-8">
+        <button id="back-btn" onclick="prevStep()" class="hidden text-sm text-gray-500 hover:text-white flex items-center gap-1 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          Back
+        </button>
+        <span id="step-counter" class="text-xs font-semibold text-gray-600 uppercase tracking-widest ml-auto">Step 1 of 7</span>
+      </div>
+
+      <!-- Steps -->
+      <div>
+
+        <!-- STEP 1: Goal -->
+        <div class="step active" id="step-1">
+          <h2 class="text-3xl font-black text-white mb-1">What's your main goal?</h2>
+          <p class="text-gray-500 text-sm mb-8">Choose the one that matters most right now.</p>
+          <div class="grid grid-cols-2 gap-3">
+            <button class="option-btn rounded-xl p-4 text-left" onclick="selectOption(this, 1)">
+              <div class="text-xl mb-2">💪</div>
+              <div class="font-bold text-sm text-white">Build Muscle</div>
+              <div class="text-xs text-gray-500 mt-0.5">Strength & size</div>
+            </button>
+            <button class="option-btn rounded-xl p-4 text-left" onclick="selectOption(this, 1)">
+              <div class="text-xl mb-2">🔥</div>
+              <div class="font-bold text-sm text-white">Lose Weight</div>
+              <div class="text-xs text-gray-500 mt-0.5">Fat loss & tone</div>
+            </button>
+            <button class="option-btn rounded-xl p-4 text-left" onclick="selectOption(this, 1)">
+              <div class="text-xl mb-2">🧘</div>
+              <div class="font-bold text-sm text-white">Flexibility & Wellness</div>
+              <div class="text-xs text-gray-500 mt-0.5">Yoga, pilates, mobility</div>
+            </button>
+            <button class="option-btn rounded-xl p-4 text-left" onclick="selectOption(this, 1)">
+              <div class="text-xl mb-2">🏃</div>
+              <div class="font-bold text-sm text-white">Athletic Performance</div>
+              <div class="text-xs text-gray-500 mt-0.5">Speed, power, sport</div>
+            </button>
+            <button class="option-btn rounded-xl p-4 text-left" onclick="selectOption(this, 1)">
+              <div class="text-xl mb-2">🥊</div>
+              <div class="font-bold text-sm text-white">Combat Sports</div>
+              <div class="text-xs text-gray-500 mt-0.5">Boxing, kickboxing</div>
+            </button>
+            <button class="option-btn rounded-xl p-4 text-left" onclick="selectOption(this, 1)">
+              <div class="text-xl mb-2">✨</div>
+              <div class="font-bold text-sm text-white">General Fitness</div>
+              <div class="text-xs text-gray-500 mt-0.5">Stay active & healthy</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 2: Experience -->
+        <div class="step" id="step-2">
+          <h2 class="text-3xl font-black text-white mb-1">What's your fitness experience?</h2>
+          <p class="text-gray-500 text-sm mb-8">This helps us find the right coaching style for you.</p>
+          <div class="space-y-3">
+            <button class="option-btn w-full rounded-xl p-4 text-left flex items-center gap-4" onclick="selectOption(this, 2)">
+              <span class="text-xl">🌱</span>
+              <div>
+                <div class="font-bold text-sm text-white">Beginner</div>
+                <div class="text-xs text-gray-500">New to working out or returning after a long break</div>
+              </div>
+            </button>
+            <button class="option-btn w-full rounded-xl p-4 text-left flex items-center gap-4" onclick="selectOption(this, 2)">
+              <span class="text-xl">⚡</span>
+              <div>
+                <div class="font-bold text-sm text-white">Intermediate</div>
+                <div class="text-xs text-gray-500">Work out regularly but want to level up</div>
+              </div>
+            </button>
+            <button class="option-btn w-full rounded-xl p-4 text-left flex items-center gap-4" onclick="selectOption(this, 2)">
+              <span class="text-xl">🏆</span>
+              <div>
+                <div class="font-bold text-sm text-white">Advanced</div>
+                <div class="text-xs text-gray-500">Experienced athlete or competitor</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 3: Location -->
+        <div class="step" id="step-3">
+          <h2 class="text-3xl font-black text-white mb-1">Where are you located?</h2>
+          <p class="text-gray-500 text-sm mb-8">We'll show you coaches available in your area.</p>
+          <div class="space-y-3">
+            <button class="option-btn w-full rounded-xl p-4 text-left flex items-center gap-3" onclick="selectOption(this, 3)">
+              <svg class="w-4 h-4 text-brand flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+              <span class="font-bold text-sm text-white">Boston, MA</span>
+            </button>
+            <button class="option-btn w-full rounded-xl p-4 text-left flex items-center gap-3" onclick="selectOption(this, 3)">
+              <svg class="w-4 h-4 text-brand flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+              <span class="font-bold text-sm text-white">New York, NY</span>
+            </button>
+            <button class="option-btn w-full rounded-xl p-4 text-left flex items-center gap-3" onclick="selectOption(this, 3)">
+              <svg class="w-4 h-4 text-brand flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+              <span class="font-bold text-sm text-white">New Jersey, NJ</span>
+            </button>
+            <button class="option-btn w-full rounded-xl p-4 text-left flex items-center gap-3" onclick="selectOption(this, 3)">
+              <svg class="w-4 h-4 text-brand flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+              <span class="font-bold text-sm text-white">Rhode Island, RI</span>
+            </button>
+            <button class="option-btn w-full rounded-xl p-4 text-left flex items-center gap-3" onclick="selectOption(this, 3)">
+              <svg class="w-4 h-4 text-brand flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+              <span class="font-bold text-sm text-white">Connecticut, CT</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 4: Schedule -->
+        <div class="step" id="step-4">
+          <h2 class="text-3xl font-black text-white mb-1">When do you prefer to train?</h2>
+          <p class="text-gray-500 text-sm mb-8">Select all that apply.</p>
+          <div class="grid grid-cols-2 gap-3">
+            <button class="option-btn multi rounded-xl p-4 text-left" onclick="toggleMulti(this, 4)">
+              <div class="text-xl mb-2">🌅</div>
+              <div class="font-bold text-sm text-white">Early Morning</div>
+              <div class="text-xs text-gray-500 mt-0.5">Before 9am</div>
+            </button>
+            <button class="option-btn multi rounded-xl p-4 text-left" onclick="toggleMulti(this, 4)">
+              <div class="text-xl mb-2">☀️</div>
+              <div class="font-bold text-sm text-white">Morning</div>
+              <div class="text-xs text-gray-500 mt-0.5">9am – 12pm</div>
+            </button>
+            <button class="option-btn multi rounded-xl p-4 text-left" onclick="toggleMulti(this, 4)">
+              <div class="text-xl mb-2">🕐</div>
+              <div class="font-bold text-sm text-white">Afternoon</div>
+              <div class="text-xs text-gray-500 mt-0.5">12pm – 5pm</div>
+            </button>
+            <button class="option-btn multi rounded-xl p-4 text-left" onclick="toggleMulti(this, 4)">
+              <div class="text-xl mb-2">🌆</div>
+              <div class="font-bold text-sm text-white">Evening</div>
+              <div class="text-xs text-gray-500 mt-0.5">After 5pm</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 5: Sessions per week -->
+        <div class="step" id="step-5">
+          <h2 class="text-3xl font-black text-white mb-1">How often do you want to train?</h2>
+          <p class="text-gray-500 text-sm mb-8">We'll match you with coaches who fit your schedule.</p>
+          <div class="space-y-3">
+            <button class="option-btn w-full rounded-xl p-4 text-left" onclick="selectOption(this, 5)">
+              <div class="font-bold text-sm text-white">1 session per week</div>
+              <div class="text-xs text-gray-500 mt-0.5">Light commitment to get started</div>
+            </button>
+            <button class="option-btn w-full rounded-xl p-4 text-left" onclick="selectOption(this, 5)">
+              <div class="font-bold text-sm text-white">2–3 sessions per week</div>
+              <div class="text-xs text-gray-500 mt-0.5">Most popular — solid, steady progress</div>
+            </button>
+            <button class="option-btn w-full rounded-xl p-4 text-left" onclick="selectOption(this, 5)">
+              <div class="font-bold text-sm text-white">4–5 sessions per week</div>
+              <div class="text-xs text-gray-500 mt-0.5">High intensity, serious results</div>
+            </button>
+            <button class="option-btn w-full rounded-xl p-4 text-left" onclick="selectOption(this, 5)">
+              <div class="font-bold text-sm text-white">I'm flexible</div>
+              <div class="text-xs text-gray-500 mt-0.5">Show me all available coaches</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 6: Gender preference -->
+        <div class="step" id="step-6">
+          <h2 class="text-3xl font-black text-white mb-1">Do you have a coach preference?</h2>
+          <p class="text-gray-500 text-sm mb-8">Totally optional — skip if you don't mind.</p>
+          <div class="space-y-3">
+            <button class="option-btn w-full rounded-xl p-4 text-left" onclick="selectOption(this, 6)">
+              <div class="font-bold text-sm text-white">Male coach</div>
+            </button>
+            <button class="option-btn w-full rounded-xl p-4 text-left" onclick="selectOption(this, 6)">
+              <div class="font-bold text-sm text-white">Female coach</div>
+            </button>
+            <button class="option-btn w-full rounded-xl p-4 text-left" onclick="selectOption(this, 6)">
+              <div class="font-bold text-sm text-white">No preference</div>
+              <div class="text-xs text-gray-500 mt-0.5">Show me the best match regardless</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 7: Contact -->
+        <div class="step" id="step-7">
+          <h2 class="text-3xl font-black text-white mb-1">Almost there.</h2>
+          <p class="text-gray-500 text-sm mb-8">We'll send your personalised coach recommendations within minutes.</p>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 uppercase tracking-widest mb-2">Full Name</label>
+              <input type="text" placeholder="Jane Smith" class="w-full bg-[#141414] border border-[#2a2a2a] focus:border-brand text-white placeholder-gray-600 rounded-xl px-4 py-3.5 text-sm outline-none transition-colors"/>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 uppercase tracking-widest mb-2">Email Address</label>
+              <input type="email" placeholder="jane@example.com" class="w-full bg-[#141414] border border-[#2a2a2a] focus:border-brand text-white placeholder-gray-600 rounded-xl px-4 py-3.5 text-sm outline-none transition-colors"/>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 uppercase tracking-widest mb-2">Phone (optional)</label>
+              <input type="tel" placeholder="+1 (555) 000-0000" class="w-full bg-[#141414] border border-[#2a2a2a] focus:border-brand text-white placeholder-gray-600 rounded-xl px-4 py-3.5 text-sm outline-none transition-colors"/>
+            </div>
+            <button onclick="submitQuiz()" class="w-full bg-brand hover:bg-orange-700 text-white py-4 font-black text-sm tracking-wide transition-colors mt-2">
+              Show Me My Coaches →
+            </button>
+            <p class="text-xs text-gray-600 text-center">No spam. No commitments. You're in control.</p>
+          </div>
+        </div>
+
+        <!-- RESULT -->
+        <div class="step" id="step-result">
+          <div class="mb-8">
+            <div class="w-16 h-16 bg-brand/20 flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <h2 class="text-3xl font-black text-white mb-2">Perfect matches found!</h2>
+            <p class="text-gray-500 text-sm">Here are your top trainers. Book your trial 90-min session directly below.</p>
+          </div>
+
+          <!-- Coach cards (dynamic) -->
+          <div id="matched-coaches" class="space-y-4">
+            <!-- populated by JavaScript -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="bg-[#0a0a0a] text-white pt-16 pb-8 border-t border-gray-800">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-10 mb-12">
+        <div class="col-span-2 md:col-span-1">
+          <a href="index.html" class="flex items-center gap-2 mb-4">
+            <img src="assets/images/logo.png" alt="Elite Home Fitness" class="h-10"/>
+            <div class="border-l border-gray-600 pl-2"><div class="text-[8px] text-gray-500">POWERED BY</div><div class="text-brand font-bold text-xs">MONTRA</div></div>
+          </a>
+          <p class="text-gray-500 text-xs leading-relaxed mb-5">Premium in-home personal training.<br>Elite results. Unmatched convenience.</p>
+          <div class="flex gap-3">
+            <a href="#" class="text-gray-500 hover:text-white transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
+            <a href="#" class="text-gray-500 hover:text-white transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+            <a href="#" class="text-gray-500 hover:text-white transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a>
+          </div>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">Company</h4>
+          <ul class="space-y-2.5 text-sm text-gray-400">
+            <li><a href="about.html" class="hover:text-white transition-colors">About Us</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Careers</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Press</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">Support</h4>
+          <ul class="space-y-2.5 text-sm text-gray-400">
+            <li><a href="#" class="hover:text-white transition-colors">FAQ</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Cancellation Policy</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Privacy Policy</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">For Clients</h4>
+          <ul class="space-y-2.5 text-sm text-gray-400">
+            <li><a href="how-it-works.html" class="hover:text-white transition-colors">How It Works</a></li>
+            <li><a href="services.html" class="hover:text-white transition-colors">Training Options</a></li>
+            <li><a href="pricing.html" class="hover:text-white transition-colors">Prices</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Gift Cards</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">For Trainers</h4>
+          <ul class="space-y-2.5 text-sm text-gray-400 mb-6">
+            <li><a href="for-trainers.html" class="hover:text-white transition-colors">Become a Coach</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Trainer Login</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Resources</a></li>
+          </ul>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Download the App</h4>
+          <div class="space-y-2">
+            <a href="#" class="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 rounded-xl px-3 py-2 transition-colors">
+              <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+              <div><div class="text-[10px] text-gray-500 leading-none">Download on the</div><div class="text-xs font-semibold leading-tight">App Store</div></div>
+            </a>
+            <a href="#" class="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 rounded-xl px-3 py-2 transition-colors">
+              <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M3.18 23.76c.3.17.66.19.98.06l.06-.04 11.2-6.47-2.44-2.44-9.8 8.89zm-1.02-20.9c-.1.21-.16.44-.16.69v19.9c0 .25.06.48.16.69l.04.06 11.15-11.15v-.26L2.2 2.8l-.04.06zM20.38 10.9L17.8 9.4l-2.7 2.7 2.7 2.7 2.6-1.51c.74-.43.74-1.13 0-1.56l-.02.07zM4.16.28L15.36 6.75l-2.44 2.44-9.8-8.9.04.01z"/></svg>
+              <div><div class="text-[10px] text-gray-500 leading-none">GET IT ON</div><div class="text-xs font-semibold leading-tight">Google Play</div></div>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="border-t border-gray-800 pt-6 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-gray-600">
+        <span>© 2024 Elite Home Fitness. All rights reserved.</span>
+        <div class="flex gap-4">
+          <a href="#" class="hover:text-gray-400 transition-colors">Terms of Use</a>
+          <a href="#" class="hover:text-gray-400 transition-colors">Privacy Policy</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const TOTAL_STEPS = 7;
+    let currentStep = 1;
+    let trainers = [];
+    let quizAnswers = {
+      goal: null,
+      experience: null,
+      location: null,
+      schedule: [],
+      frequency: null,
+      gender: null
+    };
+
+    // Load trainers on page load
+    async function loadTrainers() {
+      try {
+        const response = await fetch('/data/trainers.json');
+        trainers = await response.json();
+      } catch (error) {
+        console.error('Failed to load trainers:', error);
+        trainers = [];
+      }
+    }
+    loadTrainers();
+
+    function matchTrainers() {
+      // Score each trainer based on matches
+      const scored = trainers.map(trainer => {
+        let score = 0;
+        
+        // Match specialty (goal)
+        if (quizAnswers.goal && trainer.specialties.includes(quizAnswers.goal)) {
+          score += 10;
+        }
+        
+        // Match experience level
+        if (quizAnswers.experience && trainer.experience.includes(quizAnswers.experience)) {
+          score += 10;
+        }
+        
+        // Match location
+        if (quizAnswers.location && trainer.locations.includes(quizAnswers.location)) {
+          score += 10;
+        }
+        
+        // Match schedule availability
+        if (quizAnswers.schedule.length > 0) {
+          const scheduleMatch = quizAnswers.schedule.some(sched => 
+            trainer.availability.some(avail => 
+              avail.times.some(time => time.includes(sched.split(' • ')[0]) || sched.includes(time.split(':')[0]))
+            )
+          );
+          if (scheduleMatch) score += 5;
+        }
+        
+        return { ...trainer, matchScore: score };
+      });
+      
+      // Sort by score descending and return top matches
+      return scored.sort((a, b) => b.matchScore - a.matchScore).slice(0, 3);
+    }
+
+    function renderMatchedCoaches() {
+      const matched = matchTrainers();
+      const container = document.getElementById('matched-coaches');
+      
+      container.innerHTML = matched.map(coach => `
+        <div class="border border-white/10 rounded-xl overflow-hidden hover:border-brand/50 transition-colors">
+          <div class="flex gap-4 p-4">
+            <div class="w-20 h-20 bg-gradient-to-br from-brand/30 to-brand/10 rounded-lg flex-shrink-0 flex items-center justify-center">
+              <div class="text-xl font-black text-brand">${coach.initials}</div>
+            </div>
+            <div class="flex-1">
+              <div class="font-bold text-white">${coach.name}</div>
+              <div class="text-xs text-gray-500 mb-2">${coach.certification}</div>
+              <div class="text-xs text-gray-400 mb-3">${coach.bio}</div>
+              <div class="text-xs font-semibold text-gray-600 mb-2">Specialties: ${coach.specialties.join(', ')}</div>
+              <div class="text-xs font-semibold text-gray-600 mb-2">Available:</div>
+              <div class="flex gap-2 flex-wrap mb-3">
+                ${coach.availability.slice(0, 3).map(avail => 
+                  avail.times.slice(0, 2).map(time => `
+                    <span class="text-xs bg-white/5 border border-white/10 rounded px-2 py-1 text-gray-300">${avail.date} • ${time}</span>
+                  `).join('')
+                ).join('')}
+              </div>
+              <button onclick="bookCoach('${coach.name}', '${coach.availability[0].date} • ${coach.availability[0].times[0]}')" class="w-full bg-brand hover:bg-orange-700 text-white py-2.5 font-bold text-sm rounded-lg transition-colors">Book Session →</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateAnswerSummary() {
+      document.getElementById('answer-goal').innerHTML = `<div class="text-xs text-gray-500">Goal</div><div class="text-sm font-semibold text-gray-900">${quizAnswers.goal || '—'}</div>`;
+      document.getElementById('answer-exp').innerHTML = `<div class="text-xs text-gray-500">Experience</div><div class="text-sm font-semibold text-gray-900">${quizAnswers.experience || '—'}</div>`;
+      document.getElementById('answer-loc').innerHTML = `<div class="text-xs text-gray-500">Location</div><div class="text-sm font-semibold text-gray-900">${quizAnswers.location || '—'}</div>`;
+      const scheduleDisplay = quizAnswers.schedule.length > 0 ? quizAnswers.schedule.join(', ') : '—';
+      document.getElementById('answer-time').innerHTML = `<div class="text-xs text-gray-500">Schedule</div><div class="text-sm font-semibold text-gray-900">${scheduleDisplay}</div>`;
+      document.getElementById('answer-freq').innerHTML = `<div class="text-xs text-gray-500">Frequency</div><div class="text-sm font-semibold text-gray-900">${quizAnswers.frequency || '—'}</div>`;
+      document.getElementById('answer-gender').innerHTML = `<div class="text-xs text-gray-500">Coach Preference</div><div class="text-sm font-semibold text-gray-900">${quizAnswers.gender || '—'}</div>`;
+    }
+
+    function showStep(n) {
+      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+      const el = document.getElementById(n === 'result' ? 'step-result' : 'step-' + n);
+      if (el) el.classList.add('active');
+
+      // Progress bar
+      const pct = n === 'result' ? 100 : (n / TOTAL_STEPS) * 100;
+      document.getElementById('progress-bar').style.width = pct + '%';
+
+      // Step counter
+      document.getElementById('step-counter').textContent =
+        n === 'result' ? 'Complete!' : 'Step ' + n + ' of ' + TOTAL_STEPS;
+
+      // Back button
+      const backBtn = document.getElementById('back-btn');
+      if (n === 1 || n === 'result') {
+        backBtn.classList.add('hidden');
+      } else {
+        backBtn.classList.remove('hidden');
+      }
+    }
+
+    function nextStep() {
+      if (currentStep < TOTAL_STEPS) {
+        currentStep++;
+        showStep(currentStep);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 1) {
+        currentStep--;
+        showStep(currentStep);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    // Single-select: auto-advance
+    function selectOption(btn, step) {
+      const parent = btn.closest('.step');
+      parent.querySelectorAll('.option-btn:not(.multi)').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      
+      // Store answer
+      const answerText = btn.querySelector('[class*="font-bold"]')?.textContent || '';
+      if (step === 1) quizAnswers.goal = answerText;
+      else if (step === 2) quizAnswers.experience = answerText;
+      else if (step === 3) quizAnswers.location = answerText;
+      else if (step === 5) quizAnswers.frequency = answerText;
+      else if (step === 6) quizAnswers.gender = answerText;
+      updateAnswerSummary();
+      
+      setTimeout(() => nextStep(), 300);
+    }
+
+    // Multi-select: toggle with auto-advance after 500ms
+    function toggleMulti(btn, step) {
+      btn.classList.toggle('selected');
+      
+      // Update schedule answers
+      const step4 = document.getElementById('step-4');
+      quizAnswers.schedule = Array.from(step4.querySelectorAll('.option-btn.multi.selected'))
+        .map(b => b.querySelector('[class*="font-bold"]')?.textContent || '')
+        .filter(t => t);
+      updateAnswerSummary();
+      
+      // Auto-advance if at least one selected
+      if (quizAnswers.schedule.length > 0) {
+        setTimeout(() => nextStep(), 500);
+      }
+    }
+
+    function submitQuiz() {
+      currentStep = 'result';
+      renderMatchedCoaches();
+      showStep('result');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function bookCoach(coachName, timeSlot) {
+      alert(`✓ Session booked with ${coachName}\n${timeSlot}\n\nYou'll receive a confirmation email shortly with meeting details.`);
+    }
+  </script>
+</body>
+</html>

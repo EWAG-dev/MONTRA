@@ -24,7 +24,7 @@
       border-bottom: 2px solid #E85D04;
       padding-bottom: 0.25rem;
     }
-    nav.dark-nav { background-color: #000000 !important; border-color: #1f2937 !important; }
+    nav.dark-nav { background-color: #0f0f0f !important; border-color: #1f2937 !important; }
     nav.dark-nav .text-gray-700 { color: #d1d5db !important; }
     nav.dark-nav .text-gray-900 { color: #ffffff !important; }
     nav.dark-nav .text-gray-400 { color: #9ca3af !important; }
@@ -37,24 +37,36 @@
 
   <!-- NAV -->
   <nav class="dark-nav bg-white border-b border-gray-100 sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto pl-2 pr-6 lg:pl-2 lg:pr-8">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
-        <a href="index.html" class="flex items-center gap-3 flex-shrink-0">
-          <img src="assets/images/logo.png" alt="Elite Home Fitness" class="h-12"/>
-          <div class="border-l border-gray-600 pl-3 leading-tight">
+        <a href="index.html" class="flex items-center gap-2 flex-shrink-0">
+          <div class="w-9 h-9 bg-brand flex items-center justify-center rounded-sm">
+            <span class="text-white font-black text-lg leading-none">E</span>
+          </div>
+          <div class="leading-tight">
+            <div class="text-[10px] font-black tracking-wider text-gray-900 leading-none">ELITE</div>
+            <div class="text-[10px] font-black tracking-wider text-gray-900 leading-none">HOME FITNESS</div>
+          </div>
+          <div class="border-l border-gray-200 pl-2 leading-tight">
             <div class="text-[9px] text-gray-400 leading-none tracking-wide">POWERED BY</div>
             <div class="text-brand font-bold text-sm leading-tight">MONTRA</div>
           </div>
         </a>
         <div class="hidden md:flex items-center gap-7">
-          <a href="find-a-coach.html" class="text-sm font-bold text-brand border-b-2 border-brand pb-0.5">Find a Coach</a>
+          <a href="coaches.html" class="text-sm font-bold text-brand border-b-2 border-brand pb-0.5">Find a Coach</a>
           <a href="how-it-works.html" class="text-sm font-medium text-gray-700 hover:text-brand transition-colors">How It Works</a>
           <a href="services.html" class="text-sm font-medium text-gray-700 hover:text-brand transition-colors">Services</a>
           <a href="pricing.html" class="text-sm font-medium text-gray-700 hover:text-brand transition-colors">Prices</a>
           <a href="for-trainers.html" class="text-sm font-medium text-gray-700 hover:text-brand transition-colors">Become a Trainer</a>
         </div>
         <div class="flex items-center gap-3">
-          <a href="quiz.html" class="bg-brand !text-white rounded-lg px-4 py-2 text-sm font-bold hover:bg-orange-700 transition-colors">Book Now</a>
+          <button class="hidden md:flex items-center gap-1 text-sm font-medium text-gray-700 hover:text-brand transition-colors">
+            <svg class="w-4 h-4 text-brand" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            Boston, MA
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <button class="border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium hover:bg-gray-50 transition-colors">Log In</button>
+          <a href="quiz.html" class="bg-brand text-white rounded-lg px-4 py-2 text-sm font-bold hover:bg-orange-700 transition-colors">Book Now</a>
         </div>
       </div>
     </div>
@@ -64,7 +76,7 @@
   <section class="relative bg-[#0f0f0f] text-white overflow-hidden min-h-[520px]">
     <div class="absolute right-0 top-0 bottom-0 w-1/2">
       <img src="assets/images/coach-hero.png" alt="Coach training client at home" class="w-full h-full object-cover object-center"/>
-      <div class="absolute inset-0 bg-gradient-to-r from-[#0f0f0f] via-[#0f0f0f]/60 to-transparent"></div>
+      <div class="absolute inset-0 bg-gradient-to-r from-[#070707] via-[#070707]/55 to-transparent"></div>
     </div>
     <div class="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-16 lg:py-24">
       <!-- Breadcrumb -->
@@ -81,61 +93,39 @@
 
       <!-- Search bar -->
       <div class="flex gap-3 flex-wrap max-w-2xl">
-        <div class="relative flex-1 min-w-[200px]">
-          <div class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2">
-            <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+        <div class="flex bg-white rounded-lg overflow-hidden flex-1 min-w-[200px]">
+          <div class="flex items-center pl-4">
+            <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
           </div>
-          <select class="appearance-none w-full bg-white text-gray-700 text-sm rounded-lg pl-10 pr-10 py-3 outline-none border-0">
-            <option>Boston, MA</option>
-            <option>New York, NY</option>
-            <option>New Jersey, NJ</option>
-            <option>Rhode Island, RI</option>
-            <option>Connecticut, CT</option>
-          </select>
-          <svg class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          <input type="text" placeholder="Boston, MA" class="flex-1 px-3 py-3 text-gray-800 text-sm outline-none"/>
         </div>
-        <div class="relative">
-          <select class="appearance-none bg-white text-gray-700 text-sm rounded-lg pl-4 pr-10 py-3 outline-none border-0 min-w-[180px]">
-            <option>All Services</option>
-            <option>Personal Training</option>
-            <option>Boxing</option>
-            <option>Yoga</option>
-            <option>Pilates</option>
-            <option>Strength & Conditioning</option>
-            <option>Mobility & Stretch</option>
-            <option>Running Coach</option>
-            <option>Kickboxing</option>
-            <option>Nutrition Coaching</option>
-            <option>Sports-Specific Coaching</option>
-            <option>Weight Loss</option>
-          </select>
-          <svg class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-        </div>
+        <select class="bg-white text-gray-700 text-sm rounded-lg px-4 py-3 outline-none border-0 min-w-[160px]">
+          <option>All Services</option>
+          <option>Personal Training</option>
+          <option>Boxing</option>
+          <option>Yoga</option>
+          <option>Pilates</option>
+          <option>Strength & Conditioning</option>
+          <option>Nutrition Coaching</option>
+        </select>
         <button class="bg-brand hover:bg-orange-700 text-white px-6 py-3 rounded-lg text-sm font-bold transition-colors">Search Coaches</button>
       </div>
 
       <!-- Count + review -->
       <div class="flex items-center justify-between mt-6 max-w-2xl">
-        <p class="text-gray-400 text-sm">100+ certified trainers across MA, RI, NJ, CT & NY</p>
+        <p class="text-gray-400 text-sm">275+ coaches available in Boston, MA</p>
+        <div class="flex items-center gap-2 bg-white/10 rounded-xl px-4 py-2">
+          <div class="flex -space-x-1">
+            <div class="w-6 h-6 rounded-full bg-gray-400 border-2 border-gray-900"></div>
+            <div class="w-6 h-6 rounded-full bg-gray-500 border-2 border-gray-900"></div>
+            <div class="w-6 h-6 rounded-full bg-gray-600 border-2 border-gray-900"></div>
+          </div>
+          <div class="text-yellow-400 text-sm">★★★★★</div>
+          <span class="text-xs text-gray-300">5.0 (2,000+ Reviews)</span>
+        </div>
       </div>
     </div>
   </section>
-
-  <!-- NOT SURE CTA -->
-  <div class="max-w-7xl mx-auto px-6 lg:px-8 pt-8">
-    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-gray-50 rounded-2xl px-6 py-4">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 bg-brand/10 rounded-xl flex items-center justify-center flex-shrink-0">
-          <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        </div>
-        <div>
-          <span class="font-bold text-sm">Not sure who's right for you?</span>
-          <span class="text-gray-500 text-sm ml-2">Answer a few questions and we'll match you with the perfect coach.</span>
-        </div>
-      </div>
-      <a href="quiz.html" class="bg-brand hover:bg-orange-700 text-white px-6 py-2 rounded-xl font-bold text-sm transition-colors flex-shrink-0">Take The Quiz</a>
-    </div>
-  </div>
 
   <!-- MAIN: SIDEBAR + COACHES -->
   <section class="max-w-7xl mx-auto px-6 lg:px-8 py-12">
@@ -374,56 +364,19 @@
     </div>
   </section>
 
-  <!-- PROCESS STRIP -->
-  <section class="bg-[#111] border-t border-gray-800 py-6">
-    <div class="max-w-7xl mx-auto px-6 lg:px-8">
-      <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 bg-brand rounded-lg flex items-center justify-center flex-shrink-0">
-            <span class="text-white font-black text-sm">1</span>
-          </div>
-          <div>
-            <p class="text-white font-bold text-sm leading-tight">Find Your Coach</p>
-            <p class="text-gray-500 text-xs">Browse. Compare. Connect.</p>
-          </div>
+  <!-- NOT SURE CTA -->
+  <section class="bg-gray-50 py-14">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-brand/10 rounded-xl flex items-center justify-center flex-shrink-0">
+          <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
         </div>
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 bg-brand rounded-lg flex items-center justify-center flex-shrink-0">
-            <span class="text-white font-black text-sm">2</span>
-          </div>
-          <div>
-            <p class="text-white font-bold text-sm leading-tight">Book Your Session</p>
-            <p class="text-gray-500 text-xs">Simple. Secure. Seamless.</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 bg-brand rounded-lg flex items-center justify-center flex-shrink-0">
-            <span class="text-white font-black text-sm">3</span>
-          </div>
-          <div>
-            <p class="text-white font-bold text-sm leading-tight">Train &amp; Transform</p>
-            <p class="text-gray-500 text-xs">In-Person or Online.</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 bg-brand rounded-lg flex items-center justify-center flex-shrink-0">
-            <span class="text-white font-black text-sm">4</span>
-          </div>
-          <div>
-            <p class="text-white font-bold text-sm leading-tight">Ongoing Support</p>
-            <p class="text-gray-500 text-xs">We're With You.</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 bg-brand rounded-lg flex items-center justify-center flex-shrink-0">
-            <span class="text-white font-black text-sm">5</span>
-          </div>
-          <div>
-            <p class="text-white font-bold text-sm leading-tight">Protected Experience</p>
-            <p class="text-gray-500 text-xs">Your Goals. Our Guarantee.</p>
-          </div>
+        <div>
+          <h3 class="font-bold text-lg">Not sure who's right for you?</h3>
+          <p class="text-gray-500 text-sm">Answer a few questions and we'll match you with the perfect coach.</p>
         </div>
       </div>
+      <a href="#" class="bg-brand hover:bg-orange-700 text-white px-8 py-3 rounded-xl font-bold text-sm transition-colors flex-shrink-0">Find My Coach</a>
     </div>
   </section>
 
@@ -452,7 +405,7 @@
         <div>
           <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">Company</h4>
           <ul class="space-y-2.5 text-sm text-gray-400">
-            <li><a href="about.html" class="hover:text-white">About Us</a></li>
+            <li><a href="#" class="hover:text-white">About Us</a></li>
             <li><a href="#" class="hover:text-white">Careers</a></li>
             <li><a href="#" class="hover:text-white">Blog</a></li>
             <li><a href="#" class="hover:text-white">Contact</a></li>
@@ -507,18 +460,15 @@
     </div>
   </footer>
   <script>
-    function toggleLocationDropdown() {
-      document.getElementById('location-menu').classList.toggle('hidden');
-    }
-    function selectLocation(name) {
-      document.getElementById('selected-location').textContent = name;
-      document.getElementById('location-menu').classList.add('hidden');
-    }
-    document.addEventListener('click', function(e) {
-      const container = document.getElementById('location-dropdown-container');
-      if (container && !container.contains(e.target)) {
-        document.getElementById('location-menu').classList.add('hidden');
-      }
+    document.addEventListener('DOMContentLoaded', function() {
+      const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+      const navLinks = document.querySelectorAll('a[href$=".html"]');
+      navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (href === currentPage || (currentPage === '' && href === 'index.html')) {
+          link.classList.add('active-nav');
+        }
+      });
     });
   </script>
 </body>

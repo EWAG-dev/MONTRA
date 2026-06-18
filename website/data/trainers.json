@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1,
+    "name": "Marcus Johnson",
+    "initials": "MJ",
+    "specialties": ["Build Muscle", "Athletic Performance", "Strength"],
+    "experience": ["Intermediate", "Advanced"],
+    "locations": ["Boston MA", "New York NY"],
+    "availability": [
+      { "date": "May 15", "times": ["7:00 AM", "6:00 PM"] },
+      { "date": "May 16", "times": ["6:00 PM", "7:30 AM"] },
+      { "date": "May 17", "times": ["7:00 AM", "9:00 AM"] }
+    ],
+    "certification": "NASM Certified",
+    "bio": "Specializes in strength training and athletic performance.",
+    "clientCount": 150
+  },
+  {
+    "id": 2,
+    "name": "Sarah Martinez",
+    "initials": "SM",
+    "specialties": ["Lose Weight", "General Fitness", "Flexibility & Wellness"],
+    "experience": ["Beginner", "Intermediate", "Advanced"],
+    "locations": ["Boston MA", "Rhode Island RI"],
+    "availability": [
+      { "date": "May 14", "times": ["6:00 PM"] },
+      { "date": "May 15", "times": ["10:00 AM", "2:00 PM"] },
+      { "date": "May 18", "times": ["9:00 AM"] }
+    ],
+    "certification": "ACE Certified",
+    "bio": "Holistic approach with proven results in weight loss and wellness.",
+    "clientCount": 180
+  },
+  {
+    "id": 3,
+    "name": "Alex Kim",
+    "initials": "AK",
+    "specialties": ["Flexibility & Wellness", "Mobility", "General Fitness"],
+    "experience": ["Beginner", "Intermediate", "Advanced"],
+    "locations": ["New Jersey NJ", "Connecticut CT"],
+    "availability": [
+      { "date": "May 16", "times": ["10:00 AM", "5:00 PM"] },
+      { "date": "May 17", "times": ["6:00 PM"] },
+      { "date": "May 19", "times": ["7:00 AM", "8:00 AM"] }
+    ],
+    "certification": "ISSA Certified",
+    "bio": "Expert in mobility training and recovery.",
+    "clientCount": 120
+  }
+]

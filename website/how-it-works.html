@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Elite Home Fitness | Powered by MONTRA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'brand': '#E85D04',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .step-connector {
+      flex: 1;
+      border-top: 2px dashed #D1D5DB;
+      margin-top: 2rem;
+    }
+    .coach-card:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.12); transform: translateY(-2px); }
+    .coach-card { transition: all 0.2s ease; }
+    .filter-btn.active { background: #111827; color: white; }
+    .filter-btn:not(.active) { background: #F3F4F6; color: #374151; }
+    .filter-btn:not(.active):hover { background: #E5E7EB; }
+    .active-nav {
+      color: #E85D04 !important;
+      font-weight: 600;
+      border-bottom: 2px solid #E85D04;
+      padding-bottom: 0.25rem;
+    }
+    nav.dark-nav { background-color: #000000 !important; border-color: #1f2937 !important; }
+    nav.dark-nav .text-gray-700 { color: #d1d5db !important; }
+    nav.dark-nav .text-gray-900 { color: #ffffff !important; }
+    nav.dark-nav .text-gray-400 { color: #9ca3af !important; }
+    nav.dark-nav .border-gray-200 { border-color: #374151 !important; }
+    nav.dark-nav .border-gray-300 { border-color: #4b5563 !important; }
+    nav.dark-nav .hover\:bg-gray-50:hover { background-color: #1f2937 !important; color: #ffffff; }
+    nav.dark-nav .active-nav { color: #E85D04 !important; }
+  </style>
+</head>
+<body class="bg-white text-gray-900 antialiased">
+
+  <!-- ========== NAVIGATION ========== -->
+  <nav class="dark-nav bg-white border-b border-gray-100 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto pl-2 pr-6 lg:pl-2 lg:pr-8">
+      <div class="flex items-center justify-between h-16">
+
+        <!-- Logo -->
+        <a href="index.html" class="flex items-center gap-3 flex-shrink-0">
+          <img src="assets/images/logo.png" alt="Elite Home Fitness" class="h-12"/>
+          <div class="border-l border-gray-600 pl-3 leading-tight">
+            <div class="text-[9px] text-gray-400 leading-none tracking-wide">POWERED BY</div>
+            <div class="text-brand font-bold text-sm leading-tight">MONTRA</div>
+          </div>
+        </a>
+
+        <!-- Nav Links -->
+        <div class="hidden md:flex items-center gap-7">
+          <a href="find-a-coach.html" class="text-sm font-medium text-gray-700 hover:text-brand transition-colors">Find a Coach</a>
+          <a href="how-it-works.html" class="active-nav text-sm font-medium text-gray-700 hover:text-brand transition-colors">How It Works</a>
+          <a href="services.html" class="text-sm font-medium text-gray-700 hover:text-brand transition-colors">Services</a>
+          <a href="pricing.html" class="text-sm font-medium text-gray-700 hover:text-brand transition-colors">Prices</a>
+          <a href="for-trainers.html" class="text-sm font-medium text-gray-700 hover:text-brand transition-colors">Become a Trainer</a>
+        </div>
+
+        <!-- Right actions -->
+        <div class="flex items-center gap-3">
+          <a href="quiz.html" class="bg-brand !text-white rounded-lg px-4 py-2 text-sm font-bold hover:bg-orange-700 transition-colors">Book Now</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="bg-[#0a0a0a] text-white pt-24 pb-16 relative overflow-hidden">
+    <div class="absolute inset-0 opacity-10" style="background: radial-gradient(ellipse at 60% 50%, #E85D04 0%, transparent 70%)"></div>
+    <!-- Centered expansive orange glow -->
+    <div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(ellipse 80% 120% at 50% 50%, rgba(232,93,4,0.22) 0%, rgba(232,93,4,0.06) 45%, transparent 70%)"></div>
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 relative flex items-center gap-16">
+
+      <!-- Left: Copy -->
+      <div class="flex-1">
+        <p class="text-brand font-bold text-sm tracking-widest uppercase mb-3">Process</p>
+        <h1 class="text-5xl font-black leading-tight mb-4">From first chat to<br><span class="text-brand">first session.</span></h1>
+        <p class="text-gray-400 text-lg">No gym required. No commute. Just elite training at your door.</p>
+      </div>
+
+      <!-- Right: Trusted By Carousel -->
+      <div class="flex-shrink-0 flex flex-col items-center">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-5">Trusted By</p>
+        <!-- py-4 gives vertical room for the protruding middle card -->
+        <div class="w-[464px] overflow-x-hidden overflow-y-visible py-4">
+          <div id="logo-slider" class="flex gap-4 items-center">
+            <!-- Set 1 (clone) -->
+            <div class="logo-card bg-white rounded-xl flex-shrink-0 flex items-center justify-center px-3 transition-all duration-500" style="width:144px;height:72px;opacity:0.55;"><img src="assets/images/01_raffles.png" alt="" class="max-h-10 max-w-full object-contain"/></div>
+            <div class="logo-card bg-white rounded-xl flex-shrink-0 flex items-center justify-center px-3 transition-all duration-500" style="width:144px;height:72px;opacity:0.55;"><img src="assets/images/02_avalon.png" alt="" class="max-h-10 max-w-full object-contain"/></div>
+            <div class="logo-card bg-white rounded-xl flex-shrink-0 flex items-center justify-center px-3 transition-all duration-500" style="width:144px;height:72px;opacity:0.55;"><img src="assets/images/03_greystar.png" alt="" class="max-h-10 max-w-full object-contain"/></div>
+            <div class="logo-card bg-white rounded-xl flex-shrink-0 flex items-center justify-center px-3 transition-all duration-500" style="width:144px;height:72px;opacity:0.55;"><img src="assets/images/04_bozzuto.png" alt="" class="max-h-10 max-w-full object-contain"/></div>
+            <div class="logo-card bg-white rounded-xl flex-shrink-0 flex items-center justify-center px-3 transition-all duration-500" style="width:144px;height:72px;opacity:0.55;"><img src="assets/images/05_lincoln_property_company.png" alt="" class="max-h-10 max-w-full object-contain"/></div>
+            <div class="logo-card bg-white rounded-xl flex-shrink-0 flex items-center justify-center px-3 transition-all duration-500" style="width:144px;height:72px;opacity:0.55;"><img src="assets/images/06_st_regis_residences.png" alt="" class="max-h-10 max-w-full object-contain"/></div>
+            <div class="logo-card bg-white rounded-xl flex-shrink-0 flex items-center justify-center px-3 transition-all duration-500" style="width:144px;height:72px;opacity:0.55;"><img src="assets/images/07_willow_bridge.png" alt="" class="max-h-10 max-w-full object-contain"/></div>
+            <div class="logo-card bg-white rounded-xl flex-shrink-0 flex items-center justify-center px-3 transition-all duration-500" style="width:144px;height:72px;opacity:0.55;"><img src="assets/images/08_udr.png" alt="" class="max-h-10 max-w-full object-contain"/></div>
+            <!-- Set 2 (real) -->
+            <div class="logo-card bg-white rounded-xl flex-shrink-0 flex items-center justify-center px-3 transition-all duration-500" style="width:144px;height:72px;opacity:0.55;"><img src="assets/images/01_raffles.png" alt="Raffles" class="max-h-10 max-w-full object-contain"/></div>
+            <div class="logo-card bg-white rounded-xl flex-shrink-0 flex items-center justify-center px-3 transition-all duration-500" style="width:144px;height:72px;opacity:0.55;"><img src="assets/images/02_avalon.png" alt="Avalon" class="max-h-10 max-w-full object-contain"/></div>
+            <div class="logo-card bg-white rounded-xl flex-shrink-0 flex items-center justify-center px-3 transition-all duration-500" style="width:144px;height:72px;opacity:0.55;"><img src="assets/images/03_greystar.png" alt="Greystar" class="max-h-10 max-w-full object-contain"/></div>
+            <div class="logo-card bg-white rounded-xl flex-shrink-0 flex items-center justify-center px-3 transition-all duration-500" style="width:144px;height:72px;opacity:0.55;"><img src="assets/images/04_bozzuto.png" alt="Bozzuto" class="max-h-10 max-w-full object-contain"/></div>
+            <div class="logo-card bg-white rounded-xl flex-shrink-0 flex items-center justify-center px-3 transition-all duration-500" style="width:144px;height:72px;opacity:0.55;"><img src="assets/images/05_lincoln_property_company.png" alt="Lincoln Property Company" class="max-h-10 max-w-full object-contain"/></div>
+            <div class="logo-card bg-white rounded-xl flex-shrink-0 flex items-center justify-center px-3 transition-all duration-500" style="width:144px;height:72px;opacity:0.55;"><img src="assets/images/06_st_regis_residences.png" alt="St Regis Residences" class="max-h-10 max-w-full object-contain"/></div>
+            <div class="logo-card bg-white rounded-xl flex-shrink-0 flex items-center justify-center px-3 transition-all duration-500" style="width:144px;height:72px;opacity:0.55;"><img src="assets/images/07_willow_bridge.png" alt="Willow Bridge" class="max-h-10 max-w-full object-contain"/></div>
+            <div class="logo-card bg-white rounded-xl flex-shrink-0 flex items-center justify-center px-3 transition-all duration-500" style="width:144px;height:72px;opacity:0.55;"><img src="assets/images/08_udr.png" alt="UDR" class="max-h-10 max-w-full object-contain"/></div>
+            <!-- Set 3 (clone) -->
+            <div class="logo-card bg-white rounded-xl flex-shrink-0 flex items-center justify-center px-3 transition-all duration-500" style="width:144px;height:72px;opacity:0.55;"><img src="assets/images/01_raffles.png" alt="" class="max-h-10 max-w-full object-contain"/></div>
+            <div class="logo-card bg-white rounded-xl flex-shrink-0 flex items-center justify-center px-3 transition-all duration-500" style="width:144px;height:72px;opacity:0.55;"><img src="assets/images/02_avalon.png" alt="" class="max-h-10 max-w-full object-contain"/></div>
+            <div class="logo-card bg-white rounded-xl flex-shrink-0 flex items-center justify-center px-3 transition-all duration-500" style="width:144px;height:72px;opacity:0.55;"><img src="assets/images/03_greystar.png" alt="" class="max-h-10 max-w-full object-contain"/></div>
+            <div class="logo-card bg-white rounded-xl flex-shrink-0 flex items-center justify-center px-3 transition-all duration-500" style="width:144px;height:72px;opacity:0.55;"><img src="assets/images/04_bozzuto.png" alt="" class="max-h-10 max-w-full object-contain"/></div>
+            <div class="logo-card bg-white rounded-xl flex-shrink-0 flex items-center justify-center px-3 transition-all duration-500" style="width:144px;height:72px;opacity:0.55;"><img src="assets/images/05_lincoln_property_company.png" alt="" class="max-h-10 max-w-full object-contain"/></div>
+            <div class="logo-card bg-white rounded-xl flex-shrink-0 flex items-center justify-center px-3 transition-all duration-500" style="width:144px;height:72px;opacity:0.55;"><img src="assets/images/06_st_regis_residences.png" alt="" class="max-h-10 max-w-full object-contain"/></div>
+            <div class="logo-card bg-white rounded-xl flex-shrink-0 flex items-center justify-center px-3 transition-all duration-500" style="width:144px;height:72px;opacity:0.55;"><img src="assets/images/07_willow_bridge.png" alt="" class="max-h-10 max-w-full object-contain"/></div>
+            <div class="logo-card bg-white rounded-xl flex-shrink-0 flex items-center justify-center px-3 transition-all duration-500" style="width:144px;height:72px;opacity:0.55;"><img src="assets/images/08_udr.png" alt="" class="max-h-10 max-w-full object-contain"/></div>
+          </div>
+        </div>
+        <!-- Arrows centered -->
+        <div class="flex items-center gap-3 mt-4">
+          <button onclick="slideLogos(-1)" class="w-9 h-9 rounded-full border border-white/20 hover:border-white/50 flex items-center justify-center transition-colors">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <button onclick="slideLogos(1)" class="w-9 h-9 rounded-full border border-white/20 hover:border-white/50 flex items-center justify-center transition-colors">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Steps -->
+  <section class="py-20 bg-white">
+    <div class="max-w-4xl mx-auto px-6 lg:px-8">
+      <div class="flex flex-col gap-0">
+
+        <!-- Step 1 -->
+        <div class="flex gap-8 pb-14 relative">
+          <div class="flex flex-col items-center">
+            <div class="w-14 h-14 rounded-xl bg-brand flex items-center justify-center flex-shrink-0 z-10">
+              <span class="text-white font-black text-lg">01</span>
+            </div>
+            <div class="w-px flex-1 mt-3 bg-gradient-to-b from-brand/60 to-brand/10"></div>
+          </div>
+          <div class="pt-3">
+            <h2 class="text-2xl font-black text-gray-900 mb-2">Tell Us What You Need</h2>
+            <p class="text-gray-500 leading-relaxed mb-4 max-w-lg">Start with a quick conversation. Tell us your fitness goals, preferred training style, location, and availability. The more you share, the better your match will be.</p>
+            <ul class="grid grid-cols-2 gap-2">
+              <li class="flex items-center gap-2 text-gray-500 text-sm"><span class="w-1.5 h-1.5 rounded-full bg-brand flex-shrink-0"></span>Share your goals</li>
+              <li class="flex items-center gap-2 text-gray-500 text-sm"><span class="w-1.5 h-1.5 rounded-full bg-brand flex-shrink-0"></span>Training style & preferences</li>
+              <li class="flex items-center gap-2 text-gray-500 text-sm"><span class="w-1.5 h-1.5 rounded-full bg-brand flex-shrink-0"></span>Your location</li>
+              <li class="flex items-center gap-2 text-gray-500 text-sm"><span class="w-1.5 h-1.5 rounded-full bg-brand flex-shrink-0"></span>Your availability</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="flex gap-8 pb-14 relative">
+          <div class="flex flex-col items-center">
+            <div class="w-14 h-14 rounded-xl bg-brand flex items-center justify-center flex-shrink-0 z-10">
+              <span class="text-white font-black text-lg">02</span>
+            </div>
+            <div class="w-px flex-1 mt-3 bg-gradient-to-b from-brand/60 to-brand/10"></div>
+          </div>
+          <div class="pt-3">
+            <h2 class="text-2xl font-black text-gray-900 mb-2">We Match You</h2>
+            <p class="text-gray-500 leading-relaxed mb-4 max-w-lg">We hand-pick the right certified trainer for you based on your goals, location, and schedule. No searching, no guesswork — we do the work so you don't have to.</p>
+            <ul class="grid grid-cols-2 gap-2">
+              <li class="flex items-center gap-2 text-gray-500 text-sm"><span class="w-1.5 h-1.5 rounded-full bg-brand flex-shrink-0"></span>Personally matched by our team</li>
+              <li class="flex items-center gap-2 text-gray-500 text-sm"><span class="w-1.5 h-1.5 rounded-full bg-brand flex-shrink-0"></span>Certified & background-checked</li>
+              <li class="flex items-center gap-2 text-gray-500 text-sm"><span class="w-1.5 h-1.5 rounded-full bg-brand flex-shrink-0"></span>Matched to your specialty</li>
+              <li class="flex items-center gap-2 text-gray-500 text-sm"><span class="w-1.5 h-1.5 rounded-full bg-brand flex-shrink-0"></span>Local to your area</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="flex gap-8 pb-14 relative">
+          <div class="flex flex-col items-center">
+            <div class="w-14 h-14 rounded-xl bg-brand flex items-center justify-center flex-shrink-0 z-10">
+              <span class="text-white font-black text-lg">03</span>
+            </div>
+            <div class="w-px flex-1 mt-3 bg-gradient-to-b from-brand/60 to-brand/10"></div>
+          </div>
+          <div class="pt-3">
+            <h2 class="text-2xl font-black text-gray-900 mb-2">Trial Session <span class="text-brand text-xl font-bold">&mdash; 90 Min</span></h2>
+            <p class="text-gray-500 leading-relaxed mb-4 max-w-lg">Your matched trainer comes to you for a 90-minute trial session. It's a real workout — a chance for you both to connect, experience the coaching style, and see if it's the right fit.</p>
+            <ul class="grid grid-cols-2 gap-2">
+              <li class="flex items-center gap-2 text-gray-500 text-sm"><span class="w-1.5 h-1.5 rounded-full bg-brand flex-shrink-0"></span>Trainer comes to your location</li>
+              <li class="flex items-center gap-2 text-gray-500 text-sm"><span class="w-1.5 h-1.5 rounded-full bg-brand flex-shrink-0"></span>Full 90-minute session</li>
+              <li class="flex items-center gap-2 text-gray-500 text-sm"><span class="w-1.5 h-1.5 rounded-full bg-brand flex-shrink-0"></span>No commitment required</li>
+              <li class="flex items-center gap-2 text-gray-500 text-sm"><span class="w-1.5 h-1.5 rounded-full bg-brand flex-shrink-0"></span>Real training, real results</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="flex gap-8">
+          <div class="flex flex-col items-center">
+            <div class="w-14 h-14 rounded-xl bg-brand flex items-center justify-center flex-shrink-0">
+              <span class="text-white font-black text-lg">04</span>
+            </div>
+          </div>
+          <div class="pt-3">
+            <h2 class="text-2xl font-black text-gray-900 mb-2">Build Your Schedule</h2>
+            <p class="text-gray-500 leading-relaxed mb-4 max-w-lg">If you love the trial, we lock in a recurring schedule that works for both you and your trainer. From there, your coach handles everything — programming, progression, and accountability.</p>
+            <ul class="grid grid-cols-2 gap-2">
+              <li class="flex items-center gap-2 text-gray-500 text-sm"><span class="w-1.5 h-1.5 rounded-full bg-brand flex-shrink-0"></span>Recurring schedule set up</li>
+              <li class="flex items-center gap-2 text-gray-500 text-sm"><span class="w-1.5 h-1.5 rounded-full bg-brand flex-shrink-0"></span>Personalized training plan</li>
+              <li class="flex items-center gap-2 text-gray-500 text-sm"><span class="w-1.5 h-1.5 rounded-full bg-brand flex-shrink-0"></span>Progress tracked in app</li>
+              <li class="flex items-center gap-2 text-gray-500 text-sm"><span class="w-1.5 h-1.5 rounded-full bg-brand flex-shrink-0"></span>Ongoing program adjustments</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- CTA -->
+      <div class="flex gap-3 mt-16 pt-16 border-t border-gray-100">
+        <a href="find-a-coach.html" class="bg-brand text-white rounded-lg px-6 py-3 font-bold hover:bg-orange-700 transition-colors">Find My Coach</a>
+        <a href="services.html" class="border border-gray-300 rounded-lg px-6 py-3 font-medium hover:bg-gray-50 transition-colors">Explore Services</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW MONTRA WORKS -->
+  <section class="bg-[#0a0a0a] text-white py-20">
+    <div class="max-w-4xl mx-auto px-6 lg:px-8">
+      <div class="text-center mb-10">
+        <h2 class="text-3xl font-black mb-3">How <span class="text-brand">MONTRA</span> Works</h2>
+        <p class="text-gray-400">A trusted platform. Independent coaches. Your best results.</p>
+      </div>
+      <div class="border border-gray-700 rounded-2xl overflow-hidden">
+        <!-- Platform features -->
+        <div class="p-8 border-b border-gray-700">
+          <div class="text-center mb-8">
+            <p class="text-2xl font-black tracking-widest text-white">MONTRA</p>
+            <p class="text-gray-400 text-sm mt-1">The Home Fitness Platform</p>
+          </div>
+          <div class="grid grid-cols-3 md:grid-cols-5 gap-6 text-center">
+            <div class="flex flex-col items-center gap-3">
+              <div class="w-12 h-12 border border-gray-600 rounded-xl flex items-center justify-center">
+                <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+              </div>
+              <p class="text-sm text-gray-300 font-medium">Trust &amp; Safety</p>
+            </div>
+            <div class="flex flex-col items-center gap-3">
+              <div class="w-12 h-12 border border-gray-600 rounded-xl flex items-center justify-center">
+                <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+              </div>
+              <p class="text-sm text-gray-300 font-medium">Secure Payments</p>
+            </div>
+            <div class="flex flex-col items-center gap-3">
+              <div class="w-12 h-12 border border-gray-600 rounded-xl flex items-center justify-center">
+                <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
+              </div>
+              <p class="text-sm text-gray-300 font-medium">Smart Scheduling</p>
+            </div>
+            <div class="flex flex-col items-center gap-3">
+              <div class="w-12 h-12 border border-gray-600 rounded-xl flex items-center justify-center">
+                <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg>
+              </div>
+              <p class="text-sm text-gray-300 font-medium">Support</p>
+            </div>
+            <div class="flex flex-col items-center gap-3">
+              <div class="w-12 h-12 border border-gray-600 rounded-xl flex items-center justify-center">
+                <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
+              </div>
+              <p class="text-sm text-gray-300 font-medium">Analytics</p>
+            </div>
+          </div>
+        </div>
+        <!-- Value prop + business features -->
+        <div class="bg-[#111] p-8">
+          <p class="text-center text-brand font-bold text-lg mb-7">We own the customer relationship. You deliver the experience.</p>
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-5 text-center">
+            <div class="flex flex-col items-center gap-2">
+              <div class="w-10 h-10 bg-brand/10 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+              </div>
+              <p class="text-xs text-gray-300 font-medium leading-tight">Client Retention</p>
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <div class="w-10 h-10 bg-brand/10 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+              </div>
+              <p class="text-xs text-gray-300 font-medium leading-tight">Coach Matching &amp; Reassignment</p>
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <div class="w-10 h-10 bg-brand/10 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
+              </div>
+              <p class="text-xs text-gray-300 font-medium leading-tight">Membership Management</p>
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <div class="w-10 h-10 bg-brand/10 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"/></svg>
+              </div>
+              <p class="text-xs text-gray-300 font-medium leading-tight">Quality Standards</p>
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <div class="w-10 h-10 bg-brand/10 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/></svg>
+              </div>
+              <p class="text-xs text-gray-300 font-medium leading-tight">Platform Growth</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Trust strip -->
+  <section class="bg-gray-50 py-14 border-t border-gray-100">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div class="flex flex-col items-center text-center gap-3">
+          <div class="w-12 h-12 rounded-xl bg-gray-900 flex items-center justify-center text-brand">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div><p class="font-bold text-gray-900 text-sm">Background Checked</p><p class="text-gray-500 text-xs mt-0.5">Every coach, every time</p></div>
+        </div>
+        <div class="flex flex-col items-center text-center gap-3">
+          <div class="w-12 h-12 rounded-xl bg-gray-900 flex items-center justify-center text-brand">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+          </div>
+          <div><p class="font-bold text-gray-900 text-sm">Certified & Insured</p><p class="text-gray-500 text-xs mt-0.5">NASM, ACE, and more</p></div>
+        </div>
+        <div class="flex flex-col items-center text-center gap-3">
+          <div class="w-12 h-12 rounded-xl bg-gray-900 flex items-center justify-center text-brand">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <div><p class="font-bold text-gray-900 text-sm">5-Star Rated</p><p class="text-gray-500 text-xs mt-0.5">Verified client reviews only</p></div>
+        </div>
+        <div class="flex flex-col items-center text-center gap-3">
+          <div class="w-12 h-12 rounded-xl bg-gray-900 flex items-center justify-center text-brand">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          </div>
+          <div><p class="font-bold text-gray-900 text-sm">Top 1% of Trainers</p><p class="text-gray-500 text-xs mt-0.5">We don't hire just anyone</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="bg-[#0a0a0a] text-white pt-16 pb-8 border-t border-gray-800">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-10 mb-12">
+
+        <!-- Brand -->
+        <div class="col-span-2 md:col-span-1">
+          <a href="#" class="flex items-center gap-2 mb-4">
+            <img src="assets/images/logo.png" alt="Elite Home Fitness" class="h-10"/>
+            <div class="border-l border-gray-600 pl-2">
+              <div class="text-[8px] text-gray-500">POWERED BY</div>
+              <div class="text-brand font-bold text-xs">MONTRA</div>
+            </div>
+          </a>
+          <p class="text-gray-500 text-xs leading-relaxed mb-5">
+            Premium in-home personal training.<br>Elite results. Unmatched convenience.
+          </p>
+          <div class="flex gap-3">
+            <!-- Instagram -->
+            <a href="#" class="text-gray-500 hover:text-white transition-colors">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+              </svg>
+            </a>
+            <!-- Facebook -->
+            <a href="#" class="text-gray-500 hover:text-white transition-colors">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+              </svg>
+            </a>
+            <!-- TikTok -->
+            <a href="#" class="text-gray-500 hover:text-white transition-colors">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- COMPANY -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">Company</h4>
+          <ul class="space-y-2.5 text-sm text-gray-400">
+            <li><a href="about.html" class="hover:text-white transition-colors">About Us</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Careers</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Press</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Contact</a></li>
+          </ul>
+        </div>
+
+        <!-- SUPPORT -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">Support</h4>
+          <ul class="space-y-2.5 text-sm text-gray-400">
+            <li><a href="#" class="hover:text-white transition-colors">FAQ</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Cancellation Policy</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Privacy Policy</a></li>
+          </ul>
+        </div>
+
+        <!-- FOR CLIENTS -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">For Clients</h4>
+          <ul class="space-y-2.5 text-sm text-gray-400">
+            <li><a href="#" class="hover:text-white transition-colors">How It Works</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Training Options</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Prices</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Gift Cards</a></li>
+          </ul>
+        </div>
+
+        <!-- FOR TRAINERS + App -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">For Trainers</h4>
+          <ul class="space-y-2.5 text-sm text-gray-400 mb-6">
+            <li><a href="#" class="hover:text-white transition-colors">Become a Coach</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Trainer Login</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Resources</a></li>
+          </ul>
+
+          <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Download the App</h4>
+          <div class="space-y-2">
+            <a href="#" class="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 rounded-xl px-3 py-2 transition-colors">
+              <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+              </svg>
+              <div>
+                <div class="text-[10px] text-gray-500 leading-none">Download on the</div>
+                <div class="text-xs font-semibold leading-tight">App Store</div>
+              </div>
+            </a>
+            <a href="#" class="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 rounded-xl px-3 py-2 transition-colors">
+              <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3.18 23.76c.3.17.66.19.98.06l.06-.04 11.2-6.47-2.44-2.44-9.8 8.89zm-1.02-20.9c-.1.21-.16.44-.16.69v19.9c0 .25.06.48.16.69l.04.06 11.15-11.15v-.26L2.2 2.8l-.04.06zM20.38 10.9L17.8 9.4l-2.7 2.7 2.7 2.7 2.6-1.51c.74-.43.74-1.13 0-1.56l-.02.07zM4.16.28L15.36 6.75l-2.44 2.44-9.8-8.9.04.01z"/>
+              </svg>
+              <div>
+                <div class="text-[10px] text-gray-500 leading-none">GET IT ON</div>
+                <div class="text-xs font-semibold leading-tight">Google Play</div>
+              </div>
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bottom bar -->
+      <div class="border-t border-gray-800 pt-6 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-gray-600">
+        <span>© 2024 Elite Home Fitness. All rights reserved.</span>
+        <div class="flex gap-4">
+          <a href="#" class="hover:text-gray-400 transition-colors">Terms of Use</a>
+          <a href="#" class="hover:text-gray-400 transition-colors">Privacy Policy</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Filter tab interactivity
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+  </script>
+
+  <script>
+    // Triple-clone infinite carousel: [clone0-7 | real0-7 | clone0-7] = 24 cards
+    // Start at logoIndex=8 so real card 0 is left, card 1 is center, card 2 is right
+    const CARD_STEP = 160; // 144px card + 16px gap
+    let logoIndex = 8;
+    let isAnimating = false;
+
+    function getSlider() { return document.getElementById('logo-slider'); }
+
+    function setPosition(animated) {
+      const s = getSlider();
+      s.style.transition = animated ? 'transform 500ms ease-in-out' : 'none';
+      s.style.transform = 'translateX(-' + (logoIndex * CARD_STEP) + 'px)';
+    }
+
+    function updateLogoStyles() {
+      const cards = document.querySelectorAll('.logo-card');
+      const center = logoIndex + 1;
+      cards.forEach((card, i) => {
+        if (i === center) {
+          card.style.transform = 'translateY(-10px) scale(1.12)';
+          card.style.opacity = '1';
+          card.style.boxShadow = '0 8px 28px rgba(232,93,4,0.25)';
+          card.style.zIndex = '10';
+        } else {
+          card.style.transform = 'translateY(0) scale(1)';
+          card.style.opacity = '0.55';
+          card.style.boxShadow = 'none';
+          card.style.zIndex = '1';
+        }
+      });
+    }
+
+    function slideLogos(dir) {
+      if (isAnimating) return;
+      isAnimating = true;
+      logoIndex += dir;
+      setPosition(true);
+      updateLogoStyles();
+      // After animation, silently teleport back into the middle set if needed
+      setTimeout(() => {
+        if (logoIndex <= 2)       { logoIndex += 8; setPosition(false); }
+        else if (logoIndex >= 14) { logoIndex -= 8; setPosition(false); }
+        // Re-enable transitions after teleport repaint
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          getSlider().style.transition = 'transform 500ms ease-in-out';
+          isAnimating = false;
+        }));
+      }, 520);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      setPosition(false);
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        getSlider().style.transition = 'transform 500ms ease-in-out';
+      }));
+      updateLogoStyles();
+    });
+  </script>
+  <script>
+    function toggleLocationDropdown() {
+      document.getElementById('location-menu').classList.toggle('hidden');
+    }
+    function selectLocation(name) {
+      document.getElementById('selected-location').textContent = name;
+      document.getElementById('location-menu').classList.add('hidden');
+    }
+    document.addEventListener('click', function(e) {
+      const container = document.getElementById('location-dropdown-container');
+      if (container && !container.contains(e.target)) {
+        document.getElementById('location-menu').classList.add('hidden');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trainer Onboarding | Elite Home Fitness</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { 'brand': '#E85D04' },
+          fontFamily: { sans: ['Inter', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-[#0a0a0a] text-white antialiased">
+
+  <!-- NAV -->
+  <nav class="bg-black border-b border-gray-800 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto pl-2 pr-6 lg:pl-2 lg:pr-8">
+      <div class="flex items-center justify-between h-16">
+        <a href="index.html" class="flex items-center gap-3 flex-shrink-0">
+          <img src="assets/images/logo.png" alt="Elite Home Fitness" class="h-12"/>
+          <div class="border-l border-gray-600 pl-3 leading-tight">
+            <div class="text-[9px] text-gray-400 leading-none tracking-wide">POWERED BY</div>
+            <div class="text-brand font-bold text-sm leading-tight">MONTRA</div>
+          </div>
+        </a>
+        <div class="flex items-center gap-3">
+          <a href="for-trainers.html" class="text-sm font-medium text-gray-400 hover:text-white transition-colors">Back to Trainers</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <div class="min-h-[calc(100vh-64px)] bg-gradient-to-br from-[#0a0a0a] to-[#0f0f0f] flex flex-col items-center justify-center px-4 py-12">
+    <div class="w-full max-w-2xl">
+
+      <!-- STEP 1: Passcode -->
+      <div id="passcode-screen" class="text-center">
+        <div class="mb-8">
+          <h1 class="text-4xl font-black text-white mb-3">Trainer Onboarding</h1>
+          <p class="text-gray-400">Complete your profile to get matched with clients</p>
+        </div>
+
+        <div class="bg-white/5 border border-white/10 rounded-2xl p-8 mb-6">
+          <div class="space-y-4 mb-6">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Email</label>
+              <input type="email" id="passcode-input" placeholder="your@email.com" class="w-full bg-[#141414] border border-white/10 focus:border-brand text-white placeholder-gray-600 rounded-xl px-4 py-3.5 text-sm outline-none transition-colors"/>
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Password</label>
+              <input type="password" id="password-input" placeholder="Enter your password" class="w-full bg-[#141414] border border-white/10 focus:border-brand text-white placeholder-gray-600 rounded-xl px-4 py-3.5 text-sm outline-none transition-colors"/>
+            </div>
+          </div>
+          <p id="login-error" class="text-red-400 text-sm mb-4 min-h-[1.25rem]"></p>
+          <button id="login-btn" onclick="verifyPasscode()" class="w-full bg-brand hover:bg-orange-700 text-white py-3.5 font-bold text-sm tracking-wide transition-colors rounded-xl">Continue</button>
+          <p class="text-xs text-gray-600 mt-4">Only authorized trainers can create a profile.</p>
+        </div>
+      </div>
+
+      <!-- STEP 2: Profile Form -->
+      <div id="profile-screen" class="hidden">
+        <div class="mb-8 text-center">
+          <h1 class="text-4xl font-black text-white mb-2">Create Your Profile</h1>
+          <p class="text-gray-400 text-sm">Clients will see this when browsing trainers</p>
+        </div>
+
+        <form id="trainer-form" class="bg-white/5 border border-white/10 rounded-2xl p-8 space-y-6">
+          
+          <!-- Full Name -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Full Name *</label>
+            <input type="text" id="trainer-name" placeholder="Marcus Johnson" required class="w-full bg-[#141414] border border-white/10 focus:border-brand text-white placeholder-gray-600 rounded-xl px-4 py-3.5 text-sm outline-none transition-colors"/>
+          </div>
+
+          <!-- Certification -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Certification *</label>
+            <input type="text" id="trainer-cert" placeholder="e.g., NASM Certified, ACE Certified" required class="w-full bg-[#141414] border border-white/10 focus:border-brand text-white placeholder-gray-600 rounded-xl px-4 py-3.5 text-sm outline-none transition-colors"/>
+          </div>
+
+          <!-- Bio -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Bio (short) *</label>
+            <textarea id="trainer-bio" placeholder="Tell clients what you specialize in and why they should work with you..." required maxlength="150" class="w-full bg-[#141414] border border-white/10 focus:border-brand text-white placeholder-gray-600 rounded-xl px-4 py-3.5 text-sm outline-none transition-colors h-20 resize-none"></textarea>
+            <p class="text-xs text-gray-600 mt-1"><span id="bio-count">0</span>/150 characters</p>
+          </div>
+
+          <!-- Profile Photo -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Profile Photo</label>
+            <div class="flex items-center gap-4">
+              <div id="photo-preview" class="w-16 h-16 rounded-full bg-[#141414] border border-white/10 flex items-center justify-center text-gray-500 text-xs">No Photo</div>
+              <div class="flex-1">
+                <input type="file" id="trainer-photo" accept="image/*" class="w-full bg-[#141414] border border-white/10 focus:border-brand text-white file:bg-brand file:text-white file:border-0 file:rounded-md file:px-3 file:py-1.5 file:mr-3 rounded-xl px-3 py-2.5 text-sm outline-none transition-colors"/>
+                <p class="text-xs text-gray-600 mt-2">JPG or PNG recommended, up to 2MB.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Specialties -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Specialties (select at least 1) *</label>
+            <div class="grid grid-cols-2 gap-3">
+              <label class="flex items-center gap-2 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer">
+                <input type="checkbox" class="specialty-checkbox" value="Build Muscle"/>
+                <span class="text-sm">Build Muscle</span>
+              </label>
+              <label class="flex items-center gap-2 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer">
+                <input type="checkbox" class="specialty-checkbox" value="Lose Weight"/>
+                <span class="text-sm">Lose Weight</span>
+              </label>
+              <label class="flex items-center gap-2 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer">
+                <input type="checkbox" class="specialty-checkbox" value="Flexibility & Wellness"/>
+                <span class="text-sm">Flexibility & Wellness</span>
+              </label>
+              <label class="flex items-center gap-2 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer">
+                <input type="checkbox" class="specialty-checkbox" value="Athletic Performance"/>
+                <span class="text-sm">Athletic Performance</span>
+              </label>
+              <label class="flex items-center gap-2 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer">
+                <input type="checkbox" class="specialty-checkbox" value="Combat Sports"/>
+                <span class="text-sm">Combat Sports</span>
+              </label>
+              <label class="flex items-center gap-2 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer">
+                <input type="checkbox" class="specialty-checkbox" value="General Fitness"/>
+                <span class="text-sm">General Fitness</span>
+              </label>
+              <label class="flex items-center gap-2 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer col-span-2">
+                <input type="checkbox" class="specialty-checkbox" value="Mobility"/>
+                <span class="text-sm">Mobility</span>
+              </label>
+              <label class="flex items-center gap-2 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer">
+                <input type="checkbox" class="specialty-checkbox" value="Personal Training"/>
+                <span class="text-sm">Personal Training</span>
+              </label>
+              <label class="flex items-center gap-2 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer">
+                <input type="checkbox" class="specialty-checkbox" value="Boxing"/>
+                <span class="text-sm">Boxing</span>
+              </label>
+              <label class="flex items-center gap-2 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer">
+                <input type="checkbox" class="specialty-checkbox" value="Yoga"/>
+                <span class="text-sm">Yoga</span>
+              </label>
+              <label class="flex items-center gap-2 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer">
+                <input type="checkbox" class="specialty-checkbox" value="Pilates"/>
+                <span class="text-sm">Pilates</span>
+              </label>
+              <label class="flex items-center gap-2 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer">
+                <input type="checkbox" class="specialty-checkbox" value="Strength & Conditioning"/>
+                <span class="text-sm">Strength & Conditioning</span>
+              </label>
+              <label class="flex items-center gap-2 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer">
+                <input type="checkbox" class="specialty-checkbox" value="Mobility & Stretch"/>
+                <span class="text-sm">Mobility & Stretch</span>
+              </label>
+              <label class="flex items-center gap-2 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer">
+                <input type="checkbox" class="specialty-checkbox" value="Running Coach"/>
+                <span class="text-sm">Running Coach</span>
+              </label>
+              <label class="flex items-center gap-2 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer">
+                <input type="checkbox" class="specialty-checkbox" value="Kickboxing"/>
+                <span class="text-sm">Kickboxing</span>
+              </label>
+              <label class="flex items-center gap-2 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer">
+                <input type="checkbox" class="specialty-checkbox" value="Nutrition Coaching"/>
+                <span class="text-sm">Nutrition Coaching</span>
+              </label>
+              <label class="flex items-center gap-2 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer">
+                <input type="checkbox" class="specialty-checkbox" value="Sports-Specific Coaching"/>
+                <span class="text-sm">Sports-Specific Coaching</span>
+              </label>
+              <label class="flex items-center gap-2 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer">
+                <input type="checkbox" class="specialty-checkbox" value="Weight Loss"/>
+                <span class="text-sm">Weight Loss</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Experience Levels -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Experience Levels You Train (select at least 1) *</label>
+            <div class="space-y-2">
+              <label class="flex items-center gap-3 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer">
+                <input type="checkbox" class="experience-checkbox" value="Beginner"/>
+                <span class="text-sm">Beginner</span>
+              </label>
+              <label class="flex items-center gap-3 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer">
+                <input type="checkbox" class="experience-checkbox" value="Intermediate"/>
+                <span class="text-sm">Intermediate</span>
+              </label>
+              <label class="flex items-center gap-3 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer">
+                <input type="checkbox" class="experience-checkbox" value="Advanced"/>
+                <span class="text-sm">Advanced</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Locations -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Service Locations (select at least 1) *</label>
+            <div class="space-y-2">
+              <label class="flex items-center gap-3 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer">
+                <input type="checkbox" class="location-checkbox" value="Boston MA"/>
+                <span class="text-sm">Boston, MA</span>
+              </label>
+              <label class="flex items-center gap-3 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer">
+                <input type="checkbox" class="location-checkbox" value="New York NY"/>
+                <span class="text-sm">New York, NY</span>
+              </label>
+              <label class="flex items-center gap-3 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer">
+                <input type="checkbox" class="location-checkbox" value="New Jersey NJ"/>
+                <span class="text-sm">New Jersey, NJ</span>
+              </label>
+              <label class="flex items-center gap-3 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer">
+                <input type="checkbox" class="location-checkbox" value="Rhode Island RI"/>
+                <span class="text-sm">Rhode Island, RI</span>
+              </label>
+              <label class="flex items-center gap-3 p-3 border border-white/10 rounded-lg hover:border-brand/50 hover:bg-white/5 transition-colors cursor-pointer">
+                <input type="checkbox" class="location-checkbox" value="Connecticut CT"/>
+                <span class="text-sm">Connecticut, CT</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Availability (simplified) -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Available Time Slots (add 3) *</label>
+            <div class="space-y-2">
+              <div class="flex gap-2">
+                <input type="date" class="availability-date flex-1 bg-[#141414] border border-white/10 focus:border-brand text-white rounded-lg px-3 py-2.5 text-sm outline-none transition-colors"/>
+                <input type="time" class="availability-time flex-1 bg-[#141414] border border-white/10 focus:border-brand text-white rounded-lg px-3 py-2.5 text-sm outline-none transition-colors"/>
+              </div>
+              <div class="flex gap-2">
+                <input type="date" class="availability-date flex-1 bg-[#141414] border border-white/10 focus:border-brand text-white rounded-lg px-3 py-2.5 text-sm outline-none transition-colors"/>
+                <input type="time" class="availability-time flex-1 bg-[#141414] border border-white/10 focus:border-brand text-white rounded-lg px-3 py-2.5 text-sm outline-none transition-colors"/>
+              </div>
+              <div class="flex gap-2">
+                <input type="date" class="availability-date flex-1 bg-[#141414] border border-white/10 focus:border-brand text-white rounded-lg px-3 py-2.5 text-sm outline-none transition-colors"/>
+                <input type="time" class="availability-time flex-1 bg-[#141414] border border-white/10 focus:border-brand text-white rounded-lg px-3 py-2.5 text-sm outline-none transition-colors"/>
+              </div>
+            </div>
+            <p class="text-xs text-gray-600 mt-2">Add your first 3 available time slots. You can update these anytime.</p>
+          </div>
+
+          <!-- Submit -->
+          <button type="submit" class="w-full bg-brand hover:bg-orange-700 text-white py-3.5 font-bold text-sm tracking-wide transition-colors rounded-xl mt-8">Submit Profile</button>
+          <button type="button" onclick="goBackToPasscode()" class="w-full border border-white/10 hover:border-white/30 text-white py-3.5 font-bold text-sm tracking-wide transition-colors rounded-xl">Cancel</button>
+        </form>
+      </div>
+
+      <!-- STEP 3: Success -->
+      <div id="success-screen" class="hidden text-center">
+        <div class="bg-white/5 border border-white/10 rounded-2xl p-8">
+          <div class="w-16 h-16 bg-brand/20 flex items-center justify-center mx-auto mb-6 rounded-full">
+            <svg class="w-8 h-8 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          </div>
+          <h2 class="text-3xl font-black text-white mb-2">Profile Saved!</h2>
+          <p class="text-gray-400 mb-6">Your coach profile is live and visible to clients in the MONTRA app and on the EHF website.</p>
+
+          <div class="space-y-3">
+            <button onclick="goBackToPasscode()" class="w-full border border-white/10 hover:border-white/30 text-white py-3.5 font-bold text-sm tracking-wide transition-colors rounded-xl">Update Profile</button>
+            <a href="for-trainers.html" class="block border border-white/10 hover:border-white/30 text-white py-3.5 font-bold text-sm tracking-wide transition-colors rounded-xl">Back to Trainers Page</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="bg-black text-white pt-16 pb-8 border-t border-gray-800 mt-16">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <div class="text-center text-xs text-gray-600">
+        <p>© 2024 Elite Home Fitness. Trainer Onboarding Portal.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js';
+    import { getAuth, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js';
+
+    const BACKEND_URL = 'https://montra-production.up.railway.app';
+    let idToken = '';
+    let currentProfileData = null;
+    let selectedPhotoDataUrl = '';
+    let firebaseAuth = null;
+
+    // Initialize Firebase from backend config
+    async function initFirebase() {
+      const res = await fetch(`${BACKEND_URL}/api/firebase/client-config`);
+      const config = await res.json();
+      const app = initializeApp(config, 'ehf-onboarding');
+      firebaseAuth = getAuth(app);
+    }
+    initFirebase().catch(console.error);
+
+    function toDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Failed reading image file.'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function setPhotoPreview(dataUrl) {
+      const preview = document.getElementById('photo-preview');
+      if (dataUrl) {
+        preview.innerHTML = `<img src="${dataUrl}" alt="Profile preview" class="w-full h-full object-cover rounded-full"/>`;
+        return;
+      }
+      preview.textContent = 'No Photo';
+    }
+
+    async function verifyPasscode() {
+      const email = document.getElementById('passcode-input').value.trim();
+      const password = document.getElementById('password-input').value;
+      const errorEl = document.getElementById('login-error');
+      const btn = document.getElementById('login-btn');
+
+      if (!email || !password) {
+        errorEl.textContent = 'Please enter your email and password.';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Signing in…';
+      errorEl.textContent = '';
+
+      try {
+        const cred = await signInWithEmailAndPassword(firebaseAuth, email, password);
+        idToken = await cred.user.getIdToken();
+
+        // Load existing profile from backend
+        const profileRes = await fetch(`${BACKEND_URL}/api/trainers/my-profile`, {
+          headers: { Authorization: `Bearer ${idToken}` },
+        });
+
+        if (profileRes.ok) {
+          const { trainer } = await profileRes.json();
+          prefillForm(trainer);
+        }
+
+        document.getElementById('passcode-screen').classList.add('hidden');
+        document.getElementById('profile-screen').classList.remove('hidden');
+      } catch (err) {
+        errorEl.textContent = err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password'
+          ? 'Incorrect email or password.'
+          : 'Login failed. Please try again.';
+        btn.disabled = false;
+        btn.textContent = 'Continue';
+      }
+    }
+
+    function prefillForm(trainer) {
+      document.getElementById('trainer-name').value = trainer.name || '';
+      document.getElementById('trainer-cert').value = trainer.certification || '';
+      document.getElementById('trainer-bio').value = trainer.bio || '';
+      document.getElementById('bio-count').textContent = (trainer.bio || '').length;
+      trainer.specialties?.forEach(spec => {
+        const cb = document.querySelector(`.specialty-checkbox[value="${spec}"]`);
+        if (cb) cb.checked = true;
+      });
+      trainer.locations?.forEach(loc => {
+        const cb = document.querySelector(`.location-checkbox[value="${loc}"]`);
+        if (cb) cb.checked = true;
+      });
+    }
+
+    function goBackToPasscode() {
+      document.getElementById('profile-screen').classList.add('hidden');
+      document.getElementById('success-screen').classList.add('hidden');
+      document.getElementById('passcode-screen').classList.remove('hidden');
+      document.getElementById('passcode-input').value = '';
+      document.getElementById('password-input').value = '';
+      document.getElementById('trainer-form').reset();
+      selectedPhotoDataUrl = '';
+      setPhotoPreview('');
+      idToken = '';
+    }
+
+    // Expose to onclick handlers
+    window.verifyPasscode = verifyPasscode;
+    window.goBackToPasscode = goBackToPasscode;
+
+    // Bio character counter
+    document.getElementById('trainer-bio')?.addEventListener('input', (e) => {
+      document.getElementById('bio-count').textContent = e.target.value.length;
+    });
+
+    document.getElementById('trainer-photo')?.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) {
+        selectedPhotoDataUrl = '';
+        setPhotoPreview('');
+        return;
+      }
+      if (!file.type.startsWith('image/')) {
+        alert('Please upload a valid image file.');
+        e.target.value = '';
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Please upload an image under 2MB.');
+        e.target.value = '';
+        return;
+      }
+
+      try {
+        selectedPhotoDataUrl = await toDataUrl(file);
+        setPhotoPreview(selectedPhotoDataUrl);
+      } catch {
+        alert('Unable to read that image. Please try another file.');
+      }
+    });
+
+    // Form submission — saves to backend
+    document.getElementById('trainer-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const specialties = Array.from(document.querySelectorAll('.specialty-checkbox:checked')).map(c => c.value);
+      const experience  = Array.from(document.querySelectorAll('.experience-checkbox:checked')).map(c => c.value);
+      const locations   = Array.from(document.querySelectorAll('.location-checkbox:checked')).map(c => c.value);
+
+      if (specialties.length === 0 || experience.length === 0 || locations.length === 0) {
+        alert('Please select at least one option for Specialties, Experience Levels, and Service Locations.');
+        return;
+      }
+
+      const submitBtn = document.querySelector('#trainer-form [type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving…';
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/trainers/apply`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({
+            name:          document.getElementById('trainer-name').value.trim(),
+            certification: document.getElementById('trainer-cert').value.trim(),
+            bio:           document.getElementById('trainer-bio').value.trim(),
+            specialties,
+            locations,
+            availabilityDays: experience,
+          }),
+        });
+
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'Failed to save profile.');
+
+        currentProfileData = result.trainer;
+        document.getElementById('profile-screen').classList.add('hidden');
+        document.getElementById('success-screen').classList.remove('hidden');
+      } catch (err) {
+        alert(err.message || 'Something went wrong. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Profile';
+      }
+    });
+
+    // Enter key on login fields
+    document.getElementById('passcode-input')?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') verifyPasscode();
+    });
+    document.getElementById('password-input')?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') verifyPasscode();
+    });
+  </script>
+</body>
+</html>
