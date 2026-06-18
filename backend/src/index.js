@@ -144,6 +144,23 @@ app.post("/api/trainers/apply", requireFirebaseAuth, async (req, res) => {
   }
 });
 
+// DEV ONLY — remove after testing
+app.post("/api/dev/create-test-trainer", async (req, res) => {
+  if (process.env.NODE_ENV === "production" && !process.env.ALLOW_DEV_ENDPOINTS) {
+    return res.status(404).json({ error: "Not found" });
+  }
+  try {
+    const { email, password, name } = req.body;
+    const auth = getAuth();
+    const user = await auth.createUser({ email, password, displayName: name });
+    const { db } = await import("./firebase.js");
+    await db.collection("trainers").add({ email, name, status: "approved", accountUid: user.uid });
+    res.json({ ok: true, uid: user.uid });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
 app.post("/api/trainers/provision", async (req, res) => {
   try {
     const { firstName, lastName, email, phone, specialties, certifications, coachingStyle, experienceYears } = req.body || {};
