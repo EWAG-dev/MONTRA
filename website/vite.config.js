@@ -13,6 +13,8 @@ module.exports = defineConfig({
         pricing: path.resolve(__dirname, 'pricing.html'),
         services: path.resolve(__dirname, 'services.html'),
         quiz: path.resolve(__dirname, 'quiz.html'),
+        trainerApply: path.resolve(__dirname, 'trainer-apply.html'),
+        trainerOnboarding: path.resolve(__dirname, 'trainer-onboarding.html'),
       },
     },
   },
