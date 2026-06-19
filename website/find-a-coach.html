@@ -646,14 +646,14 @@
 
     function createEmptyCard() {
       return `
-        <div class="col-span-full flex flex-col items-center justify-center py-20 text-center">
-          <div class="w-16 h-16 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center mb-4">
-            <svg class="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+        <div class="col-span-full flex flex-col items-center justify-center py-24 text-center">
+          <div class="w-20 h-20 rounded-full bg-brand/10 flex items-center justify-center mb-6">
+            <svg class="w-9 h-9 text-brand" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"/>
             </svg>
           </div>
-          <p class="font-bold text-gray-400 text-base mb-1">No trainers added yet</p>
-          <p class="text-gray-400 text-sm">Trainers will appear here once they've been added.</p>
+          <p class="font-black text-white text-xl mb-2">Coaches Coming Soon</p>
+          <p class="text-gray-400 text-sm max-w-xs">We're onboarding certified trainers in your area. Check back soon or <a href="quiz.html" class="text-brand hover:underline">take the quiz</a> to get matched.</p>
         </div>
       `;
     }

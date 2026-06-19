@@ -425,6 +425,10 @@
         const cb = document.querySelector(`.location-checkbox[value="${loc}"]`);
         if (cb) cb.checked = true;
       });
+      trainer.experienceLevels?.forEach(lvl => {
+        const cb = document.querySelector(`.experience-checkbox[value="${lvl}"]`);
+        if (cb) cb.checked = true;
+      });
       trainer.availabilityDays?.forEach(day => {
         const cb = document.querySelector(`.availability-day[value="${day}"]`);
         if (cb) cb.checked = true;
@@ -520,6 +524,7 @@
             bio:           document.getElementById('trainer-bio').value.trim(),
             specialties,
             locations,
+            experienceLevels: Array.from(document.querySelectorAll('.experience-checkbox:checked')).map(c => c.value),
             availabilityDays: Array.from(document.querySelectorAll('.availability-day:checked')).map(c => c.value),
             workingHours: { start: document.getElementById('hours-start').value, end: document.getElementById('hours-end').value },
           }),
