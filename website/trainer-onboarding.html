@@ -436,6 +436,18 @@
         if (start && trainer.workingHours.start) start.value = trainer.workingHours.start;
         if (end && trainer.workingHours.end) end.value = trainer.workingHours.end;
       }
+      // Restore legacy experience data stored in availabilityDays before new field existed
+      if (!trainer.experienceLevels?.length && trainer.availabilityDays?.length) {
+        const expValues = ['Beginner', 'Intermediate', 'Advanced'];
+        trainer.availabilityDays.filter(v => expValues.includes(v)).forEach(lvl => {
+          const cb = document.querySelector(`.experience-checkbox[value="${lvl}"]`);
+          if (cb) cb.checked = true;
+        });
+      }
+      if (trainer.photoDataUrl) {
+        selectedPhotoDataUrl = trainer.photoDataUrl;
+        setPhotoPreview(trainer.photoDataUrl);
+      }
     }
 
     function goBackToPasscode() {
@@ -521,6 +533,7 @@
             bio:           document.getElementById('trainer-bio').value.trim(),
             specialties,
             locations,
+            photoDataUrl:  selectedPhotoDataUrl || '',
             experienceLevels: Array.from(document.querySelectorAll('.experience-checkbox:checked')).map(c => c.value),
             availabilityDays: Array.from(document.querySelectorAll('.availability-day:checked')).map(c => c.value),
             workingHours: { start: document.getElementById('hours-start').value, end: document.getElementById('hours-end').value },

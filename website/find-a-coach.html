@@ -797,13 +797,6 @@
       'Connecticut CT':  { lat: 41.6032, lng: -73.0877, label: 'Hartford, CT' }
     };
 
-    const POPULAR_COACHES_GEO = [
-      { id: 'MJ', name: 'Marcus Johnson', locations: ['Boston MA', 'New York NY'] },
-      { id: 'SM', name: 'Sarah Martinez', locations: ['Boston MA', 'Rhode Island RI'] },
-      { id: 'AK', name: 'Alex Kim',       locations: ['New Jersey NJ', 'Connecticut CT'] },
-      { id: 'LD', name: 'Luis Demo',      locations: ['Boston MA'] }
-    ];
-
     function haversine(lat1, lng1, lat2, lng2) {
       const R = 3958.8;
       const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -862,7 +855,6 @@
             input.value = cityName || '';
             input.placeholder = 'Enter your location';
           }
-          updatePopularDistances(lat, lng);
           maybeShowNearestBanner();
         },
         () => {
