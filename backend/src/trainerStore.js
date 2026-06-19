@@ -137,72 +137,110 @@ export function evaluateTrainerApplication(input) {
   const strengths = [];
   const concerns = [];
 
+  // Certification — required (25 pts)
+  const recognizedCerts = ["nasm", "ace", "nsca", "issa", "acsm", "nesta", "afaa", "nafc", "acsm", "nfpt"];
   if (trainer.certification) {
-    score += 25;
-    strengths.push(`Certified: ${trainer.certification}`);
+    const certLower = trainer.certification.toLowerCase();
+    const isRecognized = recognizedCerts.some((c) => certLower.includes(c));
+    score += isRecognized ? 25 : 15;
+    strengths.push(isRecognized ? `Recognized certification: ${trainer.certification}` : `Certification on file: ${trainer.certification}`);
+    if (!isRecognized) concerns.push("Certification not from a widely recognized body (NASM, ACE, NSCA, ISSA, ACSM)");
   } else {
-    concerns.push("Missing certification");
+    concerns.push("No certification provided — required to join");
   }
 
-  if (trainer.specialties.length >= 2) {
+  // Profile photo (10 pts)
+  if (trainer.photoDataUrl) {
+    score += 10;
+    strengths.push("Profile photo uploaded");
+  } else {
+    concerns.push("No profile photo — clients are much less likely to select a trainer without one");
+  }
+
+  // Bio quality (up to 15 pts)
+  if (trainer.bio.length >= 120) {
+    score += 15;
+    strengths.push("Detailed, compelling bio");
+  } else if (trainer.bio.length >= 60) {
+    score += 8;
+    concerns.push("Bio is short — aim for 120+ characters describing your style and results");
+  } else {
+    concerns.push("Bio is missing or too brief — this is what clients read first");
+  }
+
+  // Specialties (18 pts)
+  if (trainer.specialties.length >= 3) {
     score += 18;
     strengths.push(`${trainer.specialties.length} specialties listed`);
-  } else {
-    concerns.push("Add at least 2 specialties");
-  }
-
-  if (trainer.locations.length >= 1) {
+  } else if (trainer.specialties.length >= 2) {
     score += 12;
-    strengths.push(`${trainer.locations.length} service location${trainer.locations.length > 1 ? "s" : ""}`);
-  } else {
-    concerns.push("Add at least 1 service location");
-  }
-
-  if (trainer.availabilityDays.length >= 3) {
-    score += 10;
-    strengths.push("Availability covers 3+ days");
-  } else {
-    concerns.push("Add more availability days");
-  }
-
-  if (trainer.bio.length >= 80) {
-    score += 12;
-    strengths.push("Detailed bio provided");
-  } else {
-    concerns.push("Bio should explain training style in more detail");
-  }
-
-  if (trainer.experienceYears >= 3) {
-    score += 12;
-    strengths.push(`${trainer.experienceYears} years experience`);
-  } else if (trainer.experienceYears > 0) {
-    score += 6;
-    strengths.push(`${trainer.experienceYears} years experience`);
-  } else {
-    concerns.push("Experience years missing");
-  }
-
-  if (trainer.email) {
+    strengths.push(`${trainer.specialties.length} specialties listed`);
+    concerns.push("Add a 3rd specialty to improve match rate");
+  } else if (trainer.specialties.length === 1) {
     score += 5;
+    concerns.push("Only 1 specialty — add more to appear in more client matches");
   } else {
-    concerns.push("Email missing");
+    concerns.push("No specialties selected — required for client matching");
   }
 
-  if (trainer.phone) {
-    score += 3;
+  // Service locations (12 pts)
+  if (trainer.locations.length >= 2) {
+    score += 12;
+    strengths.push(`${trainer.locations.length} service locations`);
+  } else if (trainer.locations.length === 1) {
+    score += 7;
+    strengths.push("Service location listed");
+    concerns.push("Add a second service location to reach more clients");
+  } else {
+    concerns.push("No service locations — clients can't match without a location");
   }
 
+  // Availability days (10 pts)
+  if (trainer.availabilityDays.length >= 4) {
+    score += 10;
+    strengths.push(`Available ${trainer.availabilityDays.length} days/week`);
+  } else if (trainer.availabilityDays.length >= 2) {
+    score += 5;
+    strengths.push("Availability days set");
+    concerns.push("Trainers with 4+ available days get significantly more matches");
+  } else {
+    concerns.push("Set your weekly availability so clients know when you're bookable");
+  }
+
+  // Working hours (5 pts)
+  if (trainer.workingHours?.start && trainer.workingHours?.end) {
+    score += 5;
+    strengths.push(`Working hours: ${trainer.workingHours.start} – ${trainer.workingHours.end}`);
+  } else {
+    concerns.push("Set your working hours start and end times");
+  }
+
+  // Experience levels (5 pts)
+  if (trainer.experienceLevels?.length >= 1) {
+    score += 5;
+    strengths.push(`Trains ${trainer.experienceLevels.join(", ")} clients`);
+  } else {
+    concerns.push("Select which experience levels you train (Beginner / Intermediate / Advanced)");
+  }
+
+  // Contact info (5 pts)
+  if (trainer.email) score += 3;
+  else concerns.push("Email missing");
+  if (trainer.phone) score += 2;
+
+  // Social proof — only if meaningful (up to 10 pts)
   if (trainer.rating >= 4.8 && trainer.reviewCount >= 10) {
-    score += 8;
-    strengths.push("Strong social proof");
+    score += 10;
+    strengths.push(`${trainer.rating}★ across ${trainer.reviewCount} reviews`);
+  } else if (trainer.rating >= 4.5 && trainer.reviewCount >= 5) {
+    score += 5;
+    strengths.push(`${trainer.rating}★ across ${trainer.reviewCount} reviews`);
   }
 
-  let recommendation = "hold";
-  if (score >= 70) {
-    recommendation = "strong_yes";
-  } else if (score >= 50) {
-    recommendation = "review";
-  }
+  let recommendation;
+  if (score >= 70) recommendation = "strong_yes";
+  else if (score >= 50) recommendation = "review";
+  else recommendation = "hold";
 
   return {
     score,
@@ -211,10 +249,10 @@ export function evaluateTrainerApplication(input) {
     concerns,
     summary:
       recommendation === "strong_yes"
-        ? "Strong trainer applicant with enough signal to approve quickly."
+        ? "Strong applicant — meets all key criteria for approval."
         : recommendation === "review"
-          ? "Promising applicant, but a human review should check the missing details."
-          : "Not ready for approval yet. The profile needs more proof and coverage.",
+          ? "Promising applicant. A quick human review of the missing details is recommended."
+          : "Profile needs more work before approval. See concerns for guidance.",
   };
 }
 

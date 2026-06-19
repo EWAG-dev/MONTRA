@@ -45,6 +45,60 @@ app.use(
 
 initFirebaseAdmin();
 
+// ── Email helpers ─────────────────────────────────────────────────────────────
+
+async function sendEmail(to, subject, html) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.log(`[Email skipped — set RESEND_API_KEY] To: ${to} | ${subject}`);
+    return;
+  }
+  const from = process.env.FROM_EMAIL || "MONTRA <noreply@montrafit.com>";
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ from, to: [to], subject, html }),
+  });
+  if (!res.ok) throw new Error(`Resend error: ${await res.text()}`);
+}
+
+function approvalEmailHtml(name, resetLink) {
+  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+<div style="max-width:560px;margin:0 auto;padding:48px 24px">
+  <p style="color:#FF6820;font-size:11px;font-weight:700;letter-spacing:2px;margin:0 0 32px">MONTRA</p>
+  <h1 style="color:#fff;font-size:28px;font-weight:900;margin:0 0 12px">You're approved.</h1>
+  <p style="color:#999;font-size:15px;margin:0 0 32px">Welcome to the Elite Home Fitness trainer network.</p>
+  <p style="font-size:15px;line-height:1.7;color:#ccc">Hi ${name},<br><br>
+  Congratulations — your application has been approved and you are now part of the MONTRA trainer network.<br><br>
+  Click below to set your password and complete your trainer profile. Once your profile is live you will start receiving client match requests in the MONTRA app.</p>
+  <a href="${resetLink}" style="display:inline-block;background:#FF6820;color:#000;font-size:15px;font-weight:700;padding:16px 32px;border-radius:12px;text-decoration:none;margin:32px 0">Set Password &amp; Complete Profile &rarr;</a>
+  <p style="color:#666;font-size:13px;line-height:1.6">After setting your password you will be taken to your trainer profile page. Then download the MONTRA app and sign in with your email and new password.</p>
+  <hr style="border:none;border-top:1px solid #222;margin:40px 0">
+  <p style="color:#555;font-size:11px">MONTRA &middot; Powered by Elite Home Fitness</p>
+</div></body></html>`;
+}
+
+function rejectionEmailHtml(name, concerns = []) {
+  const concernsBlock = concerns.length
+    ? `<div style="background:#151515;border-radius:10px;padding:20px;margin:24px 0;border:1px solid #222">
+         <p style="color:#999;font-size:12px;font-weight:600;letter-spacing:1px;margin:0 0 12px">AREAS TO STRENGTHEN</p>
+         <ul style="margin:0;padding-left:18px;color:#bbb;font-size:14px;line-height:1.8">${concerns.map(c => `<li>${c}</li>`).join("")}</ul>
+       </div>`
+    : "";
+  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+<div style="max-width:560px;margin:0 auto;padding:48px 24px">
+  <p style="color:#FF6820;font-size:11px;font-weight:700;letter-spacing:2px;margin:0 0 32px">MONTRA</p>
+  <h1 style="color:#fff;font-size:24px;font-weight:900;margin:0 0 24px">Thank you for applying</h1>
+  <p style="font-size:15px;line-height:1.7;color:#ccc">Hi ${name},<br><br>
+  Thank you for your interest in joining MONTRA. After carefully reviewing your application, we are unable to move forward at this time.<br><br>
+  We genuinely appreciate the effort you put in, and we encourage you to strengthen your profile and reapply in the future.</p>
+  ${concernsBlock}
+  <p style="color:#777;font-size:14px;line-height:1.6">We wish you the very best and hope to work with you down the road.</p>
+  <hr style="border:none;border-top:1px solid #222;margin:40px 0">
+  <p style="color:#555;font-size:11px">MONTRA &middot; Powered by Elite Home Fitness</p>
+</div></body></html>`;
+}
+
 app.get("/", (_req, res) => {
   res.status(200).json({ ok: true, service: "montra-backend" });
 });
@@ -359,7 +413,7 @@ app.post("/api/admin/trainers/:id/approve", requireFirebaseAuth, requireAdmin, a
     return;
   }
 
-  // Create Firebase Auth account and send password setup email if not yet provisioned
+  // Provision Firebase Auth account if not yet created
   if (!trainer.accountUid && trainer.email) {
     try {
       const tempPassword = randomBytes(16).toString("base64url");
@@ -370,31 +424,47 @@ app.post("/api/admin/trainers/:id/approve", requireFirebaseAuth, requireAdmin, a
       });
       await updateTrainer(trainer.id, { accountUid: authUser.uid });
       trainer.accountUid = authUser.uid;
-
-      const webApiKey = process.env.FIREBASE_WEB_API_KEY;
-      if (webApiKey) {
-        await fetch(
-          `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${webApiKey}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ requestType: "PASSWORD_RESET", email: trainer.email }),
-          }
-        );
-      }
     } catch (authError) {
-      if (authError.code !== "auth/email-already-exists") {
+      if (authError.code === "auth/email-already-exists") {
+        try {
+          const existing = await getAuth().getUserByEmail(trainer.email);
+          await updateTrainer(trainer.id, { accountUid: existing.uid });
+          trainer.accountUid = existing.uid;
+        } catch (e) {
+          console.error("Failed to resolve existing auth user:", e.message);
+        }
+      } else {
         console.error("Failed to provision trainer auth account:", authError.message);
       }
     }
   }
 
-  // Ensure trainer role claim is set so iOS routes to TrainerTabView
+  // Set trainer role claim so iOS routes to TrainerTabView
   if (trainer.accountUid) {
     try {
       await getAuth().setCustomUserClaims(trainer.accountUid, { role: "trainer" });
     } catch (claimError) {
       console.error("Failed to set trainer custom claim:", claimError.message);
+    }
+  }
+
+  // Send approval email with password-reset + onboarding link
+  if (trainer.email) {
+    try {
+      const onboardingUrl = `${process.env.WEBSITE_URL || "https://montra-27532.web.app"}/trainer-onboarding.html`;
+      const resetLink = await getAuth().generatePasswordResetLink(trainer.email, { url: onboardingUrl });
+      await sendEmail(trainer.email, "You're approved — welcome to MONTRA!", approvalEmailHtml(trainer.name, resetLink));
+    } catch (emailError) {
+      console.error("Failed to send approval email:", emailError.message);
+      // Fallback: Firebase generic password reset
+      const webApiKey = process.env.FIREBASE_WEB_API_KEY;
+      if (webApiKey) {
+        await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${webApiKey}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ requestType: "PASSWORD_RESET", email: trainer.email }),
+        }).catch(() => {});
+      }
     }
   }
 
@@ -406,6 +476,11 @@ app.post("/api/admin/trainers/:id/reject", requireFirebaseAuth, requireAdmin, as
   if (!trainer) {
     res.status(404).json({ error: "Trainer not found" });
     return;
+  }
+  if (trainer.email) {
+    const evaluation = evaluateTrainerApplication(trainer);
+    sendEmail(trainer.email, "Your MONTRA trainer application", rejectionEmailHtml(trainer.name, evaluation.concerns))
+      .catch((e) => console.error("Failed to send rejection email:", e.message));
   }
   res.status(200).json({ trainer });
 });
