@@ -46,6 +46,8 @@ struct RootView: View {
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("onboarding.completed") private var onboardingCompleted = false
     @AppStorage("onboarding.preAuthActive") private var preAuthOnboardingActive = false
+    @AppStorage("trainer.agreementSigned") private var trainerAgreementSigned = false
+    @AppStorage("trainer.orientationCompleted") private var trainerOrientationCompleted = false
     @AppStorage("app.liveDataConnected") private var liveDataConnected = false
     @State private var splashDone = false
     @State private var hasRunConnectivityCheck = false
@@ -59,7 +61,13 @@ struct RootView: View {
             } else if auth.user == nil && auth.demoRole == nil {
                 LoginView()
             } else if auth.userRole == .trainer || auth.demoRole == .trainer {
-                TrainerTabView()
+                if !trainerAgreementSigned {
+                    TrainerAgreementView()
+                } else if !trainerOrientationCompleted {
+                    TrainerOrientationView()
+                } else {
+                    TrainerTabView()
+                }
             } else if !onboardingCompleted {
                 OnboardingQuizView()
             } else {

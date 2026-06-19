@@ -1,8 +1,8 @@
 import SwiftUI
 
-// MARK: - Trainer Model (placeholder — swap with Firestore later)
+// MARK: - Trainer Model
 
-struct OnboardingTrainer: Identifiable {
+struct OnboardingTrainer: Identifiable, Decodable {
     let id: String
     let name: String
     let initials: String
@@ -12,6 +12,7 @@ struct OnboardingTrainer: Identifiable {
     let locations: [String]
     let gender: String
     let accentHex: String
+    var photoDataUrl: String = ""
 }
 
 extension OnboardingTrainer {
@@ -43,8 +44,9 @@ extension OnboardingTrainer {
               locations: ["Rhode Island, RI", "Connecticut, CT"], gender: "Male", accentHex: "#F59E0B"),
     ]
 
-    static func matched(goal: String, location: String, genderPref: String) -> [OnboardingTrainer] {
-        let pool = all.filter { t in
+    /// Filter a pool of trainers by quiz answers. Falls back to the full pool if nothing matches.
+    static func filter(_ pool: [OnboardingTrainer], goal: String, location: String, genderPref: String) -> [OnboardingTrainer] {
+        let matched = pool.filter { t in
             let goalMatch     = t.specialties.contains(goal) || goal.isEmpty
             let locationMatch = t.locations.contains(location) || location.isEmpty
             let genderMatch: Bool = {
@@ -56,7 +58,7 @@ extension OnboardingTrainer {
             }()
             return goalMatch && locationMatch && genderMatch
         }
-        return pool.isEmpty ? all : pool
+        return matched.isEmpty ? pool : matched
     }
 }
 
@@ -90,7 +92,7 @@ struct OnboardingQuizView: View {
     @AppStorage("quiz.requestedTrainerName") private var requestedTrainerName = ""
     @AppStorage("quiz.matchChecklistShown")  private var matchChecklistShown = false
 
-    @State private var step = 1
+    @AppStorage("quiz.step") private var step = 1
     @State private var forward = true
     @State private var selectedSchedule: Set<String> = []
     @State private var firstName = ""
@@ -112,15 +114,17 @@ struct OnboardingQuizView: View {
     @State private var accountConfirmPassword = ""
     @State private var accountLoading = false
     @State private var accountError: String? = nil
+    @State private var showClientTerms = false
     @State private var walkthroughPage = 0
     @State private var showMatchChecklist = false
     @State private var checklistCompletedCount = 0
     @State private var checklistRunning = false
+    @State private var fetchedTrainers: [OnboardingTrainer]? = nil
 
-    private let quizSteps = 13
-    private let resultsStep = 14
-    private let confirmationStepIndex = 15
-    private let walkthroughStepIndex = 16
+    private let quizSteps = 6
+    private let resultsStep = 8
+    private let confirmationStepIndex = 9
+    private let walkthroughStepIndex = 10
     private var matchChecklistPhases: [(title: String, subtitle: String)] {
         [
             ("Saving your quiz answers", "Goal, schedule, location, and preferences"),
@@ -154,7 +158,7 @@ struct OnboardingQuizView: View {
                         Spacer()
                         HStack(spacing: 12) {
                             if step <= quizSteps {
-                                Text("13 STEPS")
+                                Text("\(quizSteps) STEPS")
                                     .font(.system(size: 11, weight: .black))
                                     .kerning(1.2)
                                     .foregroundColor(.montraTextSecondary)
@@ -212,7 +216,7 @@ struct OnboardingQuizView: View {
                         Spacer()
 
                         HStack(spacing: 12) {
-                            if step == 11 {
+                            if step == 5 {
                                 Button("Skip") { completeStep(value: "No preference") }
                                     .font(.system(size: 13, weight: .medium))
                                     .foregroundColor(.montraTextSecondary)
@@ -257,21 +261,15 @@ struct OnboardingQuizView: View {
     private var stepContent: some View {
         switch step {
         case 1: goalStep
-        case 2: lifestyleHabitsStep
-        case 3: experienceStep
-        case 4: nutritionHabitsStep
-        case 5: yourWhyStep
-        case 6: locationStep
-        case 7: healthSafetyStep
-        case 8: accountabilityStep
-        case 9: scheduleStep
-        case 10: commitmentStep
-        case 11: coachPrefStep
-        case 12: nameStep
-        case 13: accountGateStep
-        case 14: trainerMatchStep
-        case 15: confirmationStep
-        case 16: appWalkthroughStep
+        case 2: experienceStep
+        case 3: locationStep
+        case 4: scheduleStep
+        case 5: coachPrefStep
+        case 6: nameStep
+        case 7: accountGateStep
+        case 8: trainerMatchStep
+        case 9: confirmationStep
+        case 10: appWalkthroughStep
         default: confirmationStep
         }
     }
@@ -340,7 +338,7 @@ struct OnboardingQuizView: View {
     // MARK: Step 3 — Experience
 
     private var experienceStep: some View {
-        QuizStepShell(stepNumber: 3,
+        QuizStepShell(stepNumber: 2,
                       title: "Training experience",
                       subtitle: "This helps us find the right coaching style for you.") {
             VStack(spacing: 10) {
@@ -417,30 +415,16 @@ struct OnboardingQuizView: View {
     // MARK: Step 6 - Location & Equipment
 
     private var locationStep: some View {
-        QuizStepShell(stepNumber: 6,
-                      title: "Training location",
+        QuizStepShell(stepNumber: 3,
+                      title: "Your location",
                       subtitle: "Where would you like to train?") {
             VStack(alignment: .leading, spacing: 14) {
-                QuizQuestionCard(icon: "mappin.and.ellipse", title: "Training location", subtitle: "Choose one") {
                 ForEach(locationOptions, id: \.self) { loc in
                     selectionRow(title: loc, selected: selectedLocation == loc) {
                         selectedLocation = loc
+                        savedLocation = loc
+                        advance(by: 1)
                     }
-                }
-                }
-
-                QuizQuestionCard(icon: "dumbbell", title: "Equipment access", subtitle: "Choose one") {
-                ForEach(equipmentOptions, id: \.self) { equipment in
-                    selectionRow(title: equipment, selected: selectedEquipment == equipment) {
-                        selectedEquipment = equipment
-                    }
-                }
-                }
-
-                continueButton(enabled: !selectedLocation.isEmpty && !selectedEquipment.isEmpty, title: "Next") {
-                    savedLocation = selectedLocation
-                    savedEquipmentAccess = selectedEquipment
-                    advance(by: 1)
                 }
             }
         }
@@ -515,9 +499,9 @@ struct OnboardingQuizView: View {
     // MARK: Step 9 — Schedule (multi-select)
 
     private var scheduleStep: some View {
-        QuizStepShell(stepNumber: 9,
-                      title: "Schedule & routine",
-                      subtitle: "When do you want to train?") {
+        QuizStepShell(stepNumber: 4,
+                      title: "Availability",
+                      subtitle: "When do you prefer to train?") {
             VStack(spacing: 14) {
                 QuizQuestionCard(icon: "clock", title: "What training times work best?", subtitle: "Select all that apply") {
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
@@ -588,7 +572,7 @@ struct OnboardingQuizView: View {
     // MARK: Step 11 — Coach Preference (skippable)
 
     private var coachPrefStep: some View {
-        QuizStepShell(stepNumber: 11,
+        QuizStepShell(stepNumber: 5,
                       title: "Coach preference",
                       subtitle: "Totally optional — skip if you don't mind.") {
             VStack(spacing: 10) {
@@ -602,7 +586,7 @@ struct OnboardingQuizView: View {
     // MARK: Step 12 — Name
 
     private var nameStep: some View {
-        QuizStepShell(stepNumber: 12,
+        QuizStepShell(stepNumber: 6,
                       title: "What should we call you?",
                       subtitle: "We'll personalise your experience.") {
             VStack(spacing: 16) {
@@ -638,11 +622,8 @@ struct OnboardingQuizView: View {
     // MARK: Step 8 — Trainer Matches
 
     private var trainerMatchStep: some View {
-        let matches = OnboardingTrainer.matched(
-            goal: savedGoal,
-            location: savedLocation,
-            genderPref: savedCoachPref
-        )
+        let pool    = fetchedTrainers ?? OnboardingTrainer.all
+        let matches = OnboardingTrainer.filter(pool, goal: savedGoal, location: savedLocation, genderPref: savedCoachPref)
         return Group {
             if auth.user == nil {
                 accountGateStep
@@ -683,6 +664,7 @@ struct OnboardingQuizView: View {
                             guard let t = selectedTrainer else { return }
                             requestedTrainerId   = t.id
                             requestedTrainerName = t.name
+                            Task { await postMatchRequest(trainer: t) }
                             advance(by: 1)
                         } label: {
                             let firstName = selectedTrainer?.name.components(separatedBy: " ").first ?? "Coach"
@@ -724,6 +706,9 @@ struct OnboardingQuizView: View {
         }
         .onAppear {
             startMatchChecklistIfNeeded()
+            if fetchedTrainers == nil {
+                Task { await fetchTrainers() }
+            }
         }
     }
 
@@ -776,6 +761,20 @@ struct OnboardingQuizView: View {
                         .padding(.vertical, 8)
                 }
                 .disabled(accountLoading)
+
+                // Terms notice
+                Group {
+                    Text("By creating an account you agree to the ")
+                        .foregroundColor(.montraTextSecondary) +
+                    Text("Terms & Services Agreement")
+                        .foregroundColor(.montraOrange)
+                        .underline()
+                }
+                .font(.system(size: 11))
+                .onTapGesture { showClientTerms = true }
+                .sheet(isPresented: $showClientTerms) {
+                    ClientTermsSheet()
+                }
 
                 Spacer(minLength: 20)
             }
@@ -878,6 +877,7 @@ struct OnboardingQuizView: View {
                 } else {
                     preAuthOnboardingActive = false
                     isCompleted = true
+                    step = 1
                 }
             } label: {
                 Text(walkthroughPage < pages.count - 1 ? "Next" : "Finish")
@@ -898,8 +898,8 @@ struct OnboardingQuizView: View {
     private func completeStep(value: String) {
         switch step {
         case 1: savedGoal = value
-        case 3: savedExperience = value
-        case 11: savedCoachPref = value
+        case 2: savedExperience = value
+        case 5: savedCoachPref = value
         default: break
         }
         advance(by: 1)
@@ -922,7 +922,42 @@ struct OnboardingQuizView: View {
 
         if auth.user != nil || auth.demoRole != nil {
             isCompleted = true
+            step = 1
         }
+    }
+
+    private func fetchTrainers() async {
+        guard let url = MontraAPIConfig.url(for: "/api/trainers") else { return }
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            struct Response: Decodable { let trainers: [OnboardingTrainer] }
+            let response = try JSONDecoder().decode(Response.self, from: data)
+            await MainActor.run { fetchedTrainers = response.trainers }
+        } catch {
+            // Network unavailable — keep nil so static fallback is used
+        }
+    }
+
+    private func postMatchRequest(trainer: OnboardingTrainer) async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
+              let url = MontraAPIConfig.url(for: "/api/client/requests") else { return }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(tokenResult.token)", forHTTPHeaderField: "Authorization")
+        let body: [String: Any] = [
+            "trainerId": trainer.id,
+            "clientProfile": [
+                "firstName": savedFirstName,
+                "goal": savedGoal,
+                "location": savedLocation,
+                "coachPreference": savedCoachPref,
+                "availability": savedSchedule.components(separatedBy: ", ").filter { !$0.isEmpty }
+            ]
+        ]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        _ = try? await URLSession.shared.data(for: request)
     }
 
     private func startMatchChecklistIfNeeded() {
@@ -1173,13 +1208,26 @@ struct TrainerMatchCard: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 14) {
-                ZStack {
-                    Circle()
-                        .fill(Color(hex: trainer.accentHex).opacity(0.15))
-                        .frame(width: 52, height: 52)
-                    Text(trainer.initials)
-                        .font(.system(size: 17, weight: .black))
-                        .foregroundColor(Color(hex: trainer.accentHex))
+                Group {
+                    if !trainer.photoDataUrl.isEmpty,
+                       let b64 = trainer.photoDataUrl.split(separator: ",").last,
+                       let data = Data(base64Encoded: String(b64)),
+                       let uiImage = UIImage(data: data) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 52, height: 52)
+                            .clipShape(Circle())
+                    } else {
+                        ZStack {
+                            Circle()
+                                .fill(Color(hex: trainer.accentHex).opacity(0.15))
+                                .frame(width: 52, height: 52)
+                            Text(trainer.initials)
+                                .font(.system(size: 17, weight: .black))
+                                .foregroundColor(Color(hex: trainer.accentHex))
+                        }
+                    }
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -1651,6 +1699,82 @@ struct QuizOption {
     let emoji: String?
     let label: String
     let subtitle: String?
+}
+
+// MARK: - Client Terms Sheet
+
+private struct ClientTermsSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView(showsIndicators: true) {
+                VStack(alignment: .leading, spacing: 20) {
+                    termsContent
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
+            }
+            .background(Color.montraBackground.ignoresSafeArea())
+            .navigationTitle("Terms & Services Agreement")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                        .foregroundColor(.montraOrange)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var termsContent: some View {
+        termsSection("MONTRA CLIENT TERMS & SERVICES AGREEMENT", body: "This Client Terms & Services Agreement governs your access to and use of the MONTRA platform, including all related websites, mobile applications, software, booking systems, communication systems, and wellness services facilitated by Elite Home Fitness Solution LLC (\"MONTRA\").\n\nBy creating an account, booking services, accessing the Platform, or participating in any services facilitated through MONTRA, you acknowledge that you have read, understood, and agreed to this Agreement.")
+
+        termsSection("1. Platform Overview", body: "MONTRA is a technology-enabled wellness marketplace that connects Clients with independent wellness professionals, trainers, coaches, instructors, and service providers (\"Providers\"). MONTRA provides scheduling infrastructure, payment processing, AI-powered matching systems, communication systems, operational support, trust & safety systems, and marketplace infrastructure.\n\nProviders operating through MONTRA are independent contractors. MONTRA is not a medical provider, healthcare provider, physical therapy provider, gym operator, or employer of Providers.")
+
+        termsSection("2. Eligibility", body: "To use the Platform you must be at least 18 years old, provide accurate account information, comply with all applicable laws, and maintain responsibility for your account activity.")
+
+        termsSection("3. Client Bookings", body: "Clients may book wellness and fitness services through MONTRA including in-home personal training, online coaching, virtual sessions, group wellness classes, fitness consultations, and wellness programs. Bookings are confirmed when payment is successfully processed and the booking appears as confirmed within the Platform.")
+
+        termsSection("4. Intro Sessions", body: "Intro session pricing is independently determined by each Provider. Standard intro sessions are approximately 60 minutes. Intro sessions may be refundable if canceled at least 24 hours before the scheduled session start time.")
+
+        termsSection("5. Client Cancellation Policy", body: "Clients may cancel sessions at least 24 hours before the scheduled session start time. Eligible cancellations may receive a refund to the original payment method or Platform credit. Late cancellations or no-shows may result in forfeited sessions, cancellation fees, account review, or restricted Platform usage.")
+
+        termsSection("6. Payment Authorization", body: "By booking services, Client authorizes MONTRA and its payment processors to charge payment methods on file, process recurring payments where applicable, collect applicable taxes or fees, and issue credits or refunds. All payments initiated through the Platform must remain on-platform.")
+
+        termsSection("7. AI Matching & Automated Systems", body: "MONTRA may utilize artificial intelligence, algorithms, and automated technologies to match Clients with Providers, personalize recommendations, and monitor Platform quality. AI-generated recommendations may not always be error-free and do not guarantee compatibility or outcomes.")
+
+        termsSection("8. In-Home Service Disclosure", body: "Client acknowledges that participation in in-home wellness services involves inherent risks. Client is responsible for providing a reasonably safe environment, disclosing known injuries or medical limitations, and maintaining responsibility for pets, guests, minors, and property conditions during sessions.")
+
+        termsSection("9. Health & Wellness Disclaimer", body: "Participation in fitness and wellness activities involves inherent risks including injury, illness, physical strain, medical complications, property damage, and death. Client voluntarily assumes all risks. MONTRA does not provide medical advice. Client should consult a physician before beginning any wellness or fitness program.")
+
+        termsSection("10. Liability Waiver & Release", body: "To the fullest extent permitted by law, Client releases and discharges MONTRA, its affiliates, officers, employees, contractors, agents, licensors, and Platform Providers from claims arising out of participation in wellness or fitness activities, injuries or damages, Provider conduct, property damage, scheduling issues, Platform usage, or in-home service activities. Client voluntarily accepts full responsibility for participation.")
+
+        termsSection("11. Client Conduct", body: "Clients agree to communicate respectfully, provide safe environments, avoid harassment or discrimination, comply with Platform policies, and avoid off-platform payment circumvention. MONTRA reserves the right to suspend or terminate accounts for violations.")
+
+        termsSection("12. Privacy & Data Usage", body: "MONTRA may collect, process, analyze, and store information related to bookings, communications, session activity, wellness engagement, location data, behavioral interactions, payment information, and Platform usage patterns to improve Platform functionality, optimize recommendations, and enhance trust & safety.")
+
+        termsSection("13. Limitation of Liability", body: "MONTRA's total liability shall not exceed the amount paid by Client to MONTRA during the 12 months preceding the claim. MONTRA is not liable for indirect damages, loss of profits, emotional distress, property damage, injuries, Provider conduct, disputes between users, or technology interruptions.")
+
+        termsSection("14. Dispute Resolution & Arbitration", body: "Disputes shall be resolved through binding arbitration in the Commonwealth of Massachusetts. Client waives rights to jury trials, class actions, and consolidated proceedings except where prohibited by law.")
+
+        termsSection("15. Governing Law & Modifications", body: "This Agreement shall be governed by the laws of the Commonwealth of Massachusetts. MONTRA reserves the right to modify this Agreement at any time. Continued use of the Platform following updates constitutes acceptance of revised terms.\n\nElite Home Fitness Solution LLC · 745 Atlantic Ave · Boston, Massachusetts")
+    }
+
+    private func termsSection(_ heading: String, body: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(heading)
+                .font(.system(size: 13, weight: .black))
+                .foregroundColor(.montraTextPrimary)
+            Text(body)
+                .font(.system(size: 13))
+                .foregroundColor(.montraTextSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .lineSpacing(4)
+            Divider().background(Color.white.opacity(0.08))
+        }
+    }
 }
 
 #Preview {

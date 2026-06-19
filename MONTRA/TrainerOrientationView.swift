@@ -4,12 +4,22 @@ struct TrainerOrientationView: View {
     @AppStorage("trainer.orientationCompleted") private var orientationCompleted = false
     @State private var watched: Set<Int> = []
 
-    private let videos: [(title: String, description: String)] = [
-        ("Welcome to MONTRA",                  "An overview of the platform, how client matching works, and what your journey as a MONTRA coach looks like."),
-        ("MONTRA Standards & Code of Conduct", "The professional standards, prohibited conduct rules, and values every MONTRA coach is held to."),
-        ("Client Request & Session Flow",      "How to review match requests, accept clients, schedule sessions, and log session records correctly."),
-        ("Safety, Liability & Scope of Practice", "Injury protocols, client screening, maintaining your CPR/AED cert, insurance requirements, and staying within your scope."),
-        ("Communication & Professionalism",    "Response time expectations, how to message clients, handling rescheduling, and representing the MONTRA brand."),
+    private let videos: [(title: String, description: String, url: String)] = [
+        ("Welcome to MONTRA",
+         "An overview of the platform, how client matching works, and what your journey as a MONTRA coach looks like.",
+         "https://drive.google.com/file/d/1Vt_2LoNYNNXzv0E6S_JxS9sBR1nVhLaC/view"),
+        ("MONTRA Standards & Code of Conduct",
+         "The professional standards, prohibited conduct rules, and values every MONTRA coach is held to.",
+         "https://drive.google.com/file/d/1esOaU6tWSSNPqLmDt35g-3PIymFCN_tS/view"),
+        ("Client Request & Session Flow",
+         "How to review match requests, accept clients, schedule sessions, and log session records correctly.",
+         "https://drive.google.com/file/d/1T62RymHKQP3d1RJk3w9_QzJ6bWrSJZIy/view"),
+        ("Safety, Liability & Scope of Practice",
+         "Injury protocols, client screening, maintaining your CPR/AED cert, insurance requirements, and staying within your scope.",
+         "https://drive.google.com/file/d/1kVX3kzmFOS7CQ6pE0Xw77oJbuEFgGwnD/view"),
+        ("Communication & Professionalism",
+         "Response time expectations, how to message clients, handling rescheduling, and representing the MONTRA brand.",
+         "https://drive.google.com/file/d/1nRDFo77-BR5jr2u7H1NvqkDVoaKeylQ2/view"),
     ]
 
     var allWatched: Bool { watched.count == videos.count }
@@ -80,11 +90,11 @@ struct TrainerOrientationView: View {
                                 index: i + 1,
                                 title: videos[i].title,
                                 description: videos[i].description,
+                                url: videos[i].url,
                                 isWatched: watched.contains(i)
                             ) {
                                 withAnimation(.easeInOut(duration: 0.2)) {
-                                    if watched.contains(i) { watched.remove(i) }
-                                    else { watched.insert(i) }
+                                    watched.insert(i)
                                 }
                             }
                         }
@@ -109,7 +119,7 @@ struct TrainerOrientationView: View {
                         .disabled(!allWatched)
 
                         if !allWatched {
-                            Text("Tap each card above to mark it as watched.")
+                            Text("Watch each video above — they'll be marked complete automatically.")
                                 .font(.system(size: 12))
                                 .foregroundColor(.montraTextSecondary)
                                 .multilineTextAlignment(.center)
@@ -130,44 +140,73 @@ private struct OrientationVideoCard: View {
     let index: Int
     let title: String
     let description: String
+    let url: String
     let isWatched: Bool
-    let onTap: () -> Void
+    let onWatch: () -> Void
+
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: 16) {
-                // Play / check icon
-                ZStack {
-                    Circle()
-                        .fill(isWatched ? Color.montraOrange : Color.whipacity(0.08))
-                        .frame(width: 44, height: 44)
-                    Image(systemName: isWatched ? "checkmark" : "play.fill")
-                        .font(.system(size: isWatched ? 15 : 12, weight: .bold))
-                        .foregroundColor(isWatched ? .black : .montraOrange)
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("\(index). \(title)")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.montraTextPrimary)
-                    Text(description)
-                        .font(.system(size: 12))
+        HStack(spacing: 16) {
+            // Check / number icon
+            ZStack {
+                Circle()
+                    .fill(isWatched ? Color.montraOrange : Color.white.opacity(0.08))
+                    .frame(width: 44, height: 44)
+                if isWatched {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(.black)
+                } else {
+                    Text("\(index)")
+                        .font(.system(size: 14, weight: .black))
                         .foregroundColor(.montraTextSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .lineLimit(2)
                 }
-
-                Spacer()
             }
-            .padding(16)
-            .background(isWatched ? Color.montraOrange.opacity(0.08) : Color.white.opacity(0.04))
-            .clipShape(RoundedRectangle(cornerRadius: 14))
-            .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(isWatched ? Color.montraOrange.opacity(0.4) : Color.white.opacity(0.08), lineWidth: 1)
-            )
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.montraTextPrimary)
+                Text(description)
+                    .font(.system(size: 12))
+                    .foregroundColor(.montraTextSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(2)
+            }
+
+            Spacer()
+
+            // Watch button
+            Button {
+                if let videoURL = URL(string: url) {
+                    openURL(videoURL)
+                }
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    onWatch()
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: isWatched ? "checkmark" : "play.fill")
+                        .font(.system(size: 10, weight: .bold))
+                    Text(isWatched ? "Done" : "Watch")
+                        .font(.system(size: 12, weight: .bold))
+                }
+                .foregroundColor(isWatched ? .montraOrange : .black)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 7)
+                .background(isWatched ? Color.montraOrange.opacity(0.12) : Color.montraOrange)
+                .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
+        .padding(16)
+        .background(isWatched ? Color.montraOrange.opacity(0.06) : Color.white.opacity(0.04))
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(isWatched ? Color.montraOrange.opacity(0.35) : Color.white.opacity(0.08), lineWidth: 1)
+        )
     }
 }
 
