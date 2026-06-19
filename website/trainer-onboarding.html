@@ -492,6 +492,12 @@
       const experience  = Array.from(document.querySelectorAll('.experience-checkbox:checked')).map(c => c.value);
       const locations   = Array.from(document.querySelectorAll('.location-checkbox:checked')).map(c => c.value);
 
+      const bio = document.getElementById('trainer-bio').value.trim();
+      if (!bio) {
+        alert('A bio is required to complete your profile.');
+        document.getElementById('trainer-bio').focus();
+        return;
+      }
       if (specialties.length === 0 || experience.length === 0 || locations.length === 0) {
         alert('Please select at least one option for Specialties, Experience Levels, and Service Locations.');
         return;
