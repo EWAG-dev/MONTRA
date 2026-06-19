@@ -36,7 +36,7 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
   .map((v) => v.trim())
   .filter(Boolean);
 
-app.use(express.json());
+app.use(express.json({ limit: "5mb" }));
 app.use(
   cors({
     origin: allowedOrigins.length ? allowedOrigins : true,
@@ -171,7 +171,23 @@ app.post("/api/dev/create-test-trainer", async (req, res) => {
     } else {
       await db.collection("trainers").add({ email, name, status: "approved", accountUid: user.uid });
     }
+    await auth.setCustomUserClaims(user.uid, { role: "trainer" });
     res.json({ ok: true, uid: user.uid });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// DEV — set trainer role claim for an existing uid
+app.post("/api/dev/set-trainer-claim", async (req, res) => {
+  if (process.env.NODE_ENV === "production" && !process.env.ALLOW_DEV_ENDPOINTS) {
+    return res.status(404).json({ error: "Not found" });
+  }
+  try {
+    const { uid } = req.body;
+    if (!uid) return res.status(400).json({ error: "uid required" });
+    await getAuth().setCustomUserClaims(uid, { role: "trainer" });
+    res.json({ ok: true, uid });
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
@@ -370,6 +386,15 @@ app.post("/api/admin/trainers/:id/approve", requireFirebaseAuth, requireAdmin, a
       if (authError.code !== "auth/email-already-exists") {
         console.error("Failed to provision trainer auth account:", authError.message);
       }
+    }
+  }
+
+  // Ensure trainer role claim is set so iOS routes to TrainerTabView
+  if (trainer.accountUid) {
+    try {
+      await getAuth().setCustomUserClaims(trainer.accountUid, { role: "trainer" });
+    } catch (claimError) {
+      console.error("Failed to set trainer custom claim:", claimError.message);
     }
   }
 
