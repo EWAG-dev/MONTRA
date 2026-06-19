@@ -222,102 +222,15 @@
       <p class="text-xs font-bold tracking-widest text-gray-500 uppercase">Popular Coaches Near You</p>
       <a href="#all-coaches" class="text-brand text-sm font-semibold hover:underline">View all coaches →</a>
     </div>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <!-- Coach 1 -->
-      <div class="bg-[#111] rounded-2xl overflow-hidden">
-        <div class="relative">
-          <div class="bg-[#1a1a1a] h-36 flex items-center justify-center">
-            <span class="text-brand font-black text-3xl">MJ</span>
-          </div>
-          <span class="absolute top-3 left-3 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">Online Now</span>
-          <button class="absolute top-3 right-3 w-7 h-7 bg-black/40 rounded-full flex items-center justify-center">
-            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-          </button>
+    <div id="popular-coaches-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="col-span-full flex flex-col items-center justify-center py-16 text-center">
+        <div class="w-16 h-16 rounded-full bg-brand/10 flex items-center justify-center mb-4">
+          <svg class="w-8 h-8 text-brand" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
         </div>
-        <div class="p-4">
-          <p class="text-white font-bold text-sm">Marcus Johnson</p>
-          <p class="text-gray-400 text-xs mb-2">Strength &bull; Athletic Performance</p>
-          <div class="flex items-center justify-between text-xs text-gray-400 mb-3">
-            <span class="text-yellow-400 font-bold">★ 4.9 <span class="text-gray-500 font-normal">(128)</span></span>
-            <span id="dist-MJ">Boston MA • 0.8 mi</span>
-          </div>
-          <div class="flex gap-2">
-            <a href="coach-profile.html" class="flex-1 text-center border border-gray-600 text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-gray-800 transition-colors">View Profile</a>
-            <a href="quiz.html" class="flex-1 text-center bg-brand text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-orange-700 transition-colors">Book Now</a>
-          </div>
-        </div>
-      </div>
-      <!-- Coach 2 -->
-      <div class="bg-[#111] rounded-2xl overflow-hidden">
-        <div class="relative">
-          <div class="bg-[#1a1a1a] h-36 flex items-center justify-center">
-            <span class="text-brand font-black text-3xl">SM</span>
-          </div>
-          <span class="absolute top-3 left-3 bg-yellow-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">Available Tomorrow</span>
-          <button class="absolute top-3 right-3 w-7 h-7 bg-black/40 rounded-full flex items-center justify-center">
-            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-          </button>
-        </div>
-        <div class="p-4">
-          <p class="text-white font-bold text-sm">Sarah Martinez</p>
-          <p class="text-gray-400 text-xs mb-2">Lose Weight &bull; General Fitness</p>
-          <div class="flex items-center justify-between text-xs text-gray-400 mb-3">
-            <span class="text-yellow-400 font-bold">★ 4.9 <span class="text-gray-500 font-normal">(96)</span></span>
-            <span id="dist-SM">Boston MA • 1.2 mi</span>
-          </div>
-          <div class="flex gap-2">
-            <a href="coach-profile.html" class="flex-1 text-center border border-gray-600 text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-gray-800 transition-colors">View Profile</a>
-            <a href="quiz.html" class="flex-1 text-center bg-brand text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-orange-700 transition-colors">Book Now</a>
-          </div>
-        </div>
-      </div>
-      <!-- Coach 3 -->
-      <div class="bg-[#111] rounded-2xl overflow-hidden">
-        <div class="relative">
-          <div class="bg-[#1a1a1a] h-36 flex items-center justify-center">
-            <span class="text-brand font-black text-3xl">AK</span>
-          </div>
-          <span class="absolute top-3 left-3 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">Online Now</span>
-          <button class="absolute top-3 right-3 w-7 h-7 bg-black/40 rounded-full flex items-center justify-center">
-            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-          </button>
-        </div>
-        <div class="p-4">
-          <p class="text-white font-bold text-sm">Alex Kim</p>
-          <p class="text-gray-400 text-xs mb-2">Flexibility &bull; Mobility &bull; General Fitness</p>
-          <div class="flex items-center justify-between text-xs text-gray-400 mb-3">
-            <span class="text-yellow-400 font-bold">★ 5.0 <span class="text-gray-500 font-normal">(86)</span></span>
-            <span id="dist-AK">New Jersey NJ • 1.5 mi</span>
-          </div>
-          <div class="flex gap-2">
-            <a href="coach-profile.html" class="flex-1 text-center border border-gray-600 text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-gray-800 transition-colors">View Profile</a>
-            <a href="quiz.html" class="flex-1 text-center bg-brand text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-orange-700 transition-colors">Book Now</a>
-          </div>
-        </div>
-      </div>
-      <!-- Coach 4 -->
-      <div class="bg-[#111] rounded-2xl overflow-hidden">
-        <div class="relative">
-          <div class="bg-[#1a1a1a] h-36 flex items-center justify-center">
-            <span class="text-brand font-black text-3xl">LD</span>
-          </div>
-          <span class="absolute top-3 left-3 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">Available Today</span>
-          <button class="absolute top-3 right-3 w-7 h-7 bg-black/40 rounded-full flex items-center justify-center">
-            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-          </button>
-        </div>
-        <div class="p-4">
-          <p class="text-white font-bold text-sm">Luis Demo</p>
-          <p class="text-gray-400 text-xs mb-2">Build Muscle</p>
-          <div class="flex items-center justify-between text-xs text-gray-400 mb-3">
-            <span class="text-yellow-400 font-bold">★ 4.8 <span class="text-gray-500 font-normal">(74)</span></span>
-            <span id="dist-LD">Boston MA • 0.6 mi</span>
-          </div>
-          <div class="flex gap-2">
-            <a href="coach-profile.html" class="flex-1 text-center border border-gray-600 text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-gray-800 transition-colors">View Profile</a>
-            <a href="quiz.html" class="flex-1 text-center bg-brand text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-orange-700 transition-colors">Book Now</a>
-          </div>
-        </div>
+        <p class="font-black text-white text-lg mb-1">Coaches Coming Soon</p>
+        <p class="text-gray-400 text-sm">We're onboarding certified trainers in your area.</p>
       </div>
     </div>
   </section>
@@ -915,32 +828,8 @@
       return m < 1 ? 'Less than 1 mi away' : `${Math.round(m)} mi away`;
     }
 
-    function updatePopularDistances(userLat, userLng) {
-      for (const coach of POPULAR_COACHES_GEO) {
-        const span = document.getElementById(`dist-${coach.id}`);
-        if (!span) continue;
-        const result = getNearestForCoach(coach, userLat, userLng);
-        if (result) span.textContent = `${result.loc.label} • ${fmtMiles(result.dist)}`;
-      }
-    }
-
-    function maybeShowNearestBanner(userLat, userLng) {
-      const THRESHOLD_MI = 30;
-      let nearest = null;
-      for (const coach of POPULAR_COACHES_GEO) {
-        const result = getNearestForCoach(coach, userLat, userLng);
-        if (!result) continue;
-        if (!nearest || result.dist < nearest.dist)
-          nearest = { name: coach.name, dist: result.dist, loc: result.loc };
-      }
-      if (!nearest) return;
-      const banner = document.getElementById('nearest-coach-banner');
-      const text   = document.getElementById('nearest-coach-text');
-      if (!banner || !text) return;
-      if (nearest.dist > THRESHOLD_MI) {
-        text.innerHTML = `No coaches available in your area yet. Nearest coach: <strong>${nearest.name}</strong> — ${Math.round(nearest.dist)} mi away in ${nearest.loc.label}.`;
-        banner.classList.remove('hidden');
-      }
+    function maybeShowNearestBanner() {
+      // No-op: will be implemented when real geo-matching is added
     }
 
     async function resolveLocationName(lat, lng) {
@@ -974,7 +863,7 @@
             input.placeholder = 'Enter your location';
           }
           updatePopularDistances(lat, lng);
-          maybeShowNearestBanner(lat, lng);
+          maybeShowNearestBanner();
         },
         () => {
           if (input) { input.value = ''; input.placeholder = 'Enter your location'; }
@@ -989,9 +878,37 @@
 
     const BACKEND_URL = 'https://montra-production.up.railway.app';
 
+    function popularCoachCard(trainer) {
+      const safeName = escapeHtml(trainer.name || 'Coach');
+      const initials = escapeHtml(trainer.initials || safeName.split(' ').map(w=>w[0]).join('').slice(0,2));
+      const specialty = escapeHtml((trainer.specialties || []).slice(0,2).join(' • ') || 'Personal Training');
+      const region = escapeHtml((trainer.locations || [])[0] || 'Your Area');
+      const rating = trainer.rating || 4.9;
+      const reviews = trainer.reviewCount || 0;
+      const avatar = trainer.photoDataUrl
+        ? `<img src="${trainer.photoDataUrl}" alt="${safeName}" class="w-full h-full object-cover"/>`
+        : `<div class="w-full h-full bg-brand/10 flex items-center justify-center"><span class="text-brand font-black text-3xl">${initials}</span></div>`;
+      return `
+        <div class="bg-[#111] rounded-2xl overflow-hidden">
+          <div class="relative h-36">${avatar}</div>
+          <div class="p-4">
+            <p class="text-white font-bold text-sm">${safeName}</p>
+            <p class="text-gray-400 text-xs mb-2">${specialty}</p>
+            <div class="flex items-center justify-between text-xs text-gray-400 mb-3">
+              <span class="text-yellow-400 font-bold">★ ${rating} <span class="text-gray-500 font-normal">(${reviews})</span></span>
+              <span>${region}</span>
+            </div>
+            <div class="flex gap-2">
+              <a href="find-a-coach.html#all-coaches" class="flex-1 text-center border border-gray-600 text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-gray-800 transition-colors">View Profile</a>
+              <a href="quiz.html" class="flex-1 text-center bg-brand text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-orange-700 transition-colors">Book Now</a>
+            </div>
+          </div>
+        </div>`;
+    }
+
     async function loadCoaches() {
       const grid = document.getElementById('coach-grid');
-      if (!grid) return;
+      const popularGrid = document.getElementById('popular-coaches-grid');
 
       let trainers = [];
       try {
@@ -1004,13 +921,31 @@
         console.warn('Unable to load trainers from backend:', error);
       }
 
-      allCoaches = trainers;
+      // Populate popular section (up to 4)
+      if (popularGrid) {
+        if (trainers.length === 0) {
+          popularGrid.innerHTML = `
+            <div class="col-span-full flex flex-col items-center justify-center py-16 text-center">
+              <div class="w-16 h-16 rounded-full bg-brand/10 flex items-center justify-center mb-4">
+                <svg class="w-8 h-8 text-brand" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+              </div>
+              <p class="font-black text-white text-lg mb-1">Coaches Coming Soon</p>
+              <p class="text-gray-400 text-sm">We're onboarding certified trainers in your area.</p>
+            </div>`;
+        } else {
+          popularGrid.innerHTML = trainers.slice(0, 4).map(popularCoachCard).join('');
+        }
+      }
 
+      // Populate main all-coaches grid
+      allCoaches = trainers;
+      if (!grid) return;
       if (allCoaches.length === 0) {
         grid.innerHTML = createEmptyCard();
         return;
       }
-
       attachFilterEvents();
       applyFilters();
     }
