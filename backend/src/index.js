@@ -2,7 +2,7 @@ import "dotenv/config";
 import { randomBytes } from "crypto";
 import cors from "cors";
 import express from "express";
-import { getAuth, initFirebaseAdmin } from "./firebase.js";
+import { getAuth, getFirestore, initFirebaseAdmin } from "./firebase.js";
 import {
   approveTrainer,
   createTrainer,
