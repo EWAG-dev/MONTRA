@@ -64,6 +64,11 @@ function normalizeTrainerPayload(input, existingTrainer = null) {
   const email = normalizeString(input.email || existingTrainer?.email);
   const accountUid = normalizeString(input.accountUid || existingTrainer?.accountUid);
   const phone = normalizeString(input.phone || existingTrainer?.phone);
+  const cprCertification = normalizeString(input.cprCertification ?? existingTrainer?.cprCertification);
+  const hasInsurance = Boolean(input.hasInsurance ?? existingTrainer?.hasInsurance ?? false);
+  const introVideoUrl = normalizeString(input.introVideoUrl ?? existingTrainer?.introVideoUrl);
+  const backgroundCheckConsent = Boolean(input.backgroundCheckConsent ?? existingTrainer?.backgroundCheckConsent ?? false);
+  const policyAgreement = Boolean(input.policyAgreement ?? existingTrainer?.policyAgreement ?? false);
 
   if (!name) {
     throw new Error("Trainer name is required.");
@@ -99,6 +104,11 @@ function normalizeTrainerPayload(input, existingTrainer = null) {
     email,
     accountUid,
     phone,
+    cprCertification,
+    hasInsurance,
+    introVideoUrl,
+    backgroundCheckConsent,
+    policyAgreement,
   };
 }
 
@@ -126,6 +136,11 @@ function serializeTrainer(doc) {
     email: data.email || "",
     accountUid: data.accountUid || "",
     phone: data.phone || "",
+    cprCertification: data.cprCertification || "",
+    hasInsurance: data.hasInsurance === true,
+    introVideoUrl: data.introVideoUrl || "",
+    backgroundCheckConsent: data.backgroundCheckConsent === true,
+    policyAgreement: data.policyAgreement === true,
     createdAt: data.createdAt || null,
     updatedAt: data.updatedAt || null,
   };
@@ -136,17 +151,58 @@ export function evaluateTrainerApplication(input) {
   let score = 0;
   const strengths = [];
   const concerns = [];
+  const hardFails = []; // automatic disqualifiers per MONTRA Eligibility Policy
 
-  // Certification — required (25 pts)
-  const recognizedCerts = ["nasm", "ace", "nsca", "issa", "acsm", "nesta", "afaa", "nafc", "acsm", "nfpt"];
+  // ── HARD REQUIREMENTS (auto-hold if missing) ────────────────────────────────
+
+  // Fitness certification — required by policy
+  const recognizedCerts = ["nasm", "ace", "nsca", "issa", "acsm", "nesta", "afaa", "nafc", "nfpt", "ncsf"];
   if (trainer.certification) {
     const certLower = trainer.certification.toLowerCase();
     const isRecognized = recognizedCerts.some((c) => certLower.includes(c));
     score += isRecognized ? 25 : 15;
     strengths.push(isRecognized ? `Recognized certification: ${trainer.certification}` : `Certification on file: ${trainer.certification}`);
-    if (!isRecognized) concerns.push("Certification not from a widely recognized body (NASM, ACE, NSCA, ISSA, ACSM)");
+    if (!isRecognized) concerns.push("Certification not from a widely recognized body (NASM, ACE, NSCA, ISSA, ACSM) — admin should verify");
   } else {
-    concerns.push("No certification provided — required to join");
+    hardFails.push("No fitness certification — required by MONTRA Eligibility Policy before activation");
+  }
+
+  // CPR / AED — required by policy
+  if (trainer.cprCertification) {
+    score += 10;
+    strengths.push(`CPR/AED certified: ${trainer.cprCertification}`);
+  } else {
+    hardFails.push("No CPR/AED certification — required by MONTRA Eligibility Policy");
+  }
+
+  // Policy agreement — required before submission
+  if (!trainer.policyAgreement) {
+    hardFails.push("Trainer has not agreed to the MONTRA Coach Eligibility & Acceptance Policy");
+  }
+
+  // Background check consent — required before receiving leads
+  if (trainer.backgroundCheckConsent) {
+    strengths.push("Background check consent given");
+  } else {
+    concerns.push("Background check consent not confirmed — required before receiving client leads");
+  }
+
+  // ── SCORED PROFILE REQUIREMENTS ─────────────────────────────────────────────
+
+  // Professional liability insurance (10 pts)
+  if (trainer.hasInsurance) {
+    score += 10;
+    strengths.push("Professional liability insurance confirmed");
+  } else {
+    concerns.push("Professional liability insurance not confirmed — required by MONTRA Eligibility Policy");
+  }
+
+  // Coach introduction video (10 pts)
+  if (trainer.introVideoUrl) {
+    score += 10;
+    strengths.push("Coach introduction video provided");
+  } else {
+    concerns.push("No introduction video — required for full profile activation per MONTRA Eligibility Policy");
   }
 
   // Profile photo (10 pts)
@@ -238,21 +294,32 @@ export function evaluateTrainerApplication(input) {
   }
 
   let recommendation;
-  if (score >= 70) recommendation = "strong_yes";
-  else if (score >= 50) recommendation = "review";
-  else recommendation = "hold";
+  if (hardFails.length > 0) {
+    recommendation = "hold";
+  } else if (score >= 70) {
+    recommendation = "strong_yes";
+  } else if (score >= 50) {
+    recommendation = "review";
+  } else {
+    recommendation = "hold";
+  }
+
+  const allConcerns = [...hardFails, ...concerns];
 
   return {
     score,
     recommendation,
     strengths,
-    concerns,
+    concerns: allConcerns,
+    hardFails,
     summary:
-      recommendation === "strong_yes"
-        ? "Strong applicant — meets all key criteria for approval."
-        : recommendation === "review"
-          ? "Promising applicant. A quick human review of the missing details is recommended."
-          : "Profile needs more work before approval. See concerns for guidance.",
+      hardFails.length > 0
+        ? `Auto-hold: ${hardFails.length} required eligibility item(s) missing. See concerns for details.`
+        : recommendation === "strong_yes"
+          ? "Strong applicant — meets all key criteria for approval."
+          : recommendation === "review"
+            ? "Promising applicant. A quick human review of the missing details is recommended."
+            : "Profile needs more work before approval. See concerns for guidance.",
   };
 }
 
