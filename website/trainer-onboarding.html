@@ -354,8 +354,23 @@
     function toDataUrl(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
         reader.onerror = () => reject(new Error('Failed reading image file.'));
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onerror = () => reject(new Error('Failed decoding image.'));
+          img.onload = () => {
+            const MAX = 400;
+            // Center-crop to square, then resize to MAX×MAX
+            const size = Math.min(img.width, img.height);
+            const sx = (img.width  - size) / 2;
+            const sy = (img.height - size) / 2;
+            const canvas = document.createElement('canvas');
+            canvas.width = MAX; canvas.height = MAX;
+            canvas.getContext('2d').drawImage(img, sx, sy, size, size, 0, 0, MAX, MAX);
+            resolve(canvas.toDataURL('image/jpeg', 0.82));
+          };
+          img.src = e.target.result;
+        };
         reader.readAsDataURL(file);
       });
     }
@@ -483,12 +498,6 @@
         e.target.value = '';
         return;
       }
-      if (file.size > 2 * 1024 * 1024) {
-        alert('Please upload an image under 2MB.');
-        e.target.value = '';
-        return;
-      }
-
       try {
         selectedPhotoDataUrl = await toDataUrl(file);
         setPhotoPreview(selectedPhotoDataUrl);
