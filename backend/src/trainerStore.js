@@ -53,6 +53,9 @@ function normalizeTrainerPayload(input, existingTrainer = null) {
   const specialties = normalizeList(input.specialties ?? existingTrainer?.specialties ?? []);
   const locations = normalizeList(input.locations ?? existingTrainer?.locations ?? []);
   const availabilityDays = normalizeList(input.availabilityDays ?? existingTrainer?.availabilityDays ?? []);
+  const experienceLevels = normalizeList(input.experienceLevels ?? existingTrainer?.experienceLevels ?? []);
+  const workingHours = input.workingHours ?? existingTrainer?.workingHours ?? null;
+  const photoDataUrl = normalizeString(input.photoDataUrl || existingTrainer?.photoDataUrl);
   const experienceYears = Number(input.experienceYears ?? existingTrainer?.experienceYears ?? 0);
   const rating = Number(input.rating ?? existingTrainer?.rating ?? 4.9);
   const reviewCount = Number(input.reviewCount ?? existingTrainer?.reviewCount ?? 0);
@@ -85,6 +88,9 @@ function normalizeTrainerPayload(input, existingTrainer = null) {
     gender,
     accentHex,
     availabilityDays,
+    experienceLevels,
+    workingHours,
+    photoDataUrl,
     experienceYears: Number.isFinite(experienceYears) ? experienceYears : 0,
     rating: Number.isFinite(rating) ? rating : 4.9,
     reviewCount: Number.isFinite(reviewCount) ? reviewCount : 0,
@@ -109,6 +115,9 @@ function serializeTrainer(doc) {
     gender: data.gender || "Any",
     accentHex: data.accentHex || "#FF6820",
     availabilityDays: Array.isArray(data.availabilityDays) ? data.availabilityDays : [],
+    experienceLevels: Array.isArray(data.experienceLevels) ? data.experienceLevels : [],
+    workingHours: data.workingHours || null,
+    photoDataUrl: data.photoDataUrl || "",
     experienceYears: typeof data.experienceYears === "number" ? data.experienceYears : 0,
     rating: typeof data.rating === "number" ? data.rating : 4.9,
     reviewCount: typeof data.reviewCount === "number" ? data.reviewCount : 0,
