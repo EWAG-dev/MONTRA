@@ -152,9 +152,25 @@ app.post("/api/dev/create-test-trainer", async (req, res) => {
   try {
     const { email, password, name } = req.body;
     const auth = getAuth();
-    const user = await auth.createUser({ email, password, displayName: name });
-    const { db } = await import("./firebase.js");
-    await db.collection("trainers").add({ email, name, status: "approved", accountUid: user.uid });
+    const db = getFirestore();
+    // Get or create auth user
+    let user;
+    try {
+      user = await auth.createUser({ email, password, displayName: name });
+    } catch (e) {
+      if (e.code === "auth/email-already-exists") {
+        user = await auth.getUserByEmail(email);
+        // Update password in case it changed
+        await auth.updateUser(user.uid, { password });
+      } else throw e;
+    }
+    // Find existing trainer doc by email and update accountUid, or create new
+    const snap = await db.collection("trainers").where("email", "==", email).limit(1).get();
+    if (!snap.empty) {
+      await snap.docs[0].ref.update({ accountUid: user.uid, status: "approved" });
+    } else {
+      await db.collection("trainers").add({ email, name, status: "approved", accountUid: user.uid });
+    }
     res.json({ ok: true, uid: user.uid });
   } catch (e) {
     res.status(400).json({ error: e.message });
