@@ -987,33 +987,24 @@
     locateUser();
     // ─────────────────────────────────────────────────────────────────────────
 
+    const BACKEND_URL = 'https://montra-production.up.railway.app';
+
     async function loadCoaches() {
       const grid = document.getElementById('coach-grid');
       if (!grid) return;
 
-      let baseTrainers = [];
+      let trainers = [];
       try {
-        const response = await fetch('/data/trainers.json');
+        const response = await fetch(`${BACKEND_URL}/api/trainers`);
         if (response.ok) {
-          baseTrainers = await response.json();
+          const data = await response.json();
+          trainers = (data.trainers || []).filter(t => t.status === 'approved' && t.name && t.bio);
         }
       } catch (error) {
-        console.warn('Unable to load base trainer data:', error);
+        console.warn('Unable to load trainers from backend:', error);
       }
 
-      const storedProfiles = readStoredProfiles();
-      const merged = [...baseTrainers];
-
-      storedProfiles.forEach((profile) => {
-        const matchIndex = merged.findIndex((trainer) => (trainer.name || '').trim().toLowerCase() === (profile.name || '').trim().toLowerCase());
-        if (matchIndex >= 0) {
-          merged[matchIndex] = { ...merged[matchIndex], ...profile };
-        } else {
-          merged.push(profile);
-        }
-      });
-
-      allCoaches = merged;
+      allCoaches = trainers;
 
       if (allCoaches.length === 0) {
         grid.innerHTML = createEmptyCard();

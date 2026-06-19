@@ -235,24 +235,70 @@
             </div>
           </div>
 
-          <!-- Availability (simplified) -->
+          <!-- Working Hours -->
           <div>
-            <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Available Time Slots (add 3) *</label>
-            <div class="space-y-2">
-              <div class="flex gap-2">
-                <input type="date" class="availability-date flex-1 bg-[#141414] border border-white/10 focus:border-brand text-white rounded-lg px-3 py-2.5 text-sm outline-none transition-colors"/>
-                <input type="time" class="availability-time flex-1 bg-[#141414] border border-white/10 focus:border-brand text-white rounded-lg px-3 py-2.5 text-sm outline-none transition-colors"/>
+            <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Working Hours</label>
+            <div class="grid grid-cols-2 gap-3 mb-3">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Start Time</label>
+                <select id="hours-start" class="w-full bg-[#141414] border border-white/10 focus:border-brand text-white rounded-lg px-3 py-2.5 text-sm outline-none transition-colors">
+                  <option value="6:00 AM">6:00 AM</option>
+                  <option value="7:00 AM">7:00 AM</option>
+                  <option value="8:00 AM" selected>8:00 AM</option>
+                  <option value="9:00 AM">9:00 AM</option>
+                  <option value="10:00 AM">10:00 AM</option>
+                  <option value="11:00 AM">11:00 AM</option>
+                  <option value="12:00 PM">12:00 PM</option>
+                  <option value="1:00 PM">1:00 PM</option>
+                  <option value="2:00 PM">2:00 PM</option>
+                  <option value="3:00 PM">3:00 PM</option>
+                  <option value="4:00 PM">4:00 PM</option>
+                  <option value="5:00 PM">5:00 PM</option>
+                  <option value="6:00 PM">6:00 PM</option>
+                </select>
               </div>
-              <div class="flex gap-2">
-                <input type="date" class="availability-date flex-1 bg-[#141414] border border-white/10 focus:border-brand text-white rounded-lg px-3 py-2.5 text-sm outline-none transition-colors"/>
-                <input type="time" class="availability-time flex-1 bg-[#141414] border border-white/10 focus:border-brand text-white rounded-lg px-3 py-2.5 text-sm outline-none transition-colors"/>
-              </div>
-              <div class="flex gap-2">
-                <input type="date" class="availability-date flex-1 bg-[#141414] border border-white/10 focus:border-brand text-white rounded-lg px-3 py-2.5 text-sm outline-none transition-colors"/>
-                <input type="time" class="availability-time flex-1 bg-[#141414] border border-white/10 focus:border-brand text-white rounded-lg px-3 py-2.5 text-sm outline-none transition-colors"/>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">End Time</label>
+                <select id="hours-end" class="w-full bg-[#141414] border border-white/10 focus:border-brand text-white rounded-lg px-3 py-2.5 text-sm outline-none transition-colors">
+                  <option value="10:00 AM">10:00 AM</option>
+                  <option value="11:00 AM">11:00 AM</option>
+                  <option value="12:00 PM">12:00 PM</option>
+                  <option value="1:00 PM">1:00 PM</option>
+                  <option value="2:00 PM">2:00 PM</option>
+                  <option value="3:00 PM">3:00 PM</option>
+                  <option value="4:00 PM">4:00 PM</option>
+                  <option value="5:00 PM" selected>5:00 PM</option>
+                  <option value="6:00 PM">6:00 PM</option>
+                  <option value="7:00 PM">7:00 PM</option>
+                  <option value="8:00 PM">8:00 PM</option>
+                  <option value="9:00 PM">9:00 PM</option>
+                </select>
               </div>
             </div>
-            <p class="text-xs text-gray-600 mt-2">Add your first 3 available time slots. You can update these anytime.</p>
+            <label class="block text-xs text-gray-500 mb-2">Available Days</label>
+            <div class="flex flex-wrap gap-2">
+              <label class="flex items-center gap-2 px-3 py-2 border border-white/10 rounded-lg hover:border-brand/50 cursor-pointer text-sm">
+                <input type="checkbox" class="availability-day" value="Monday"/> Mon
+              </label>
+              <label class="flex items-center gap-2 px-3 py-2 border border-white/10 rounded-lg hover:border-brand/50 cursor-pointer text-sm">
+                <input type="checkbox" class="availability-day" value="Tuesday"/> Tue
+              </label>
+              <label class="flex items-center gap-2 px-3 py-2 border border-white/10 rounded-lg hover:border-brand/50 cursor-pointer text-sm">
+                <input type="checkbox" class="availability-day" value="Wednesday"/> Wed
+              </label>
+              <label class="flex items-center gap-2 px-3 py-2 border border-white/10 rounded-lg hover:border-brand/50 cursor-pointer text-sm">
+                <input type="checkbox" class="availability-day" value="Thursday"/> Thu
+              </label>
+              <label class="flex items-center gap-2 px-3 py-2 border border-white/10 rounded-lg hover:border-brand/50 cursor-pointer text-sm">
+                <input type="checkbox" class="availability-day" value="Friday"/> Fri
+              </label>
+              <label class="flex items-center gap-2 px-3 py-2 border border-white/10 rounded-lg hover:border-brand/50 cursor-pointer text-sm">
+                <input type="checkbox" class="availability-day" value="Saturday"/> Sat
+              </label>
+              <label class="flex items-center gap-2 px-3 py-2 border border-white/10 rounded-lg hover:border-brand/50 cursor-pointer text-sm">
+                <input type="checkbox" class="availability-day" value="Sunday"/> Sun
+              </label>
+            </div>
           </div>
 
           <!-- Submit -->
@@ -379,6 +425,16 @@
         const cb = document.querySelector(`.location-checkbox[value="${loc}"]`);
         if (cb) cb.checked = true;
       });
+      trainer.availabilityDays?.forEach(day => {
+        const cb = document.querySelector(`.availability-day[value="${day}"]`);
+        if (cb) cb.checked = true;
+      });
+      if (trainer.workingHours) {
+        const start = document.getElementById('hours-start');
+        const end = document.getElementById('hours-end');
+        if (start && trainer.workingHours.start) start.value = trainer.workingHours.start;
+        if (end && trainer.workingHours.end) end.value = trainer.workingHours.end;
+      }
     }
 
     function goBackToPasscode() {
@@ -458,7 +514,8 @@
             bio:           document.getElementById('trainer-bio').value.trim(),
             specialties,
             locations,
-            availabilityDays: experience,
+            availabilityDays: Array.from(document.querySelectorAll('.availability-day:checked')).map(c => c.value),
+            workingHours: { start: document.getElementById('hours-start').value, end: document.getElementById('hours-end').value },
           }),
         });
 
