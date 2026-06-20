@@ -5,24 +5,34 @@ struct TrainerOrientationView: View {
     @State private var watched: Set<Int> = []
 
     private let videos: [(title: String, description: String, url: String)] = [
-        ("Welcome to MONTRA",
-         "An overview of the platform, how client matching works, and what your journey as a MONTRA coach looks like.",
-         "https://drive.google.com/file/d/1Vt_2LoNYNNXzv0E6S_JxS9sBR1nVhLaC/view"),
-        ("MONTRA Standards & Code of Conduct",
-         "The professional standards, prohibited conduct rules, and values every MONTRA coach is held to.",
-         "https://drive.google.com/file/d/1esOaU6tWSSNPqLmDt35g-3PIymFCN_tS/view"),
-        ("Client Request & Session Flow",
-         "How to review match requests, accept clients, schedule sessions, and log session records correctly.",
-         "https://drive.google.com/file/d/1T62RymHKQP3d1RJk3w9_QzJ6bWrSJZIy/view"),
-        ("Safety, Liability & Scope of Practice",
-         "Injury protocols, client screening, maintaining your CPR/AED cert, insurance requirements, and staying within your scope.",
-         "https://drive.google.com/file/d/1kVX3kzmFOS7CQ6pE0Xw77oJbuEFgGwnD/view"),
-        ("Communication & Professionalism",
-         "Response time expectations, how to message clients, handling rescheduling, and representing the MONTRA brand.",
-         "https://drive.google.com/file/d/1nRDFo77-BR5jr2u7H1NvqkDVoaKeylQ2/view"),
+        (
+            "Welcome to MONTRA",
+            "An overview of the platform, how client matching works, and what your journey as a MONTRA coach looks like.",
+            "https://drive.google.com/file/d/1Vt_2LoNYNNXzv0E6S_JxS9sBR1nVhLaC/view"
+        ),
+        (
+            "MONTRA Standards & Code of Conduct",
+            "The professional standards, prohibited conduct rules, and values every MONTRA coach is held to.",
+            "https://drive.google.com/file/d/1esOaU6tWSSNPqLmDt35g-3PIymFCN_tS/view"
+        ),
+        (
+            "Client Request & Session Flow",
+            "How to review match requests, accept clients, schedule sessions, and log session records correctly.",
+            "https://drive.google.com/file/d/1T62RymHKQP3d1RJk3w9_QzJ6bWrSJZIy/view"
+        ),
+        (
+            "Safety, Liability & Scope of Practice",
+            "Injury protocols, client screening, CPR/AED cert, insurance requirements, and staying within your scope.",
+            "https://drive.google.com/file/d/1kVX3kzmFOS7CQ6pE0Xw77oJbuEFgGwnD/view"
+        ),
+        (
+            "Communication & Professionalism",
+            "Response time expectations, messaging clients, handling rescheduling, and representing the MONTRA brand.",
+            "https://drive.google.com/file/d/1nRDFo77-BR5jr2u7H1NvqkDVoaKeylQ2/view"
+        ),
     ]
 
-    var allWatched: Bool { watched.count == videos.count }
+    private var allWatched: Bool { watched.count == videos.count }
 
     var body: some View {
         ZStack {
@@ -77,18 +87,14 @@ struct TrainerOrientationView: View {
                     .foregroundColor(.montraOrange)
             }
             GeometryReader { geo in
-                let fillWidth = total > 0 ? geo.size.width * CGFloat(done) / CGFloat(total) : 0
+                let fillWidth: CGFloat = total > 0 ? geo.size.width * CGFloat(done) / CGFloat(total) : 0
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(Color.white.opacity(0.08))
-                        .frame(height: 6)
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(Color.montraOrange)
-                        .frame(width: fillWidth, height: 6)
-                        .animation(.easeInOut(duration: 0.3), value: done)
+                    RoundedRectangle(cornerRadius: 3).fill(Color.white.opacity(0.08)).frame(height: 6)
+                    RoundedRectangle(cornerRadius: 3).fill(Color.montraOrange).frame(width: fillWidth, height: 6)
                 }
             }
             .frame(height: 6)
+            .animation(Animation.easeInOut(duration: 0.3), value: done)
         }
         .padding(.horizontal, 24)
         .padding(.bottom, 24)
@@ -104,9 +110,7 @@ struct TrainerOrientationView: View {
                     url: videos[i].url,
                     isWatched: watched.contains(i)
                 ) {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        watched.insert(i)
-                    }
+                    watched.insert(i)
                 }
             }
         }
@@ -115,20 +119,7 @@ struct TrainerOrientationView: View {
 
     private var ctaSection: some View {
         VStack(spacing: 12) {
-            Button {
-                guard allWatched else { return }
-                orientationCompleted = true
-            } label: {
-                Text(allWatched ? "Begin Taking Clients" : "Watch all videos to continue")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(allWatched ? .black : .montraTextSecondary)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 52)
-                    .background(allWatched ? Color.montraOrange : Color.white.opacity(0.08))
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
-                    .animation(.easeInOut(duration: 0.2), value: allWatched)
-            }
-            .disabled(!allWatched)
+            ctaButton
             if !allWatched {
                 Text("Watch each video above — they'll be marked complete automatically.")
                     .font(.system(size: 12))
@@ -139,6 +130,26 @@ struct TrainerOrientationView: View {
         .padding(.horizontal, 24)
         .padding(.top, 32)
         .padding(.bottom, 60)
+    }
+
+    private var ctaButton: some View {
+        let label: String = allWatched ? "Begin Taking Clients" : "Watch all videos to continue"
+        let fg: Color = allWatched ? .black : .montraTextSecondary
+        let bg: Color = allWatched ? .montraOrange : Color.white.opacity(0.08)
+        return Button {
+            guard allWatched else { return }
+            orientationCompleted = true
+        } label: {
+            Text(label)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(fg)
+                .frame(maxWidth: .infinity)
+                .frame(height: 52)
+                .background(bg)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+        }
+        .disabled(!allWatched)
+        .animation(Animation.easeInOut(duration: 0.2), value: allWatched)
     }
 }
 
@@ -156,57 +167,10 @@ private struct OrientationVideoCard: View {
 
     var body: some View {
         HStack(spacing: 16) {
-            // Check / number icon
-            ZStack {
-                Circle()
-                    .fill(isWatched ? Color.montraOrange : Color.white.opacity(0.08))
-                    .frame(width: 44, height: 44)
-                if isWatched {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundColor(.black)
-                } else {
-                    Text("\(index)")
-                        .font(.system(size: 14, weight: .black))
-                        .foregroundColor(.montraTextSecondary)
-                }
-            }
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.montraTextPrimary)
-                Text(description)
-                    .font(.system(size: 12))
-                    .foregroundColor(.montraTextSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .lineLimit(2)
-            }
-
+            circleIcon
+            infoStack
             Spacer()
-
-            // Watch button
-            Button {
-                if let videoURL = URL(string: url) {
-                    openURL(videoURL)
-                }
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    onWatch()
-                }
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: isWatched ? "checkmark" : "play.fill")
-                        .font(.system(size: 10, weight: .bold))
-                    Text(isWatched ? "Done" : "Watch")
-                        .font(.system(size: 12, weight: .bold))
-                }
-                .foregroundColor(isWatched ? .montraOrange : .black)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
-                .background(isWatched ? Color.montraOrange.opacity(0.12) : Color.montraOrange)
-                .clipShape(Capsule())
-            }
-            .buttonStyle(.plain)
+            watchButton
         }
         .padding(16)
         .background(isWatched ? Color.montraOrange.opacity(0.06) : Color.white.opacity(0.04))
@@ -215,6 +179,59 @@ private struct OrientationVideoCard: View {
             RoundedRectangle(cornerRadius: 14)
                 .stroke(isWatched ? Color.montraOrange.opacity(0.35) : Color.white.opacity(0.08), lineWidth: 1)
         )
+        .animation(Animation.easeInOut(duration: 0.2), value: isWatched)
+    }
+
+    private var circleIcon: some View {
+        ZStack {
+            Circle()
+                .fill(isWatched ? Color.montraOrange : Color.white.opacity(0.08))
+                .frame(width: 44, height: 44)
+            if isWatched {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundColor(.black)
+            } else {
+                Text("\(index)")
+                    .font(.system(size: 14, weight: .black))
+                    .foregroundColor(.montraTextSecondary)
+            }
+        }
+    }
+
+    private var infoStack: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.montraTextPrimary)
+            Text(description)
+                .font(.system(size: 12))
+                .foregroundColor(.montraTextSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .lineLimit(2)
+        }
+    }
+
+    private var watchButton: some View {
+        let icon: String = isWatched ? "checkmark" : "play.fill"
+        let label: String = isWatched ? "Done" : "Watch"
+        let fg: Color = isWatched ? .montraOrange : .black
+        let bg: Color = isWatched ? Color.montraOrange.opacity(0.12) : .montraOrange
+        return Button {
+            if let videoURL = URL(string: url) { openURL(videoURL) }
+            onWatch()
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: icon).font(.system(size: 10, weight: .bold))
+                Text(label).font(.system(size: 12, weight: .bold))
+            }
+            .foregroundColor(fg)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .background(bg)
+            .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 }
 
