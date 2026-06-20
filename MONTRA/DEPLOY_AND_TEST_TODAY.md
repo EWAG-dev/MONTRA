@@ -128,3 +128,10 @@ firebase deploy --only hosting
 2. Start iOS archive/upload immediately after.
 3. While build processes, log web defects.
 4. Install TestFlight build and execute iOS smoke pass.
+
+
+
+
+# Notes from Aaron (new dev manual tester)"
+# Confirmed it is in testflight
+# 
