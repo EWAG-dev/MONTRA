@@ -13,7 +13,7 @@ struct TrainerAgreementView: View {
 
                 // Header
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(\"MONTRA\")
+                    Text("MONTRA")
                         .font(.system(size: 11, weight: .black))
                         .kerning(1.8)
                         .foregroundColor(.montraOrange)
