@@ -141,8 +141,6 @@ struct TrainerOrientationView: View {
         .padding(.bottom, 60)
     }
 }
-    }
-}
 
 // MARK: - Video Card
 
