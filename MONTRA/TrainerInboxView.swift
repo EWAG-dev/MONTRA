@@ -5,12 +5,15 @@ struct TrainerInboxView: View {
 
     @EnvironmentObject private var auth: AuthManager
     @AppStorage("app.liveDataConnected") private var liveDataConnected = false
-    @State private var selectedSegment: Segment = .messages
+    @State private var selectedSegment: Segment = .requests
     @State private var messageText = ""
     @State private var showTrainerMenu = false
     @AppStorage("trainer.profileImageData") private var trainerProfileImageData: Data = Data()
+    @State private var matchRequests: [TrainerMatchRequest] = []
+    @State private var requestsLoading = false
 
     enum Segment: String, CaseIterable {
+        case requests      = "Requests"
         case messages      = "Messages"
         case notifications = "Notifications"
     }
@@ -109,10 +112,10 @@ struct TrainerInboxView: View {
                 .padding(.bottom, 4)
 
                 // MARK: Content
-                if selectedSegment == .messages {
-                    messagesContent
-                } else {
-                    notificationsContent
+                switch selectedSegment {
+                case .requests:      requestsContent
+                case .messages:      messagesContent
+                case .notifications: notificationsContent
                 }
 
                 Spacer(minLength: 90)
@@ -120,8 +123,50 @@ struct TrainerInboxView: View {
             .padding(.horizontal, 20)
         }
         .background(Color.montraBackground)
+        .task { await fetchMatchRequests() }
         .sheet(isPresented: $showTrainerMenu) {
             ProfileMenuSheet(isClient: false)
+        }
+    }
+
+    // MARK: - Requests (live)
+
+    @ViewBuilder
+    private var requestsContent: some View {
+        if requestsLoading {
+            HStack { Spacer(); ProgressView().tint(.montraOrange); Spacer() }.padding(.top, 24)
+        } else if matchRequests.isEmpty {
+            VStack(spacing: 12) {
+                Image(systemName: "tray")
+                    .font(.system(size: 32))
+                    .foregroundColor(.montraTextSecondary)
+                Text("No client requests yet")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.montraTextSecondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.top, 40)
+        } else {
+            VStack(spacing: 10) {
+                ForEach(matchRequests) { req in
+                    MatchRequestCard(request: req)
+                }
+            }
+        }
+    }
+
+    private func fetchMatchRequests() async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
+              let url = MontraAPIConfig.url(for: "/api/trainers/my-profile") else { return }
+        requestsLoading = true
+        defer { requestsLoading = false }
+        var req = URLRequest(url: url)
+        req.setValue("Bearer \(tokenResult.token)", forHTTPHeaderField: "Authorization")
+        guard let (data, _) = try? await URLSession.shared.data(for: req) else { return }
+        struct Response: Decodable { let matches: [TrainerMatchRequest] }
+        if let response = try? JSONDecoder().decode(Response.self, from: data) {
+            matchRequests = response.matches
         }
     }
 
@@ -211,6 +256,90 @@ struct TrainerConversation: Identifiable {
             .prefix(2)
             .map(String.init)
             .joined()
+    }
+}
+
+// MARK: - Match Request Model
+
+struct TrainerMatchRequest: Identifiable, Decodable {
+    let id: String
+    let clientUid: String
+    let clientEmail: String
+    let clientProfile: ClientProfile
+    let status: String
+    let createdAt: String
+    let trainerName: String
+
+    struct ClientProfile: Decodable {
+        let firstName: String
+        let goal: String
+        let location: String
+        let coachPreference: String
+        let availability: [String]
+    }
+
+    var initials: String {
+        String(clientProfile.firstName.prefix(1)).uppercased()
+    }
+    var timeAgo: String {
+        let formatter = ISO8601DateFormatter()
+        guard let date = formatter.date(from: createdAt) else { return "" }
+        let diff = Int(Date().timeIntervalSince(date))
+        if diff < 3600  { return "\(diff / 60)m ago" }
+        if diff < 86400 { return "\(diff / 3600)h ago" }
+        return "\(diff / 86400)d ago"
+    }
+}
+
+// MARK: - Match Request Card
+
+struct MatchRequestCard: View {
+    let request: TrainerMatchRequest
+
+    var body: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                Circle()
+                    .fill(Color.montraOrange.opacity(0.15))
+                    .frame(width: 46, height: 46)
+                Text(request.initials)
+                    .font(.system(size: 17, weight: .black))
+                    .foregroundColor(.montraOrange)
+            }
+            .overlay(Circle().stroke(Color.montraOrange.opacity(0.6), lineWidth: 1))
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text(request.clientProfile.firstName.isEmpty ? "New Client" : request.clientProfile.firstName)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.montraTextPrimary)
+                    Text(request.status.capitalized)
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(request.status == "pending" ? .montraOrange : .green)
+                        .padding(.horizontal, 6).padding(.vertical, 2)
+                        .background((request.status == "pending" ? Color.montraOrange : Color.green).opacity(0.12))
+                        .clipShape(Capsule())
+                }
+                Text("\(request.clientProfile.goal) · \(request.clientProfile.location)")
+                    .font(.system(size: 12))
+                    .foregroundColor(.montraTextSecondary)
+                    .lineLimit(1)
+                if !request.clientProfile.availability.isEmpty {
+                    Text(request.clientProfile.availability.joined(separator: ", "))
+                        .font(.system(size: 11))
+                        .foregroundColor(.montraTextSecondary)
+                        .lineLimit(1)
+                }
+            }
+
+            Spacer()
+
+            Text(request.timeAgo)
+                .font(.system(size: 11))
+                .foregroundColor(.montraTextSecondary)
+        }
+        .padding(14)
+        .montraCard(radius: 14)
     }
 }
 

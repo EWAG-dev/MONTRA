@@ -80,4 +80,10 @@ final class AuthManager: ObservableObject {
     func sendPasswordReset(to email: String) async throws {
         try await Auth.auth().sendPasswordReset(withEmail: email)
     }
+
+    func deleteAccount() async throws {
+        guard let user = Auth.auth().currentUser else { return }
+        try await user.delete()
+        demoRole = nil
+    }
 }

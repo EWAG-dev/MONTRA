@@ -11,11 +11,15 @@ struct ProfileMenuSheet: View {
     @AppStorage("dashboardProfileImageData") private var profileImageData: Data = Data()
     @AppStorage("quiz.firstName") private var quizFirstName: String = ""
     @State private var selectedPhotoItem: PhotosPickerItem? = nil
+    @AppStorage("onboarding.completed") private var onboardingCompleted = false
+    @AppStorage("quiz.step")            private var quizStep = 1
     @State private var showPersonalInfo      = false
     @State private var showNotificationPrefs = false
     @State private var showAppearanceSheet   = false
     @State private var showGiftShareSheet    = false
     @State private var showReferShareSheet   = false
+    @State private var showDeleteConfirm     = false
+    @State private var deleteError: String?  = nil
 
     private var displayName: String {
         isClient ? (quizFirstName.isEmpty ? "Member" : quizFirstName) : "Alex Morgan"
@@ -92,7 +96,7 @@ struct ProfileMenuSheet: View {
 
                             Spacer()
 
-                            Button {} label: {
+                            Button { showPersonalInfo = true } label: {
                                 Text("Edit Profile")
                                     .font(.system(size: 13, weight: .semibold))
                                     .foregroundColor(.montraTextPrimary)
@@ -152,6 +156,8 @@ struct ProfileMenuSheet: View {
                         // ── Sign out section ──────────────────────────
                         ProfileSectionCard(title: "") {
                             Button {
+                                onboardingCompleted = false
+                                quizStep = 1
                                 auth.signOut()
                                 dismiss()
                             } label: {
@@ -159,6 +165,15 @@ struct ProfileMenuSheet: View {
                                     icon: "rectangle.portrait.and.arrow.right",
                                     label: "Sign Out",
                                     tint: Color(hex: "#FF6B6B"),
+                                    showChevron: false
+                                )
+                            }
+                            Divider().background(Color.white.opacity(0.06)).padding(.leading, 52)
+                            Button { showDeleteConfirm = true } label: {
+                                ProfileRow(
+                                    icon: "trash.fill",
+                                    label: "Delete Account",
+                                    tint: Color(hex: "#FF3B30"),
                                     showChevron: false
                                 )
                             }
@@ -178,6 +193,29 @@ struct ProfileMenuSheet: View {
                     profileImageData = data
                 }
             }
+        }
+        .alert("Delete Account", isPresented: $showDeleteConfirm) {
+            Button("Delete", role: .destructive) {
+                Task {
+                    do {
+                        try await auth.deleteAccount()
+                        // auth.user is now nil — RootView routes to LoginView
+                        onboardingCompleted = false
+                        quizStep = 1
+                        dismiss()
+                    } catch {
+                        deleteError = "Couldn't delete account. Sign out and sign back in first, then try again."
+                    }
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will permanently delete your account and all associated data. This cannot be undone.")
+        }
+        .alert("Error", isPresented: Binding(get: { deleteError != nil }, set: { if !$0 { deleteError = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(deleteError ?? "")
         }
         .sheet(isPresented: $showPersonalInfo)      { PersonalInfoSheet() }
         .sheet(isPresented: $showNotificationPrefs) { NotificationPrefsSheet() }

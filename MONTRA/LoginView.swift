@@ -139,45 +139,6 @@ struct LoginView: View {
 
                     Spacer(minLength: 40)
 
-                    #if DEBUG
-                    // MARK: Demo Buttons
-                    VStack(spacing: 10) {
-                        Text("Try a demo")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundColor(Color.white.opacity(0.25))
-                            .kerning(0.5)
-
-                        HStack(spacing: 10) {
-                            Button {
-                                onboardingCompleted = true
-                                auth.enableDemo(as: .user)
-                            } label: {
-                                Text("Client")
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundColor(.montraTextSecondary)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 10)
-                                    .background(Color.white.opacity(0.06))
-                                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.white.opacity(0.1), lineWidth: 0.8))
-                            }
-                            Button {
-                                auth.enableDemo(as: .trainer)
-                            } label: {
-                                Text("Trainer")
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundColor(.montraTextSecondary)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 10)
-                                    .background(Color.white.opacity(0.06))
-                                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.white.opacity(0.1), lineWidth: 0.8))
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 24)
-                    #endif
-
                 }
             }
         }
