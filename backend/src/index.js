@@ -99,6 +99,26 @@ function rejectionEmailHtml(name, concerns = []) {
 </div></body></html>`;
 }
 
+function applicationReceivedEmailHtml(name) {
+  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+<div style="max-width:560px;margin:0 auto;padding:48px 24px">
+  <p style="color:#FF6820;font-size:11px;font-weight:700;letter-spacing:2px;margin:0 0 32px">MONTRA</p>
+  <h1 style="color:#fff;font-size:24px;font-weight:900;margin:0 0 16px">Application Received</h1>
+  <p style="font-size:15px;line-height:1.7;color:#ccc">Hi ${name},<br><br>
+  We received your MONTRA coach application and our team will review it within 48 hours.<br><br>
+  If approved, you will receive a second email with a secure link to set your password and complete your trainer onboarding.</p>
+  <div style="background:#151515;border-radius:10px;padding:18px;margin:24px 0;border:1px solid #222;color:#bbb;font-size:14px;line-height:1.7">
+    <strong style="color:#fff">What happens next:</strong><br>
+    1) Application review<br>
+    2) Eligibility checks<br>
+    3) Approval email with setup link
+  </div>
+  <p style="color:#777;font-size:14px;line-height:1.6">Thank you for applying to MONTRA.</p>
+  <hr style="border:none;border-top:1px solid #222;margin:40px 0">
+  <p style="color:#555;font-size:11px">MONTRA &middot; Powered by Elite Home Fitness</p>
+</div></body></html>`;
+}
+
 app.get("/", (_req, res) => {
   res.status(200).json({ ok: true, service: "montra-backend" });
 });
@@ -312,6 +332,17 @@ app.post("/api/trainers/provision", async (req, res) => {
       status: "pending",
       experienceYears: Number.isFinite(Number(experienceYears)) ? Number(experienceYears) : 0,
     });
+
+    // Best-effort confirmation so applicants know submission succeeded.
+    try {
+      await sendEmail(
+        normalizedEmail,
+        "Application received — MONTRA Coach Application",
+        applicationReceivedEmailHtml(name)
+      );
+    } catch (emailError) {
+      console.error("Failed to send application confirmation email:", emailError.message);
+    }
 
     res.status(201).json({ ok: true, applicationId: trainer.id });
   } catch (error) {
