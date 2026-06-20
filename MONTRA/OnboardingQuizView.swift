@@ -16,33 +16,7 @@ struct OnboardingTrainer: Identifiable, Decodable {
 }
 
 extension OnboardingTrainer {
-    static let all: [OnboardingTrainer] = [
-        .init(id: "jordan_hayes", name: "Jordan Hayes", initials: "JH",
-              certification: "NASM Certified",
-              bio: "Specialises in strength-focused programming for all levels. Known for high-energy sessions and detailed form coaching.",
-              specialties: ["Build Muscle", "Athletic Performance", "General Fitness"],
-              locations: ["Boston, MA", "New York, NY"], gender: "Male", accentHex: "#FF6820"),
-        .init(id: "priya_nair", name: "Priya Nair", initials: "PN",
-              certification: "ACE Certified",
-              bio: "Holistic coach with a focus on sustainable fat loss, mobility, and overall wellness. 8+ years experience.",
-              specialties: ["Lose Weight", "Flexibility & Wellness", "General Fitness"],
-              locations: ["Boston, MA", "Rhode Island, RI"], gender: "Female", accentHex: "#A855F7"),
-        .init(id: "marcus_webb", name: "Marcus Webb", initials: "MW",
-              certification: "NSCA Certified",
-              bio: "Former competitive boxer turned coach. Brings real combat sports experience to every client's programme.",
-              specialties: ["Combat Sports", "Athletic Performance", "Build Muscle"],
-              locations: ["New York, NY", "New Jersey, NJ"], gender: "Male", accentHex: "#3B82F6"),
-        .init(id: "sofia_chen", name: "Sofia Chen", initials: "SC",
-              certification: "ISSA Certified",
-              bio: "Yoga-certified movement specialist. Creates plans that balance performance with recovery.",
-              specialties: ["Flexibility & Wellness", "General Fitness", "Lose Weight"],
-              locations: ["Connecticut, CT", "New Jersey, NJ"], gender: "Female", accentHex: "#10B981"),
-        .init(id: "tyler_brooks", name: "Tyler Brooks", initials: "TB",
-              certification: "NASM Certified",
-              bio: "Data-driven approach to general fitness and weight loss. Clients consistently beat their goals.",
-              specialties: ["General Fitness", "Lose Weight", "Athletic Performance"],
-              locations: ["Rhode Island, RI", "Connecticut, CT"], gender: "Male", accentHex: "#F59E0B"),
-    ]
+    static let all: [OnboardingTrainer] = [] // backend is source of truth
 
     /// Filter a pool of trainers by quiz answers. Falls back to the full pool if nothing matches.
     static func filter(_ pool: [OnboardingTrainer], goal: String, location: String, genderPref: String) -> [OnboardingTrainer] {

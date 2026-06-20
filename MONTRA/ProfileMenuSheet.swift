@@ -22,7 +22,7 @@ struct ProfileMenuSheet: View {
     @State private var deleteError: String?  = nil
 
     private var displayName: String {
-        isClient ? (quizFirstName.isEmpty ? "Member" : quizFirstName) : "Alex Morgan"
+        isClient ? (quizFirstName.isEmpty ? "Member" : quizFirstName) : (auth.user?.displayName ?? "Trainer")
     }
 
     private var roleLabel: String {

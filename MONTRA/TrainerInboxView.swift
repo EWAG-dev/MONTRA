@@ -18,20 +18,8 @@ struct TrainerInboxView: View {
         case notifications = "Notifications"
     }
 
-    // Sample data — replaced when Firestore messaging is wired up
-    private let conversations: [TrainerConversation] = [
-        TrainerConversation(id: 1, clientName: "Jessica R.",  lastMessage: "See you tomorrow at 10!", time: "2m",        unread: true, tint: Color(hex: "#F97316")),
-        TrainerConversation(id: 2, clientName: "Marcus D.",   lastMessage: "Can we move Friday's session?", time: "1h", unread: true, tint: Color(hex: "#3B82F6")),
-        TrainerConversation(id: 3, clientName: "Priya S.",    lastMessage: "Thanks for the program notes.", time: "3h", unread: false, tint: Color(hex: "#A855F7")),
-        TrainerConversation(id: 4, clientName: "Dwayne K.",   lastMessage: "Feeling good after yesterday!", time: "Yesterday", unread: false, tint: Color(hex: "#10B981")),
-    ]
-
-    private let notifications: [AppNotification] = [
-        AppNotification(id: 1, title: "New booking request", detail: "Jessica R. requested a session on May 27 at 10:00 AM.", time: "5m",        isUnread: true),
-        AppNotification(id: 2, title: "Session cancelled",   detail: "Marcus D. cancelled the May 25 12:00 PM session.",       time: "30m",       isUnread: true),
-        AppNotification(id: 3, title: "Program completed",   detail: "Priya S. completed week 4 of Mobility Reset.",          time: "2h",        isUnread: false),
-        AppNotification(id: 4, title: "New client signup",   detail: "Dwayne K. has joined MONTRA and is assigned to you.",   time: "Yesterday", isUnread: false),
-    ]
+    private let conversations: [TrainerConversation] = []
+    private let notifications: [AppNotification] = []
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -81,7 +69,7 @@ struct TrainerInboxView: View {
                     .overlay(Circle().stroke(Color.montraOrange, lineWidth: 1.5))
 
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("Alex Morgan")
+                        Text(auth.user?.displayName ?? "Trainer")
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(.montraTextPrimary)
                         Text("Personal Trainer · MONTRA")

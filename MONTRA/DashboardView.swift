@@ -426,12 +426,7 @@ struct DashboardView: View {
         calories: "500–600"
     )
 
-    private let scheduledSessions: [ScheduleSession] = [
-        ScheduleSession(id: 1, month: "MAY", date: 27, day: "MON", title: "HIIT & Core",        trainer: "Alex Morgan", time: "9:00 AM",  status: .confirmed),
-        ScheduleSession(id: 2, month: "MAY", date: 31, day: "FRI", title: "Lower Body Power",   trainer: "Alex Morgan", time: "11:00 AM", status: .scheduled),
-        ScheduleSession(id: 3, month: "JUN", date:  3, day: "MON", title: "Upper Body Strength", trainer: "Alex Morgan", time: "9:00 AM",  status: .scheduled),
-        ScheduleSession(id: 4, month: "JUN", date:  7, day: "FRI", title: "Full Body Strength",  trainer: "Alex Morgan", time: "10:00 AM", status: .scheduled),
-    ]
+    private let scheduledSessions: [ScheduleSession] = []
 }
 
 // MARK: - Weekly Stat Cell

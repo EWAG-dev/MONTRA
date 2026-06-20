@@ -22,12 +22,12 @@ struct SessionsView: View {
     @AppStorage("quiz.requestedTrainerName") private var trainerFullName: String = ""
 
     private var trainerFirstName: String {
-        let name = trainerFullName.isEmpty ? "Alex Morgan" : trainerFullName
-        return name.components(separatedBy: " ").first ?? "Alex"
+        let name = trainerFullName.isEmpty ? "Your Trainer" : trainerFullName
+        return name.components(separatedBy: " ").first ?? "Trainer"
     }
 
     private var trainerDisplayName: String {
-        trainerFullName.isEmpty ? "Alex Morgan" : trainerFullName
+        trainerFullName.isEmpty ? "Your Trainer" : trainerFullName
     }
 
     private var trainerInitials: String {

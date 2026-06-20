@@ -13,15 +13,7 @@ struct TrainerSessionsView: View {
         case past     = "Past"
     }
 
-    // Sample sessions — replaced when Firestore data model is wired up
-    private let allSessions: [TrainerClientSession] = [
-        TrainerClientSession(id: 1,  clientName: "Jessica R.",  time: "10:00 AM", type: "Full Body Strength",  status: .confirmed, durationMin: 60),
-        TrainerClientSession(id: 2,  clientName: "Marcus D.",   time: "12:00 PM", type: "HIIT & Core",         status: .confirmed, durationMin: 60),
-        TrainerClientSession(id: 3,  clientName: "Priya S.",    time: "2:00 PM",  type: "Lower Body Power",    status: .scheduled, durationMin: 60),
-        TrainerClientSession(id: 4,  clientName: "Dwayne K.",   time: "11:00 AM", type: "Mobility Reset",      status: .scheduled, durationMin: 45),
-        TrainerClientSession(id: 5,  clientName: "Jessica R.",  time: "10:00 AM", type: "Upper Body Strength", status: .confirmed, durationMin: 60),
-        TrainerClientSession(id: 6,  clientName: "Marcus D.",   time: "9:00 AM",  type: "HIIT Conditioning",   status: .confirmed, durationMin: 60),
-    ]
+    private let allSessions: [TrainerClientSession] = []
 
     var body: some View {
         NavigationStack {

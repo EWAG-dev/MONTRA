@@ -16,13 +16,7 @@ struct ClientSchedulesView: View {
     @State private var draftTime: [String: String] = [:]
     @State private var savedClients: Set<String> = []
 
-    private let clients: [(key: String, name: String)] = [
-        ("jessica_r", "Jessica R."),
-        ("marcus_d",  "Marcus D."),
-        ("priya_s",   "Priya S."),
-        ("dwayne_k",  "Dwayne K."),
-        ("sofia_t",   "Sofia T."),
-    ]
+    private let clients: [(key: String, name: String)] = []
 
     private let allDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     private let allDaysFull = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]

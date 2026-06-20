@@ -1,12 +1,7 @@
 import SwiftUI
 
 struct NotificationsView: View {
-    private let notifications: [AppNotification] = [
-        AppNotification(id: 1, title: "Session confirmed", detail: "Alex confirmed your 10:00 AM Friday session.", time: "2m", isUnread: true),
-        AppNotification(id: 2, title: "Program update", detail: "Your Strength Builder plan has a new week 3 block.", time: "1h", isUnread: true),
-        AppNotification(id: 3, title: "Hydration reminder", detail: "Aim for 2.5L water today before training.", time: "3h", isUnread: false),
-        AppNotification(id: 4, title: "Payment receipt", detail: "Your monthly training invoice is available.", time: "Yesterday", isUnread: false),
-    ]
+    private let notifications: [AppNotification] = []
 
     var body: some View {
         ScrollView(showsIndicators: false) {

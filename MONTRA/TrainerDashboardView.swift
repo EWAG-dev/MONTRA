@@ -5,17 +5,8 @@ struct TrainerDashboardView: View {
     @EnvironmentObject private var auth: AuthManager
     @AppStorage("app.liveDataConnected") private var liveDataConnected = false
 
-    // Sample data — replaced when trainer-side data model is wired up
-    private let todaySessions: [TrainerClientSession] = [
-        TrainerClientSession(id: 1, clientName: "Jessica R.",  time: "10:00 AM", type: "Full Body Strength",  status: .confirmed, durationMin: 60),
-        TrainerClientSession(id: 2, clientName: "Marcus D.",   time: "12:00 PM", type: "HIIT & Core",         status: .confirmed, durationMin: 60),
-        TrainerClientSession(id: 3, clientName: "Priya S.",    time: "2:00 PM",  type: "Lower Body Power",    status: .scheduled, durationMin: 60),
-    ]
-
-    private let upcomingSessions: [TrainerClientSession] = [
-        TrainerClientSession(id: 4, clientName: "Jessica R.",  time: "10:00 AM", type: "Upper Body Strength", status: .confirmed, durationMin: 60),
-        TrainerClientSession(id: 5, clientName: "Dwayne K.",   time: "11:00 AM", type: "Mobility Reset",      status: .scheduled, durationMin: 45),
-    ]
+    private let todaySessions: [TrainerClientSession] = []
+    private let upcomingSessions: [TrainerClientSession] = []
 
     @State private var showProfileSheet = false
     @State private var showSchedules = false

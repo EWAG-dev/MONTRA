@@ -247,6 +247,49 @@ app.post("/api/dev/set-trainer-claim", async (req, res) => {
   }
 });
 
+// Dev-only: run full approval flow for a trainer doc without requiring admin auth
+app.post("/api/dev/approve-trainer", async (req, res) => {
+  if (process.env.NODE_ENV === "production" && !process.env.ALLOW_DEV_ENDPOINTS) {
+    return res.status(404).json({ error: "Not found" });
+  }
+  const { trainerId } = req.body;
+  if (!trainerId) return res.status(400).json({ error: "trainerId required" });
+
+  const trainer = await approveTrainer(trainerId);
+  if (!trainer) return res.status(404).json({ error: "Trainer not found" });
+
+  if (!trainer.accountUid && trainer.email) {
+    try {
+      const tempPassword = randomBytes(16).toString("base64url");
+      const authUser = await getAuth().createUser({ email: trainer.email, password: tempPassword, displayName: trainer.name });
+      await updateTrainer(trainer.id, { accountUid: authUser.uid });
+      trainer.accountUid = authUser.uid;
+    } catch (authError) {
+      if (authError.code === "auth/email-already-exists") {
+        const existing = await getAuth().getUserByEmail(trainer.email);
+        await updateTrainer(trainer.id, { accountUid: existing.uid });
+        trainer.accountUid = existing.uid;
+      }
+    }
+  }
+
+  if (trainer.accountUid) {
+    await getAuth().setCustomUserClaims(trainer.accountUid, { role: "trainer" });
+  }
+
+  if (trainer.email) {
+    try {
+      const onboardingUrl = `${process.env.WEBSITE_URL || "https://montra-27532.web.app"}/trainer-onboarding.html`;
+      const resetLink = await getAuth().generatePasswordResetLink(trainer.email, { url: onboardingUrl });
+      await sendEmail(trainer.email, "You're approved — welcome to MONTRA!", approvalEmailHtml(trainer.name, resetLink));
+    } catch (emailError) {
+      console.error("Dev approve email error:", emailError.message);
+    }
+  }
+
+  res.json({ ok: true, trainerId, email: trainer.email });
+});
+
 app.post("/api/trainers/provision", async (req, res) => {
   try {
     const { firstName, lastName, email, phone, specialties, certifications, coachingStyle, experienceYears } = req.body || {};

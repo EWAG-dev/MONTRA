@@ -127,7 +127,7 @@ struct CoachChatSheet: View {
     private var headerTitle: String {
         switch selectedTarget {
         case .coach:
-            return "Chat with Alex Morgan"
+            return "Chat with Your Coach"
         case .montraTeam:
             return "Chat with MONTRA Team"
         case .support:
