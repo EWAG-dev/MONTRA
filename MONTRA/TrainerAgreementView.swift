@@ -13,7 +13,7 @@ struct TrainerAgreementView: View {
 
                 // Header
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("MONTRA")
+                    Text(\"MONTRA\")
                         .font(.system(size: 11, weight: .black))
                         .kerning(1.8)
                         .foregroundColor(.montraOrange)
@@ -108,7 +108,7 @@ struct TrainerAgreementView: View {
 
     @ViewBuilder
     private var agreementContent: some View {
-        agreementSection("MONTRA INDEPENDENT COACH PROVIDER AGREEMENT", body: "This Independent Coach Provider Agreement is entered into between Elite Home Fitness Solution LLC, doing business as MONTRA ("Company"), and the independent wellness professional, trainer, coach, instructor, or service provider ("Provider") accessing or utilizing the MONTRA platform.\n\nBy registering for, accessing, or providing services through the MONTRA platform, you acknowledge that you have read, understood, and agreed to the terms of this Agreement.")
+        agreementSection("MONTRA INDEPENDENT COACH PROVIDER AGREEMENT", body: "This Independent Coach Provider Agreement is entered into between Elite Home Fitness Solution LLC, doing business as MONTRA (\"Company\"), and the independent wellness professional, trainer, coach, instructor, or service provider (\"Provider\") accessing or utilizing the MONTRA platform.\n\nBy registering for, accessing, or providing services through the MONTRA platform, you acknowledge that you have read, understood, and agreed to the terms of this Agreement.")
 
         agreementSection("1. Platform Overview", body: "MONTRA is a technology-enabled wellness marketplace platform that connects clients seeking wellness and fitness-related services with independent Providers. MONTRA provides scheduling infrastructure, payment processing, client acquisition systems, AI-powered matching tools, marketplace operations, communication systems, trust & safety systems, and operational infrastructure.\n\nMONTRA is not a gym employer model. Providers utilize the Platform independently while operating their own businesses.")
 
