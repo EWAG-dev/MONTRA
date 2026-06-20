@@ -27,110 +27,120 @@ struct TrainerOrientationView: View {
     var body: some View {
         ZStack {
             Color.montraBackground.ignoresSafeArea()
-
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) {
-
-                    // Header
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("MONTRA")
-                            .font(.system(size: 11, weight: .black))
-                            .kerning(1.8)
-                            .foregroundColor(.montraOrange)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(Color.montraOrange.opacity(0.12))
-                            .clipShape(Capsule())
-
-                        Text("Trainer Orientation")
-                            .font(.system(size: 30, weight: .black))
-                            .foregroundColor(.montraTextPrimary)
-                            .padding(.top, 8)
-
-                        Text("Watch each orientation video before you start accepting clients. Tap each card to mark it as watched.")
-                            .font(.system(size: 14))
-                            .foregroundColor(.montraTextSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.top, 64)
-                    .padding(.bottom, 32)
-
-                    // Progress bar
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("\(watched.count) of \(videos.count) completed")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundColor(.montraTextSecondary)
-                            Spacer()
-                            Text("\(Int(Double(watched.count) / Double(videos.count) * 100))%")
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundColor(.montraOrange)
-                        }
-                        GeometryReader { geo in
-                            ZStack(alignment: .leading) {
-                                RoundedRectangle(cornerRadius: 3)
-                                    .fill(Color.white.opacity(0.08))
-                                    .frame(height: 6)
-                    RoundedRectangle(cornerRadius: 3)
-                                    .fill(Color.montraOrange)
-                                    .frame(width: geo.size.width * (CGFloat(watched.count) / CGFloat(videos.count)), height: 6)
-                                    .animation(.easeInOut(duration: 0.3), value: watched.count)
-                            }
-                        }
-                        .frame(height: 6)
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 24)
-
-                    // Video cards
-                    VStack(spacing: 12) {
-                        ForEach(videos.indices, id: \.self) { i in
-                            OrientationVideoCard(
-                                index: i + 1,
-                                title: videos[i].title,
-                                description: videos[i].description,
-                                url: videos[i].url,
-                                isWatched: watched.contains(i)
-                            ) {
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    watched.insert(i)
-                                }
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 24)
-
-                    // CTA
-                    VStack(spacing: 12) {
-                        Button {
-                            guard allWatched else { return }
-                            orientationCompleted = true
-                        } label: {
-                            Text(allWatched ? "Begin Taking Clients" : "Watch all videos to continue")
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(allWatched ? .black : .montraTextSecondary)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 52)
-                                .background(allWatched ? Color.montraOrange : Color.white.opacity(0.08))
-                                .clipShape(RoundedRectangle(cornerRadius: 14))
-                                .animation(.easeInOut(duration: 0.2), value: allWatched)
-                        }
-                        .disabled(!allWatched)
-
-                        if !allWatched {
-                            Text("Watch each video above — they'll be marked complete automatically.")
-                                .font(.system(size: 12))
-                                .foregroundColor(.montraTextSecondary)
-                                .multilineTextAlignment(.center)
-                        }
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.top, 32)
-                    .padding(.bottom, 60)
+                    headerSection
+                    progressSection
+                    videoSection
+                    ctaSection
                 }
             }
         }
+    }
+
+    private var headerSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("MONTRA")
+                .font(.system(size: 11, weight: .black))
+                .kerning(1.8)
+                .foregroundColor(.montraOrange)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color.montraOrange.opacity(0.12))
+                .clipShape(Capsule())
+            Text("Trainer Orientation")
+                .font(.system(size: 30, weight: .black))
+                .foregroundColor(.montraTextPrimary)
+                .padding(.top, 8)
+            Text("Watch each orientation video before you start accepting clients.")
+                .font(.system(size: 14))
+                .foregroundColor(.montraTextSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 64)
+        .padding(.bottom, 32)
+    }
+
+    private var progressSection: some View {
+        let total = videos.count
+        let done = watched.count
+        let pct = total > 0 ? Int(Double(done) / Double(total) * 100) : 0
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("\(done) of \(total) completed")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.montraTextSecondary)
+                Spacer()
+                Text("\(pct)%")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.montraOrange)
+            }
+            GeometryReader { geo in
+                let fillWidth = total > 0 ? geo.size.width * CGFloat(done) / CGFloat(total) : 0
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(Color.white.opacity(0.08))
+                        .frame(height: 6)
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(Color.montraOrange)
+                        .frame(width: fillWidth, height: 6)
+                        .animation(.easeInOut(duration: 0.3), value: done)
+                }
+            }
+            .frame(height: 6)
+        }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 24)
+    }
+
+    private var videoSection: some View {
+        VStack(spacing: 12) {
+            ForEach(videos.indices, id: \.self) { i in
+                OrientationVideoCard(
+                    index: i + 1,
+                    title: videos[i].title,
+                    description: videos[i].description,
+                    url: videos[i].url,
+                    isWatched: watched.contains(i)
+                ) {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        watched.insert(i)
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 24)
+    }
+
+    private var ctaSection: some View {
+        VStack(spacing: 12) {
+            Button {
+                guard allWatched else { return }
+                orientationCompleted = true
+            } label: {
+                Text(allWatched ? "Begin Taking Clients" : "Watch all videos to continue")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(allWatched ? .black : .montraTextSecondary)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .background(allWatched ? Color.montraOrange : Color.white.opacity(0.08))
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .animation(.easeInOut(duration: 0.2), value: allWatched)
+            }
+            .disabled(!allWatched)
+            if !allWatched {
+                Text("Watch each video above — they'll be marked complete automatically.")
+                    .font(.system(size: 12))
+                    .foregroundColor(.montraTextSecondary)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 32)
+        .padding(.bottom, 60)
+    }
+}
     }
 }
 
