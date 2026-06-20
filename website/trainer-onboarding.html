@@ -298,36 +298,6 @@
             </div>
           </div>
 
-          <!-- CPR Certification -->
-          <div>
-            <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">CPR / AED Certification *</label>
-            <input type="text" id="trainer-cpr" placeholder="e.g., Red Cross CPR/AED, expires 06/2026" required class="w-full bg-[#141414] border border-white/10 focus:border-brand text-white placeholder-gray-600 rounded-xl px-4 py-3.5 text-sm outline-none transition-colors"/>
-            <p class="text-xs text-gray-600 mt-1">Current CPR and AED certification is required by MONTRA policy.</p>
-          </div>
-
-          <!-- Intro Video -->
-          <div>
-            <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Coach Introduction Video</label>
-            <input type="url" id="trainer-intro-video" placeholder="https://youtube.com/watch?v=..." class="w-full bg-[#141414] border border-white/10 focus:border-brand text-white placeholder-gray-600 rounded-xl px-4 py-3.5 text-sm outline-none transition-colors"/>
-            <p class="text-xs text-gray-600 mt-1">A short 60–90 second intro video significantly improves your match rate.</p>
-          </div>
-
-          <!-- Agreements -->
-          <div class="space-y-3 pt-2">
-            <label class="flex items-start gap-3 p-4 border border-white/10 rounded-xl hover:border-brand/40 cursor-pointer transition-colors">
-              <input type="checkbox" id="trainer-insurance" class="mt-0.5 accent-brand flex-shrink-0"/>
-              <span class="text-sm text-gray-300">I confirm that I currently carry <strong class="text-white">professional liability insurance</strong> appropriate for fitness coaching services.</span>
-            </label>
-            <label class="flex items-start gap-3 p-4 border border-white/10 rounded-xl hover:border-brand/40 cursor-pointer transition-colors">
-              <input type="checkbox" id="trainer-bg-consent" class="mt-0.5 accent-brand flex-shrink-0"/>
-              <span class="text-sm text-gray-300">I consent to a <strong class="text-white">background screening</strong> as required before receiving client leads through MONTRA.</span>
-            </label>
-            <label class="flex items-start gap-3 p-4 border border-white/10 rounded-xl hover:border-brand/40 cursor-pointer transition-colors">
-              <input type="checkbox" id="trainer-policy-agree" class="mt-0.5 accent-brand flex-shrink-0"/>
-              <span class="text-sm text-gray-300">I have read and agree to the <strong class="text-white">MONTRA Coach Eligibility &amp; Acceptance Policy</strong>, including all professional standards and prohibited conduct guidelines.</span>
-            </label>
-          </div>
-
           <!-- Submit -->
           <button type="submit" class="w-full bg-brand hover:bg-orange-700 text-white py-3.5 font-bold text-sm tracking-wide transition-colors rounded-xl mt-8">Submit Profile</button>
           <button type="button" onclick="goBackToPasscode()" class="w-full border border-white/10 hover:border-white/30 text-white py-3.5 font-bold text-sm tracking-wide transition-colors rounded-xl">Cancel</button>
@@ -371,6 +341,12 @@
     let currentProfileData = null;
     let selectedPhotoDataUrl = '';
     let firebaseAuth = null;
+    // Hiring/application fields — carried forward silently, not re-entered in profile build
+    let appCprCertification = '';
+    let appIntroVideoUrl = '';
+    let appHasInsurance = false;
+    let appBackgroundCheckConsent = false;
+    let appPolicyAgreement = false;
 
     // Initialize Firebase from backend config
     async function initFirebase() {
@@ -493,11 +469,12 @@
         selectedPhotoDataUrl = trainer.photoDataUrl;
         setPhotoPreview(trainer.photoDataUrl);
       }
-      if (trainer.cprCertification) document.getElementById('trainer-cpr').value = trainer.cprCertification;
-      if (trainer.introVideoUrl) document.getElementById('trainer-intro-video').value = trainer.introVideoUrl;
-      if (trainer.hasInsurance) document.getElementById('trainer-insurance').checked = true;
-      if (trainer.backgroundCheckConsent) document.getElementById('trainer-bg-consent').checked = true;
-      if (trainer.policyAgreement) document.getElementById('trainer-policy-agree').checked = true;
+      // Cache application-stage fields — displayed in read-only info, not editable in profile build
+      appCprCertification = trainer.cprCertification || '';
+      appIntroVideoUrl = trainer.introVideoUrl || '';
+      appHasInsurance = !!trainer.hasInsurance;
+      appBackgroundCheckConsent = !!trainer.backgroundCheckConsent;
+      appPolicyAgreement = !!trainer.policyAgreement;
     }
 
     function goBackToPasscode() {
@@ -559,24 +536,6 @@
         alert('Please select at least one option for Specialties, Experience Levels, and Service Locations.');
         return;
       }
-      if (!document.getElementById('trainer-cpr').value.trim()) {
-        alert('CPR/AED certification is required.');
-        document.getElementById('trainer-cpr').focus();
-        return;
-      }
-      if (!document.getElementById('trainer-insurance').checked) {
-        alert('You must confirm you carry professional liability insurance to continue.');
-        return;
-      }
-      if (!document.getElementById('trainer-bg-consent').checked) {
-        alert('Background check consent is required before submitting.');
-        return;
-      }
-      if (!document.getElementById('trainer-policy-agree').checked) {
-        alert('You must agree to the MONTRA Coach Eligibility Policy to continue.');
-        return;
-      }
-
       const submitBtn = document.querySelector('#trainer-form [type="submit"]');
       submitBtn.disabled = true;
       submitBtn.textContent = 'Saving…';
@@ -598,11 +557,11 @@
             experienceLevels: Array.from(document.querySelectorAll('.experience-checkbox:checked')).map(c => c.value),
             availabilityDays: Array.from(document.querySelectorAll('.availability-day:checked')).map(c => c.value),
             workingHours: { start: document.getElementById('hours-start').value, end: document.getElementById('hours-end').value },
-            cprCertification: document.getElementById('trainer-cpr').value.trim(),
-            hasInsurance: document.getElementById('trainer-insurance').checked,
-            introVideoUrl: document.getElementById('trainer-intro-video').value.trim(),
-            backgroundCheckConsent: document.getElementById('trainer-bg-consent').checked,
-            policyAgreement: document.getElementById('trainer-policy-agree').checked,
+            cprCertification: appCprCertification,
+            hasInsurance: appHasInsurance,
+            introVideoUrl: appIntroVideoUrl,
+            backgroundCheckConsent: appBackgroundCheckConsent,
+            policyAgreement: appPolicyAgreement,
           }),
         });
 
