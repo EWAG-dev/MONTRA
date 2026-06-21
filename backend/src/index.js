@@ -50,16 +50,22 @@ initFirebaseAdmin();
 async function sendEmail(to, subject, html) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    console.log(`[Email skipped — set RESEND_API_KEY] To: ${to} | ${subject}`);
+    console.warn(`[Email skipped — RESEND_API_KEY not set] To: ${to} | Subject: ${subject}`);
     return;
   }
-  const from = process.env.FROM_EMAIL || "MONTRA <noreply@montrafit.com>";
+  const from = process.env.FROM_EMAIL || "MONTRA <noreply@montra.com>";
+  console.log(`[Email] Sending to: ${to} | From: ${from} | Subject: ${subject}`);
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({ from, to: [to], subject, html }),
   });
-  if (!res.ok) throw new Error(`Resend error: ${await res.text()}`);
+  const body = await res.text();
+  if (!res.ok) {
+    console.error(`[Email] Resend API error ${res.status}: ${body}`);
+    throw new Error(`Resend error ${res.status}: ${body}`);
+  }
+  console.log(`[Email] Sent successfully. Resend response: ${body}`);
 }
 
 function approvalEmailHtml(name, resetLink) {
@@ -287,6 +293,9 @@ app.post("/api/dev/approve-trainer", async (req, res) => {
     } catch (authError) {
       if (authError.code === "auth/email-already-exists") {
         const existing = await getAuth().getUserByEmail(trainer.email);
+        if (trainer.name && existing.displayName !== trainer.name) {
+          await getAuth().updateUser(existing.uid, { displayName: trainer.name });
+        }
         await updateTrainer(trainer.id, { accountUid: existing.uid });
         trainer.accountUid = existing.uid;
       }
@@ -502,6 +511,11 @@ app.post("/api/admin/trainers/:id/approve", requireFirebaseAuth, requireAdmin, a
       if (authError.code === "auth/email-already-exists") {
         try {
           const existing = await getAuth().getUserByEmail(trainer.email);
+          // Update the auth profile displayName to the trainer's name so iOS reads
+          // the correct name from Firebase Auth rather than stale client-side state.
+          if (trainer.name && existing.displayName !== trainer.name) {
+            await getAuth().updateUser(existing.uid, { displayName: trainer.name });
+          }
           await updateTrainer(trainer.id, { accountUid: existing.uid });
           trainer.accountUid = existing.uid;
         } catch (e) {
@@ -609,6 +623,29 @@ app.post("/api/ai/coach-suggestion", requireFirebaseAuth, (req, res) => {
     model: "montra-rules-v1",
     suggestion: lines.join(" "),
   });
+});
+
+// Admin-only endpoint to test Resend integration without going through a full trainer flow
+app.post("/api/admin/test-email", requireFirebaseAuth, requireAdmin, async (req, res) => {
+  const to = String(req.body.to || req.user.email || "").trim();
+  if (!to) {
+    return res.status(400).json({ error: "Provide a 'to' email address in the request body" });
+  }
+  try {
+    await sendEmail(
+      to,
+      "MONTRA — Email Test",
+      `<!DOCTYPE html><html><body style="background:#0a0a0a;font-family:sans-serif;padding:48px 24px">
+        <p style="color:#FF6820;font-size:11px;font-weight:700;letter-spacing:2px">MONTRA</p>
+        <h1 style="color:#fff;font-size:24px">Email test successful</h1>
+        <p style="color:#ccc;font-size:15px">If you are reading this, Resend is correctly configured and sending from the verified domain.</p>
+        <p style="color:#555;font-size:11px">MONTRA &middot; Powered by Elite Home Fitness</p>
+      </body></html>`
+    );
+    res.status(200).json({ ok: true, to, from: process.env.FROM_EMAIL || "MONTRA <noreply@montra.com>" });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
 });
 
 app.listen(port, () => {
