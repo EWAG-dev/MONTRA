@@ -1079,7 +1079,7 @@ struct OnboardingQuizView: View {
                 try await auth.sendEmailVerification()
                 verificationMessage = "Verification email sent. Open your inbox, then come back and tap 'I've verified my email'."
             } catch {
-                verificationError = "Account created, but we couldn't send verification email. Tap resend below."
+                verificationError = "Account created, but we couldn't send verification email: \(error.localizedDescription)"
             }
             advance(by: 1)
         } catch {
@@ -1111,7 +1111,7 @@ struct OnboardingQuizView: View {
             try await auth.sendEmailVerification()
             verificationMessage = "Verification email sent. Check your inbox and spam folder."
         } catch {
-            verificationError = "We couldn't resend the verification email right now. Please try again."
+            verificationError = "We couldn't resend the verification email right now: \(error.localizedDescription)"
         }
     }
 

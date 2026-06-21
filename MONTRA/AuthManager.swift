@@ -1,5 +1,6 @@
 import Foundation
 import FirebaseAuth
+import FirebaseCore
 
 @MainActor
 final class AuthManager: ObservableObject {
@@ -75,7 +76,11 @@ final class AuthManager: ObservableObject {
     }
 
     func sendEmailVerification() async throws {
-        guard let user = Auth.auth().currentUser else { return }
+        guard let user = Auth.auth().currentUser else {
+            throw NSError(domain: "AuthManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found for verification email."])
+        }
+        // Reload first to reduce stale-session errors when immediately resending.
+        try? await user.reload()
         if !user.isEmailVerified {
             try await user.sendEmailVerification()
         }

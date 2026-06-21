@@ -215,11 +215,33 @@ app.get("/health", (_req, res) => {
 });
 
 app.get("/api/firebase/client-config", (_req, res) => {
+  const projectId = String(process.env.FIREBASE_PROJECT_ID || "").trim();
+  const rawAuthDomain = String(process.env.FIREBASE_AUTH_DOMAIN || "").trim();
+  const rawAppId = String(process.env.FIREBASE_APP_ID || "").trim();
+  const warnings = [];
+
+  let authDomain = rawAuthDomain;
+  if (authDomain.endsWith(".firebaseapp.co")) {
+    authDomain = authDomain.replace(/\.firebaseapp\.co$/i, ".firebaseapp.com");
+    warnings.push("FIREBASE_AUTH_DOMAIN had .firebaseapp.co and was auto-corrected to .firebaseapp.com");
+  }
+  if (!authDomain && projectId) {
+    authDomain = `${projectId}.firebaseapp.com`;
+    warnings.push("FIREBASE_AUTH_DOMAIN missing; using default <project>.firebaseapp.com");
+  }
+
+  let appId = rawAppId;
+  if (appId && !/^1:\d+:(web|ios|android):/i.test(appId)) {
+    warnings.push("FIREBASE_APP_ID does not look valid; omitting appId from client config");
+    appId = "";
+  }
+
   res.status(200).json({
     apiKey: process.env.FIREBASE_WEB_API_KEY || "",
-    authDomain: process.env.FIREBASE_AUTH_DOMAIN || "",
-    appId: process.env.FIREBASE_APP_ID || "",
-    projectId: process.env.FIREBASE_PROJECT_ID || "",
+    authDomain,
+    appId,
+    projectId,
+    warnings,
   });
 });
 
