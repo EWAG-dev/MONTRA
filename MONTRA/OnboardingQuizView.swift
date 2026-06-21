@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 // MARK: - Trainer Model
 
@@ -91,6 +92,7 @@ struct OnboardingQuizView: View {
     @State private var verificationLoading = false
     @State private var verificationError: String? = nil
     @State private var verificationMessage: String? = nil
+    @State private var verificationLinkOrCode = ""
     @State private var requestSubmissionError: String? = nil
     @State private var showClientTerms = false
     @State private var walkthroughPage = 0
@@ -787,6 +789,37 @@ struct OnboardingQuizView: View {
                     .font(.system(size: 14))
                     .foregroundColor(.montraTextSecondary)
 
+                MontraInputField(
+                    placeholder: "Paste verification link or code",
+                    text: $verificationLinkOrCode,
+                    keyboardType: .URL,
+                    isSecure: false
+                )
+
+                Button {
+                    Task { await applyPastedVerification() }
+                } label: {
+                    Text("Verify with pasted link/code")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.montraTextSecondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                }
+                .disabled(verificationLoading || verificationLinkOrCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+                Button {
+                    if let pasted = UIPasteboard.general.string {
+                        verificationLinkOrCode = pasted
+                    }
+                } label: {
+                    Text("Paste from clipboard")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.montraTextSecondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                }
+                .disabled(verificationLoading)
+
                 if let verificationMessage {
                     Text(verificationMessage)
                         .font(.system(size: 13, weight: .semibold))
@@ -1128,6 +1161,36 @@ struct OnboardingQuizView: View {
             verificationMessage = "Verification email sent. Check your inbox and spam folder."
         } catch {
             verificationError = "We couldn't resend the verification email right now: \(error.localizedDescription)"
+        }
+    }
+
+    private func applyPastedVerification() async {
+        verificationError = nil
+        verificationMessage = nil
+        verificationLoading = true
+        defer { verificationLoading = false }
+
+        let value = verificationLinkOrCode.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !value.isEmpty else {
+            verificationError = "Paste a verification link or code first."
+            return
+        }
+
+        do {
+            let verified: Bool
+            if value.contains("oobCode=") || value.contains("http://") || value.contains("https://") {
+                verified = try await auth.applyEmailVerificationLink(value)
+            } else {
+                verified = try await auth.applyEmailVerificationCode(value)
+            }
+
+            if verified {
+                verificationMessage = "Email verified. You can now select a coach."
+            } else {
+                verificationError = "Verification was applied, but your account still appears unverified. Tap 'I've verified my email'."
+            }
+        } catch {
+            verificationError = "Couldn't apply verification link/code: \(error.localizedDescription)"
         }
     }
 

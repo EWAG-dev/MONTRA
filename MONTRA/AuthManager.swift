@@ -100,6 +100,26 @@ final class AuthManager: ObservableObject {
         }
     }
 
+    func applyEmailVerificationCode(_ code: String) async throws -> Bool {
+        let trimmed = code.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            throw NSError(domain: "AuthManager", code: -2, userInfo: [NSLocalizedDescriptionKey: "Verification code is empty."])
+        }
+
+        try await Auth.auth().applyActionCode(trimmed)
+        return await refreshEmailVerificationStatus()
+    }
+
+    func applyEmailVerificationLink(_ link: String) async throws -> Bool {
+        let trimmed = link.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let components = URLComponents(string: trimmed) else {
+            throw NSError(domain: "AuthManager", code: -3, userInfo: [NSLocalizedDescriptionKey: "Invalid verification link."])
+        }
+
+        let code = components.queryItems?.first(where: { $0.name == "oobCode" })?.value ?? ""
+        return try await applyEmailVerificationCode(code)
+    }
+
     func setUserDisplayName(_ name: String) async {
         guard let changeRequest = Auth.auth().currentUser?.createProfileChangeRequest() else { return }
         changeRequest.displayName = name
