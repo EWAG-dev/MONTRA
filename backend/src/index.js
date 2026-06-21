@@ -125,6 +125,68 @@ function applicationReceivedEmailHtml(name) {
 </div></body></html>`;
 }
 
+async function finalizeTrainerApproval(trainer, context = "approval") {
+  if (!trainer) {
+    return null;
+  }
+
+  if (!trainer.accountUid && trainer.email) {
+    try {
+      const tempPassword = randomBytes(16).toString("base64url");
+      const authUser = await getAuth().createUser({
+        email: trainer.email,
+        password: tempPassword,
+        displayName: trainer.name,
+      });
+      await updateTrainer(trainer.id, { accountUid: authUser.uid });
+      trainer.accountUid = authUser.uid;
+    } catch (authError) {
+      if (authError.code === "auth/email-already-exists") {
+        try {
+          const existing = await getAuth().getUserByEmail(trainer.email);
+          if (trainer.name && existing.displayName !== trainer.name) {
+            await getAuth().updateUser(existing.uid, { displayName: trainer.name });
+          }
+          await updateTrainer(trainer.id, { accountUid: existing.uid });
+          trainer.accountUid = existing.uid;
+        } catch (e) {
+          console.error(`[${context}] Failed to resolve existing auth user:`, e.message);
+        }
+      } else {
+        console.error(`[${context}] Failed to provision trainer auth account:`, authError.message);
+      }
+    }
+  }
+
+  if (trainer.accountUid) {
+    try {
+      await getAuth().setCustomUserClaims(trainer.accountUid, { role: "trainer" });
+    } catch (claimError) {
+      console.error(`[${context}] Failed to set trainer custom claim:`, claimError.message);
+    }
+  }
+
+  if (trainer.email) {
+    try {
+      const onboardingUrl = `${process.env.WEBSITE_URL || "https://montra-27532.web.app"}/trainer-onboarding.html`;
+      const resetLink = await getAuth().generatePasswordResetLink(trainer.email, { url: onboardingUrl });
+      await sendEmail(trainer.email, "You're approved — welcome to MONTRA!", approvalEmailHtml(trainer.name, resetLink));
+    } catch (emailError) {
+      console.error(`[${context}] Failed to send approval email:`, emailError.message);
+      const webApiKey = process.env.FIREBASE_WEB_API_KEY;
+      if (webApiKey) {
+        await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${webApiKey}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ requestType: "PASSWORD_RESET", email: trainer.email }),
+        }).catch(() => {});
+      }
+    }
+  }
+
+  return trainer;
+}
+
 app.get("/", (_req, res) => {
   res.status(200).json({ ok: true, service: "montra-backend" });
 });
@@ -284,37 +346,7 @@ app.post("/api/dev/approve-trainer", async (req, res) => {
   const trainer = await approveTrainer(trainerId);
   if (!trainer) return res.status(404).json({ error: "Trainer not found" });
 
-  if (!trainer.accountUid && trainer.email) {
-    try {
-      const tempPassword = randomBytes(16).toString("base64url");
-      const authUser = await getAuth().createUser({ email: trainer.email, password: tempPassword, displayName: trainer.name });
-      await updateTrainer(trainer.id, { accountUid: authUser.uid });
-      trainer.accountUid = authUser.uid;
-    } catch (authError) {
-      if (authError.code === "auth/email-already-exists") {
-        const existing = await getAuth().getUserByEmail(trainer.email);
-        if (trainer.name && existing.displayName !== trainer.name) {
-          await getAuth().updateUser(existing.uid, { displayName: trainer.name });
-        }
-        await updateTrainer(trainer.id, { accountUid: existing.uid });
-        trainer.accountUid = existing.uid;
-      }
-    }
-  }
-
-  if (trainer.accountUid) {
-    await getAuth().setCustomUserClaims(trainer.accountUid, { role: "trainer" });
-  }
-
-  if (trainer.email) {
-    try {
-      const onboardingUrl = `${process.env.WEBSITE_URL || "https://montra-27532.web.app"}/trainer-onboarding.html`;
-      const resetLink = await getAuth().generatePasswordResetLink(trainer.email, { url: onboardingUrl });
-      await sendEmail(trainer.email, "You're approved — welcome to MONTRA!", approvalEmailHtml(trainer.name, resetLink));
-    } catch (emailError) {
-      console.error("Dev approve email error:", emailError.message);
-    }
-  }
+  await finalizeTrainerApproval(trainer, "dev-approve-trainer");
 
   res.json({ ok: true, trainerId, email: trainer.email });
 });
@@ -331,7 +363,7 @@ app.post("/api/trainers/provision", async (req, res) => {
     const name = `${String(firstName).trim()} ${String(lastName).trim()}`;
     const normalizedEmail = String(email).trim().toLowerCase();
 
-    const trainer = await createTrainer({
+    let trainer = await createTrainer({
       name,
       email: normalizedEmail,
       phone: String(phone || "").trim(),
@@ -353,7 +385,17 @@ app.post("/api/trainers/provision", async (req, res) => {
       console.error("Failed to send application confirmation email:", emailError.message);
     }
 
-    res.status(201).json({ ok: true, applicationId: trainer.id });
+    if (autoApproveTrainers) {
+      trainer = await approveTrainer(trainer.id);
+      await finalizeTrainerApproval(trainer, "public-provision-auto-approve");
+    }
+
+    res.status(201).json({
+      ok: true,
+      applicationId: trainer.id,
+      status: trainer.status,
+      autoApproved: autoApproveTrainers,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message || "Failed to submit application" });
   }
@@ -496,65 +538,7 @@ app.post("/api/admin/trainers/:id/approve", requireFirebaseAuth, requireAdmin, a
     return;
   }
 
-  // Provision Firebase Auth account if not yet created
-  if (!trainer.accountUid && trainer.email) {
-    try {
-      const tempPassword = randomBytes(16).toString("base64url");
-      const authUser = await getAuth().createUser({
-        email: trainer.email,
-        password: tempPassword,
-        displayName: trainer.name,
-      });
-      await updateTrainer(trainer.id, { accountUid: authUser.uid });
-      trainer.accountUid = authUser.uid;
-    } catch (authError) {
-      if (authError.code === "auth/email-already-exists") {
-        try {
-          const existing = await getAuth().getUserByEmail(trainer.email);
-          // Update the auth profile displayName to the trainer's name so iOS reads
-          // the correct name from Firebase Auth rather than stale client-side state.
-          if (trainer.name && existing.displayName !== trainer.name) {
-            await getAuth().updateUser(existing.uid, { displayName: trainer.name });
-          }
-          await updateTrainer(trainer.id, { accountUid: existing.uid });
-          trainer.accountUid = existing.uid;
-        } catch (e) {
-          console.error("Failed to resolve existing auth user:", e.message);
-        }
-      } else {
-        console.error("Failed to provision trainer auth account:", authError.message);
-      }
-    }
-  }
-
-  // Set trainer role claim so iOS routes to TrainerTabView
-  if (trainer.accountUid) {
-    try {
-      await getAuth().setCustomUserClaims(trainer.accountUid, { role: "trainer" });
-    } catch (claimError) {
-      console.error("Failed to set trainer custom claim:", claimError.message);
-    }
-  }
-
-  // Send approval email with password-reset + onboarding link
-  if (trainer.email) {
-    try {
-      const onboardingUrl = `${process.env.WEBSITE_URL || "https://montra-27532.web.app"}/trainer-onboarding.html`;
-      const resetLink = await getAuth().generatePasswordResetLink(trainer.email, { url: onboardingUrl });
-      await sendEmail(trainer.email, "You're approved — welcome to MONTRA!", approvalEmailHtml(trainer.name, resetLink));
-    } catch (emailError) {
-      console.error("Failed to send approval email:", emailError.message);
-      // Fallback: Firebase generic password reset
-      const webApiKey = process.env.FIREBASE_WEB_API_KEY;
-      if (webApiKey) {
-        await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${webApiKey}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ requestType: "PASSWORD_RESET", email: trainer.email }),
-        }).catch(() => {});
-      }
-    }
-  }
+  await finalizeTrainerApproval(trainer, "admin-approve-trainer");
 
   res.status(200).json({ trainer });
 });
@@ -646,6 +630,47 @@ app.post("/api/admin/test-email", requireFirebaseAuth, requireAdmin, async (req,
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }
+});
+
+// Admin-only cleanup endpoint for test accounts in Auth + trainer records.
+app.post("/api/admin/cleanup-test-accounts", requireFirebaseAuth, requireAdmin, async (_req, res) => {
+  const targets = [
+    "aaronhwitz@gmail.com",
+    "horwina@gmail.com",
+    "aaronhorowitz97@gmail.com",
+  ];
+
+  const report = [];
+  const db = getFirestore();
+  const auth = getAuth();
+
+  for (const email of targets) {
+    const item = { email, authDeleted: false, trainerDocsDeleted: 0 };
+
+    try {
+      const user = await auth.getUserByEmail(email);
+      await auth.deleteUser(user.uid);
+      item.authDeleted = true;
+    } catch (error) {
+      if (error.code !== "auth/user-not-found") {
+        item.authError = error.message;
+      }
+    }
+
+    try {
+      const snapshot = await db.collection("trainers").where("email", "==", email).get();
+      for (const doc of snapshot.docs) {
+        await doc.ref.delete();
+      }
+      item.trainerDocsDeleted = snapshot.size;
+    } catch (error) {
+      item.firestoreError = error.message;
+    }
+
+    report.push(item);
+  }
+
+  res.status(200).json({ ok: true, cleaned: report });
 });
 
 app.listen(port, () => {
