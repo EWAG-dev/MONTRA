@@ -163,8 +163,8 @@ function trainerClientRequestEmailHtml(trainerName, clientName) {
 <div style="max-width:560px;margin:0 auto;padding:48px 24px">
   <p style="color:#FF6820;font-size:11px;font-weight:700;letter-spacing:2px;margin:0 0 32px">MONTRA</p>
   <h1 style="color:#fff;font-size:24px;font-weight:900;margin:0 0 16px">New client request</h1>
-  <p style="font-size:15px;line-height:1.7;color:#ccc">Hi ${trainerName || "Coach"},<br><br>
-  ${clientName || "A new client"} selected you as their coach in MONTRA.</p>
+  <p style="font-size:15px;line-height:1.7;color:#ccc">Hi ${escapeHtml(trainerName || "Coach")},<br><br>
+  ${escapeHtml(clientName || "A new client")} selected you as their coach in MONTRA.</p>
   <div style="background:#151515;border-radius:10px;padding:18px;margin:24px 0;border:1px solid #222;color:#bbb;font-size:14px;line-height:1.7">
     Please log in to the MONTRA app to:<br>
     1) Open chat with this client<br>
@@ -381,7 +381,7 @@ app.post("/api/trainers/apply", requireFirebaseAuth, async (req, res) => {
 
 // DEV ONLY — remove after testing
 app.post("/api/dev/create-test-trainer", async (req, res) => {
-  if (process.env.NODE_ENV === "production" && !process.env.ALLOW_DEV_ENDPOINTS) {
+  if (!process.env.ALLOW_DEV_ENDPOINTS) {
     return res.status(404).json({ error: "Not found" });
   }
   try {
@@ -415,7 +415,7 @@ app.post("/api/dev/create-test-trainer", async (req, res) => {
 
 // DEV — set trainer role claim for an existing uid
 app.post("/api/dev/set-trainer-claim", async (req, res) => {
-  if (process.env.NODE_ENV === "production" && !process.env.ALLOW_DEV_ENDPOINTS) {
+  if (!process.env.ALLOW_DEV_ENDPOINTS) {
     return res.status(404).json({ error: "Not found" });
   }
   try {
@@ -430,7 +430,7 @@ app.post("/api/dev/set-trainer-claim", async (req, res) => {
 
 // Dev-only: run full approval flow for a trainer doc without requiring admin auth
 app.post("/api/dev/approve-trainer", async (req, res) => {
-  if (process.env.NODE_ENV === "production" && !process.env.ALLOW_DEV_ENDPOINTS) {
+  if (!process.env.ALLOW_DEV_ENDPOINTS) {
     return res.status(404).json({ error: "Not found" });
   }
   const { trainerId } = req.body;
