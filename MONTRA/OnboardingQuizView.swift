@@ -88,6 +88,10 @@ struct OnboardingQuizView: View {
     @State private var accountConfirmPassword = ""
     @State private var accountLoading = false
     @State private var accountError: String? = nil
+    @State private var verificationLoading = false
+    @State private var verificationError: String? = nil
+    @State private var verificationMessage: String? = nil
+    @State private var requestSubmissionError: String? = nil
     @State private var showClientTerms = false
     @State private var walkthroughPage = 0
     @State private var showMatchChecklist = false
@@ -601,6 +605,8 @@ struct OnboardingQuizView: View {
         return Group {
             if auth.user == nil {
                 accountGateStep
+            } else if auth.user?.isEmailVerified != true {
+                verifyEmailStep
             } else if showMatchChecklist {
                 MatchChecklistIntroView(
                     completedCount: checklistCompletedCount,
@@ -636,10 +642,17 @@ struct OnboardingQuizView: View {
 
                         Button {
                             guard let t = selectedTrainer else { return }
-                            requestedTrainerId   = t.id
-                            requestedTrainerName = t.name
-                            Task { await postMatchRequest(trainer: t) }
-                            advance(by: 1)
+                            requestSubmissionError = nil
+                            Task {
+                                let posted = await postMatchRequest(trainer: t)
+                                guard posted else {
+                                    requestSubmissionError = "We couldn't send your coach request yet. Please try again."
+                                    return
+                                }
+                                requestedTrainerId = t.id
+                                requestedTrainerName = t.name
+                                advance(by: 1)
+                            }
                         } label: {
                             let firstName = selectedTrainer?.name.components(separatedBy: " ").first ?? "Coach"
                             Text(selectedTrainer == nil ? "Select a coach first" : "Request \(firstName)")
@@ -652,6 +665,12 @@ struct OnboardingQuizView: View {
                                 .animation(.easeInOut(duration: 0.2), value: selectedTrainer?.id)
                         }
                         .disabled(selectedTrainer == nil)
+
+                        if let requestSubmissionError {
+                            Text(requestSubmissionError)
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(.red)
+                        }
                            if matches.isEmpty {
                                VStack(spacing: 12) {
                                    Image(systemName: "exclamationmark.triangle.fill")
@@ -749,6 +768,66 @@ struct OnboardingQuizView: View {
                 .sheet(isPresented: $showClientTerms) {
                     ClientTermsSheet()
                 }
+
+                Spacer(minLength: 20)
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 8)
+        }
+    }
+
+    private var verifyEmailStep: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 18) {
+                Text("Verify your email")
+                    .font(.system(size: 30, weight: .black))
+                    .foregroundColor(.montraTextPrimary)
+
+                Text("Before selecting a coach, verify your email address. We sent a verification link to \(auth.user?.email ?? accountEmail).")
+                    .font(.system(size: 14))
+                    .foregroundColor(.montraTextSecondary)
+
+                if let verificationMessage {
+                    Text(verificationMessage)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.green)
+                }
+
+                if let verificationError {
+                    Text(verificationError)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.red)
+                }
+
+                Button {
+                    Task { await refreshVerificationStatus() }
+                } label: {
+                    ZStack {
+                        if verificationLoading {
+                            ProgressView().tint(.black)
+                        } else {
+                            Text("I've verified my email")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(.black)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .background(Color.montraOrange)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                }
+                .disabled(verificationLoading)
+
+                Button {
+                    Task { await resendVerificationEmail() }
+                } label: {
+                    Text("Resend verification email")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.montraTextSecondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                }
+                .disabled(verificationLoading)
 
                 Spacer(minLength: 20)
             }
@@ -912,10 +991,10 @@ struct OnboardingQuizView: View {
         }
     }
 
-    private func postMatchRequest(trainer: OnboardingTrainer) async {
+    private func postMatchRequest(trainer: OnboardingTrainer) async -> Bool {
         guard let user = auth.user,
               let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
-              let url = MontraAPIConfig.url(for: "/api/client/requests") else { return }
+              let url = MontraAPIConfig.url(for: "/api/client/requests") else { return false }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -931,7 +1010,13 @@ struct OnboardingQuizView: View {
             ]
         ]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
-        _ = try? await URLSession.shared.data(for: request)
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse else { return false }
+            return (200...299).contains(http.statusCode)
+        } catch {
+            return false
+        }
     }
 
     private func startMatchChecklistIfNeeded() {
@@ -990,9 +1075,43 @@ struct OnboardingQuizView: View {
             if !trimmedName.isEmpty {
                 await auth.setUserDisplayName(trimmedName)
             }
+            do {
+                try await auth.sendEmailVerification()
+                verificationMessage = "Verification email sent. Open your inbox, then come back and tap 'I've verified my email'."
+            } catch {
+                verificationError = "Account created, but we couldn't send verification email. Tap resend below."
+            }
             advance(by: 1)
         } catch {
             accountError = "Account creation failed. If you already have an account, use Sign in below."
+        }
+    }
+
+    private func refreshVerificationStatus() async {
+        verificationError = nil
+        verificationMessage = nil
+        verificationLoading = true
+        defer { verificationLoading = false }
+
+        let verified = await auth.refreshEmailVerificationStatus()
+        if verified {
+            verificationMessage = "Email verified. You can now select a coach."
+        } else {
+            verificationError = "Your email is still unverified. Please click the link in your inbox first."
+        }
+    }
+
+    private func resendVerificationEmail() async {
+        verificationError = nil
+        verificationMessage = nil
+        verificationLoading = true
+        defer { verificationLoading = false }
+
+        do {
+            try await auth.sendEmailVerification()
+            verificationMessage = "Verification email sent. Check your inbox and spam folder."
+        } catch {
+            verificationError = "We couldn't resend the verification email right now. Please try again."
         }
     }
 

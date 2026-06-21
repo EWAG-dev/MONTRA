@@ -74,6 +74,27 @@ final class AuthManager: ObservableObject {
         try await Auth.auth().createUser(withEmail: email, password: password)
     }
 
+    func sendEmailVerification() async throws {
+        guard let user = Auth.auth().currentUser else { return }
+        if !user.isEmailVerified {
+            try await user.sendEmailVerification()
+        }
+    }
+
+    func refreshEmailVerificationStatus() async -> Bool {
+        guard let current = Auth.auth().currentUser else { return false }
+
+        do {
+            try await current.reload()
+            let refreshed = Auth.auth().currentUser
+            user = refreshed
+            userDisplayName = refreshed?.displayName ?? ""
+            return refreshed?.isEmailVerified ?? false
+        } catch {
+            return current.isEmailVerified
+        }
+    }
+
     func setUserDisplayName(_ name: String) async {
         guard let changeRequest = Auth.auth().currentUser?.createProfileChangeRequest() else { return }
         changeRequest.displayName = name

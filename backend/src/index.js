@@ -125,6 +125,25 @@ function applicationReceivedEmailHtml(name) {
 </div></body></html>`;
 }
 
+function trainerClientRequestEmailHtml(trainerName, clientName) {
+  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+<div style="max-width:560px;margin:0 auto;padding:48px 24px">
+  <p style="color:#FF6820;font-size:11px;font-weight:700;letter-spacing:2px;margin:0 0 32px">MONTRA</p>
+  <h1 style="color:#fff;font-size:24px;font-weight:900;margin:0 0 16px">New client request</h1>
+  <p style="font-size:15px;line-height:1.7;color:#ccc">Hi ${trainerName || "Coach"},<br><br>
+  ${clientName || "A new client"} selected you as their coach in MONTRA.</p>
+  <div style="background:#151515;border-radius:10px;padding:18px;margin:24px 0;border:1px solid #222;color:#bbb;font-size:14px;line-height:1.7">
+    Please log in to the MONTRA app to:<br>
+    1) Open chat with this client<br>
+    2) Coordinate schedule options<br>
+    3) Lock in their first session
+  </div>
+  <p style="color:#777;font-size:14px;line-height:1.6">Thanks for coaching with MONTRA.</p>
+  <hr style="border:none;border-top:1px solid #222;margin:40px 0">
+  <p style="color:#555;font-size:11px">MONTRA &middot; Powered by Elite Home Fitness</p>
+</div></body></html>`;
+}
+
 async function finalizeTrainerApproval(trainer, context = "approval") {
   if (!trainer) {
     return null;
@@ -494,6 +513,11 @@ app.post("/api/client/match", requireFirebaseAuth, async (req, res) => {
 
 app.post("/api/client/requests", requireFirebaseAuth, async (req, res) => {
   try {
+    if (req.user.email_verified !== true) {
+      res.status(403).json({ error: "Email verification required before selecting a coach" });
+      return;
+    }
+
     const trainer = await getTrainer(String(req.body.trainerId || "").trim());
     if (!trainer || trainer.status !== "approved") {
       res.status(400).json({ error: "Selected trainer is unavailable" });
@@ -508,6 +532,15 @@ app.post("/api/client/requests", requireFirebaseAuth, async (req, res) => {
       clientEmail: req.user.email || "",
       clientProfile: req.body.clientProfile || {},
     });
+
+    if (trainer.email) {
+      const clientFirstName = String(req.body?.clientProfile?.firstName || "").trim();
+      sendEmail(
+        trainer.email,
+        "New client request on MONTRA",
+        trainerClientRequestEmailHtml(trainer.name, clientFirstName)
+      ).catch((e) => console.error("Failed to send trainer client-request email:", e.message));
+    }
 
     res.status(201).json({ request });
   } catch (error) {
