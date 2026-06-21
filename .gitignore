@@ -33,6 +33,7 @@ build.log
 build_full.log
 build_output.log
 build_output.txt
+backend/node_modules/
 website/node_modules/
 website/dist/
 
@@ -42,3 +43,13 @@ MONTRA/.git_backup_*/
 # Local env files
 backend/.env
 website/.env
+
+# Local one-off files and accidental root exports
+AaronNotes.md
+Modelfile
+trainer-application.html
+trainer-onboarding.html
+
+# Backend local artifacts not currently tracked in this repo
+backend/package-lock.json
+backend/src/__tests__/
