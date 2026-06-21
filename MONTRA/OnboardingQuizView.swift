@@ -646,9 +646,8 @@ struct OnboardingQuizView: View {
                             guard let t = selectedTrainer else { return }
                             requestSubmissionError = nil
                             Task {
-                                let posted = await postMatchRequest(trainer: t)
-                                guard posted else {
-                                    requestSubmissionError = "We couldn't send your coach request yet. Please try again."
+                                if let errorMessage = await postMatchRequest(trainer: t) {
+                                    requestSubmissionError = errorMessage
                                     return
                                 }
                                 requestedTrainerId = t.id
@@ -1024,10 +1023,12 @@ struct OnboardingQuizView: View {
         }
     }
 
-    private func postMatchRequest(trainer: OnboardingTrainer) async -> Bool {
+    private func postMatchRequest(trainer: OnboardingTrainer) async -> String? {
         guard let user = auth.user,
-              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
-              let url = MontraAPIConfig.url(for: "/api/client/requests") else { return false }
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: true),
+              let url = MontraAPIConfig.url(for: "/api/client/requests") else {
+            return "Your session is unavailable. Please sign in again."
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -1044,12 +1045,26 @@ struct OnboardingQuizView: View {
         ]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
         do {
-            let (_, response) = try await URLSession.shared.data(for: request)
-            guard let http = response as? HTTPURLResponse else { return false }
-            return (200...299).contains(http.statusCode)
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse else {
+                return "Unexpected server response. Please try again."
+            }
+            if (200...299).contains(http.statusCode) {
+                return nil
+            }
+
+            if let payload = try? JSONDecoder().decode(APIErrorPayload.self, from: data),
+               !payload.error.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                return payload.error
+            }
+            return "We couldn't send your coach request yet. Please try again."
         } catch {
-            return false
+            return "Network error while sending request. Please try again."
         }
+    }
+
+    private struct APIErrorPayload: Decodable {
+        let error: String
     }
 
     private func startMatchChecklistIfNeeded() {
