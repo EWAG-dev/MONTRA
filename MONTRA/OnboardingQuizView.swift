@@ -1083,7 +1083,23 @@ struct OnboardingQuizView: View {
             }
             advance(by: 1)
         } catch {
-            accountError = "Account creation failed. If you already have an account, use Sign in below."
+            if let nsError = error as NSError?,
+               let code = AuthErrorCode(rawValue: nsError.code) {
+                switch code {
+                case .emailAlreadyInUse:
+                    accountError = "That email already has an account. Sign in instead or reset the password from Login."
+                case .invalidEmail:
+                    accountError = "That email address is invalid."
+                case .weakPassword:
+                    accountError = "Password is too weak. Use at least 6 characters."
+                case .networkError:
+                    accountError = "Network error while creating account. Please try again."
+                default:
+                    accountError = "Account creation failed: \(nsError.localizedDescription)"
+                }
+            } else {
+                accountError = "Account creation failed. If you already have an account, use Sign in below."
+            }
         }
     }
 
