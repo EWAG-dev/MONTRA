@@ -144,7 +144,18 @@ struct CoachChatSheet: View {
         .sheet(isPresented: $showNotifications) {
             NotificationsView()
         }
-        .task { await refreshThreads() }
+        .task {
+            await refreshThreads()
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 8_000_000_000)
+                if Task.isCancelled { break }
+                if let thread = selectedThread {
+                    await loadMessages(for: thread)
+                } else {
+                    await refreshThreads()
+                }
+            }
+        }
     }
 
     @ViewBuilder
@@ -270,9 +281,9 @@ struct CoachChatSheet: View {
 
     private func refreshThreads() async {
         guard let user = auth.user,
-              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: true) else { return }
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false) else { return }
 
-        loadingThreads = true
+        if threads.isEmpty { loadingThreads = true }
         defer { loadingThreads = false }
 
         do {
@@ -291,9 +302,9 @@ struct CoachChatSheet: View {
 
     private func loadMessages(for thread: ChatThread) async {
         guard let user = auth.user,
-              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: true) else { return }
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false) else { return }
 
-        loadingMessages = true
+        if messages.isEmpty { loadingMessages = true }
         defer { loadingMessages = false }
 
         do {

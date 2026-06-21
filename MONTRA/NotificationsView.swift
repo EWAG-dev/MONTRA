@@ -1,7 +1,10 @@
 import SwiftUI
 
 struct NotificationsView: View {
-    private let notifications: [AppNotification] = []
+    @EnvironmentObject private var auth: AuthManager
+    @State private var notifications: [MontraNotification] = []
+    @State private var isLoading = false
+    @State private var errorText: String?
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -14,8 +17,27 @@ struct NotificationsView: View {
                 }
                 .padding(.top, 8)
 
-                ForEach(notifications) { item in
-                    NotificationRow(item: item)
+                if isLoading && notifications.isEmpty {
+                    ProgressView()
+                        .tint(.montraOrange)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 60)
+                } else if let errorText, notifications.isEmpty {
+                    NotificationsEmptyState(
+                        icon: "exclamationmark.triangle",
+                        title: "Couldn't load notifications",
+                        message: errorText
+                    )
+                } else if notifications.isEmpty {
+                    NotificationsEmptyState(
+                        icon: "bell",
+                        title: "You're all caught up",
+                        message: "New requests and messages will show up here."
+                    )
+                } else {
+                    ForEach(notifications) { item in
+                        MontraNotificationRow(item: item)
+                    }
                 }
 
                 Spacer(minLength: 80)
@@ -23,34 +45,69 @@ struct NotificationsView: View {
             .padding(.horizontal, 20)
         }
         .background(Color.montraBackground)
+        .refreshable { await load() }
+        .task { await load() }
+    }
+
+    private func load() async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false) else {
+            errorText = "Please sign in again to see notifications."
+            return
+        }
+
+        if notifications.isEmpty { isLoading = true }
+        defer { isLoading = false }
+
+        do {
+            notifications = try await NotificationsAPI.loadMine(token: tokenResult.token)
+            errorText = nil
+        } catch {
+            errorText = error.localizedDescription
+        }
     }
 }
 
-struct AppNotification: Identifiable {
-    let id: Int
+struct NotificationsEmptyState: View {
+    let icon: String
     let title: String
-    let detail: String
-    let time: String
-    let isUnread: Bool
+    let message: String
+
+    var body: some View {
+        VStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 30, weight: .light))
+                .foregroundColor(.montraTextSecondary)
+            Text(title)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(.montraTextPrimary)
+            Text(message)
+                .font(.system(size: 13))
+                .foregroundColor(.montraTextSecondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 50)
+    }
 }
 
-struct NotificationRow: View {
-    let item: AppNotification
+struct MontraNotificationRow: View {
+    let item: MontraNotification
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Circle()
-                .fill(item.isUnread ? Color.montraOrange : Color.montraDivider)
+                .fill(item.unread ? Color.montraOrange : Color.montraDivider)
                 .frame(width: 9, height: 9)
                 .padding(.top, 6)
 
             VStack(alignment: .leading, spacing: 5) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(item.title)
-                        .font(.system(size: 15, weight: item.isUnread ? .semibold : .regular))
+                        .font(.system(size: 15, weight: item.unread ? .semibold : .regular))
                         .foregroundColor(.montraTextPrimary)
                     Spacer()
-                    Text(item.time)
+                    Text(MontraNotificationRow.relativeTime(from: item.createdAt))
                         .font(.system(size: 11))
                         .foregroundColor(.montraTextSecondary)
                 }
@@ -63,8 +120,20 @@ struct NotificationRow: View {
         .padding(14)
         .montraCard(radius: 14)
     }
+
+    static func relativeTime(from iso: String) -> String {
+        guard !iso.isEmpty else { return "" }
+        let withFractional = ISO8601DateFormatter()
+        withFractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let date = withFractional.date(from: iso) ?? ISO8601DateFormatter().date(from: iso)
+        guard let date else { return "" }
+        let relative = RelativeDateTimeFormatter()
+        relative.unitsStyle = .abbreviated
+        return relative.localizedString(for: date, relativeTo: Date())
+    }
 }
 
 #Preview {
     NotificationsView()
+        .environmentObject(AuthManager())
 }

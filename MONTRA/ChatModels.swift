@@ -111,3 +111,32 @@ enum ChatError: LocalizedError {
         }
     }
 }
+
+struct MontraNotification: Identifiable, Decodable, Hashable {
+    let id: String
+    let title: String
+    let detail: String
+    let createdAt: String
+    let unread: Bool
+    let category: String
+}
+
+enum NotificationsAPI {
+    struct Response: Decodable {
+        let notifications: [MontraNotification]
+    }
+
+    static func loadMine(token: String) async throws -> [MontraNotification] {
+        guard let url = MontraAPIConfig.url(for: "/api/notifications/my") else {
+            throw ChatError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+            throw ChatError.server("Unable to load notifications right now.")
+        }
+        return try JSONDecoder().decode(Response.self, from: data).notifications
+    }
+}

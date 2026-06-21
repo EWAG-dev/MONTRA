@@ -97,10 +97,11 @@ export async function listConversationsForTrainer(trainerId) {
 export async function listConversationMessages(conversationId) {
   const snapshot = await messagesCollection()
     .where("conversationId", "==", normalizeString(conversationId))
-    .orderBy("createdAt", "asc")
     .get();
 
-  return snapshot.docs.map(serializeMessage);
+  return snapshot.docs
+    .map(serializeMessage)
+    .sort((left, right) => String(left.createdAt).localeCompare(String(right.createdAt)));
 }
 
 export async function sendConversationMessage(input) {

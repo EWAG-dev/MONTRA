@@ -691,6 +691,83 @@ app.get("/api/client/requests", requireFirebaseAuth, async (req, res) => {
   res.status(200).json({ requests });
 });
 
+app.get("/api/notifications/my", requireFirebaseAuth, async (req, res) => {
+  try {
+    const trainer = await getTrainerByAccountUid(req.user.uid);
+    const notifications = [];
+
+    if (trainer) {
+      const [matches, conversations] = await Promise.all([
+        listTrainerMatches(trainer.id),
+        listConversationsForTrainer(trainer.id),
+      ]);
+
+      for (const match of matches) {
+        if (match.status === "pending") {
+          notifications.push({
+            id: `req_${match.id}`,
+            title: "New client request",
+            detail: `${match.clientProfile?.firstName || "A new client"} requested you as their coach.`,
+            createdAt: match.updatedAt || match.createdAt || "",
+            unread: true,
+            category: "request",
+          });
+        }
+      }
+
+      for (const convo of conversations) {
+        if (convo.lastMessage && convo.lastSenderRole === "client") {
+          notifications.push({
+            id: `msg_${convo.id}`,
+            title: `New message from ${convo.clientName || "your client"}`,
+            detail: convo.lastMessage,
+            createdAt: convo.lastMessageAt || convo.updatedAt || "",
+            unread: true,
+            category: "message",
+          });
+        }
+      }
+    } else {
+      const [requests, conversations] = await Promise.all([
+        listClientRequests(req.user.uid),
+        listConversationsForClient(req.user.uid),
+      ]);
+
+      for (const request of requests) {
+        if (request.status === "accepted") {
+          notifications.push({
+            id: `acc_${request.id}`,
+            title: "Your coach accepted",
+            detail: `${request.trainerName || "Your coach"} accepted your request. You can start chatting now.`,
+            createdAt: request.updatedAt || request.createdAt || "",
+            unread: true,
+            category: "request",
+          });
+        }
+      }
+
+      for (const convo of conversations) {
+        if (convo.lastMessage && convo.lastSenderRole === "trainer") {
+          notifications.push({
+            id: `msg_${convo.id}`,
+            title: `New message from ${convo.trainerName || "your coach"}`,
+            detail: convo.lastMessage,
+            createdAt: convo.lastMessageAt || convo.updatedAt || "",
+            unread: true,
+            category: "message",
+          });
+        }
+      }
+    }
+
+    notifications.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+    res.status(200).json({ notifications });
+  } catch (error) {
+    console.error("Failed to build notifications:", error.message);
+    res.status(200).json({ notifications: [] });
+  }
+});
+
 app.get("/api/conversations/my-threads", requireFirebaseAuth, async (req, res) => {
   const trainer = await getTrainerByAccountUid(req.user.uid);
   if (trainer) {

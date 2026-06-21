@@ -21,6 +21,8 @@ struct TrainerInboxView: View {
     @State private var chatSending = false
     @State private var chatMessageText = ""
     @State private var chatError: String? = nil
+    @State private var liveNotifications: [MontraNotification] = []
+    @State private var notificationsLoading = false
 
     enum Segment: String, CaseIterable {
         case requests      = "Requests"
@@ -29,7 +31,6 @@ struct TrainerInboxView: View {
     }
 
     private let conversations: [TrainerConversation] = []
-    private let notifications: [AppNotification] = []
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -124,6 +125,16 @@ struct TrainerInboxView: View {
         .task {
             await fetchMatchRequests()
             await refreshChatThreads()
+            await loadNotifications()
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 8_000_000_000)
+                if Task.isCancelled { break }
+                if let thread = selectedThread {
+                    await loadChatMessages(for: thread)
+                }
+                await fetchMatchRequests()
+                await loadNotifications()
+            }
         }
         .sheet(isPresented: $showTrainerMenu) {
             ProfileMenuSheet(isClient: false)
@@ -381,9 +392,9 @@ struct TrainerInboxView: View {
 
     private func refreshChatThreads() async {
         guard let user = auth.user,
-              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: true) else { return }
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false) else { return }
 
-        chatLoadingThreads = true
+        if chatThreads.isEmpty { chatLoadingThreads = true }
         defer { chatLoadingThreads = false }
 
         do {
@@ -402,9 +413,9 @@ struct TrainerInboxView: View {
 
     private func loadChatMessages(for thread: ChatThread) async {
         guard let user = auth.user,
-              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: true) else { return }
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false) else { return }
 
-        chatLoadingMessages = true
+        if chatMessages.isEmpty { chatLoadingMessages = true }
         defer { chatLoadingMessages = false }
 
         do {
@@ -443,9 +454,34 @@ struct TrainerInboxView: View {
     @ViewBuilder
     private var notificationsContent: some View {
         VStack(spacing: 10) {
-            ForEach(notifications) { item in
-                NotificationRow(item: item)
+            if notificationsLoading && liveNotifications.isEmpty {
+                ProgressView()
+                    .tint(.montraOrange)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 40)
+            } else if liveNotifications.isEmpty {
+                NotificationsEmptyState(
+                    icon: "bell",
+                    title: "You're all caught up",
+                    message: "New client requests and messages will show up here."
+                )
+            } else {
+                ForEach(liveNotifications) { item in
+                    MontraNotificationRow(item: item)
+                }
             }
+        }
+    }
+
+    private func loadNotifications() async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false) else { return }
+
+        if liveNotifications.isEmpty { notificationsLoading = true }
+        defer { notificationsLoading = false }
+
+        if let items = try? await NotificationsAPI.loadMine(token: tokenResult.token) {
+            liveNotifications = items
         }
     }
 }
