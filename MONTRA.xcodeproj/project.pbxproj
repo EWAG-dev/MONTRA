@@ -28,6 +28,7 @@
 		A6958B59C26198F93F9ABA3A /* TrainerProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3CACE5834CF2C04AD3C45C /* TrainerProgress.swift */; };
 		AFBA2D7AFFF5A19BF2D521F6 /* MontraCompactTopBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5136A81B3A141BC939C5F89 /* MontraCompactTopBar.swift */; };
 		C02DB6CAC6197D6E2F438BAD /* MessagesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CE961CD047FDE66F2DF35D4 /* MessagesView.swift */; };
+		C6B2E1D7A4E84D1B9F8A7E1C /* ChatModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8F0E5B4C7B4A1F9E7C6D3A /* ChatModels.swift */; };
 		C171B7607A773B25DEDD8247 /* TrainerProgramsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 816B0C9B88470822F0525D2C /* TrainerProgramsView.swift */; };
 		E81191F04DD6C64F6C42619D /* NotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F506439AA346F5E43B5C4C /* NotificationsView.swift */; };
 		ED0F611749CCC6B20EFEBBEC /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67A4AFFCD3600FC75FB826A8 /* Theme.swift */; };
@@ -49,6 +50,7 @@
 		67A4AFFCD3600FC75FB826A8 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		67D422E9C092DB5545BAE4B0 /* TrainerDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainerDashboardView.swift; sourceTree = "<group>"; };
 		6CE961CD047FDE66F2DF35D4 /* MessagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesView.swift; sourceTree = "<group>"; };
+		2E8F0E5B4C7B4A1F9E7C6D3A /* ChatModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatModels.swift; sourceTree = "<group>"; };
 		6F9A8C2F2F7D4E6A9D3C5F21 /* LiveDataConnectivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveDataConnectivity.swift; sourceTree = "<group>"; };
 		71F506439AA346F5E43B5C4C /* NotificationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsView.swift; sourceTree = "<group>"; };
 		816B0C9B88470822F0525D2C /* TrainerProgramsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainerProgramsView.swift; sourceTree = "<group>"; };
@@ -108,6 +110,7 @@
 				862A677FF5122F8C56A8F460 /* LoginView.swift */,
 				6F9A8C2F2F7D4E6A9D3C5F21 /* LiveDataConnectivity.swift */,
 				6CE961CD047FDE66F2DF35D4 /* MessagesView.swift */,
+				2E8F0E5B4C7B4A1F9E7C6D3A /* ChatModels.swift */,
 				EC384F94972FB8ABF7F4047A /* MONTRAApp.swift */,
 				B5136A81B3A141BC939C5F89 /* MontraCompactTopBar.swift */,
 				71F506439AA346F5E43B5C4C /* NotificationsView.swift */,
@@ -214,6 +217,7 @@
 				07D6A9A4E4D74A2DBB2F3B11 /* LiveDataConnectivity.swift in Sources */,
 				013E5BBCA0F00499D645A757 /* MONTRAApp.swift in Sources */,
 				C02DB6CAC6197D6E2F438BAD /* MessagesView.swift in Sources */,
+				C6B2E1D7A4E84D1B9F8A7E1C /* ChatModels.swift in Sources */,
 				AFBA2D7AFFF5A19BF2D521F6 /* MontraCompactTopBar.swift in Sources */,
 				E81191F04DD6C64F6C42619D /* NotificationsView.swift in Sources */,
 				6F143A4FA58A2A01D6847DA4 /* OnboardingQuizView.swift in Sources */,

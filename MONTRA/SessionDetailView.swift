@@ -288,8 +288,9 @@ private struct SessionLiveTrackingCard: View {
                 .clipShape(Capsule())
             }
 
-            Map(coordinateRegion: .constant(mapRegion), interactionModes: [.pan, .zoom], annotationItems: annotations) { item in
-                MapAnnotation(coordinate: item.coordinate) {
+            Map(position: .constant(.region(mapRegion)), interactionModes: [.pan, .zoom]) {
+                ForEach(annotations) { item in
+                    Annotation(item.title, coordinate: item.coordinate) {
                     VStack(spacing: 6) {
                         Image(systemName: item.icon)
                             .font(.system(size: 14, weight: .bold))
@@ -307,6 +308,7 @@ private struct SessionLiveTrackingCard: View {
                             .background(Color.black.opacity(0.72))
                             .clipShape(Capsule())
                     }
+                }
                 }
             }
             .frame(height: 210)

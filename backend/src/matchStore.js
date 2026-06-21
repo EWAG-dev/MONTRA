@@ -78,3 +78,49 @@ export async function listClientRequests(clientUid) {
     .map((doc) => ({ id: doc.id, ...doc.data() }))
     .sort((left, right) => String(right.createdAt).localeCompare(String(left.createdAt)));
 }
+
+export async function getMatchRequest(requestId) {
+  const id = normalizeString(requestId);
+  if (!id) {
+    return null;
+  }
+
+  const doc = await collection().doc(id).get();
+  if (!doc.exists) {
+    return null;
+  }
+
+  return {
+    id: doc.id,
+    ...doc.data(),
+  };
+}
+
+export async function updateMatchRequestStatus(requestId, status) {
+  const id = normalizeString(requestId);
+  const normalizedStatus = normalizeString(status).toLowerCase();
+  if (!id) {
+    throw new Error("requestId is required");
+  }
+
+  if (!["pending", "accepted", "declined"].includes(normalizedStatus)) {
+    throw new Error("Invalid match request status");
+  }
+
+  const ref = collection().doc(id);
+  const doc = await ref.get();
+  if (!doc.exists) {
+    return null;
+  }
+
+  await ref.update({
+    status: normalizedStatus,
+    updatedAt: new Date().toISOString(),
+  });
+
+  const updated = await ref.get();
+  return {
+    id: updated.id,
+    ...updated.data(),
+  };
+}

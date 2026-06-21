@@ -11,6 +11,8 @@ struct TrainerInboxView: View {
     @AppStorage("trainer.profileImageData") private var trainerProfileImageData: Data = Data()
     @State private var matchRequests: [TrainerMatchRequest] = []
     @State private var requestsLoading = false
+    @State private var requestActionError: String? = nil
+    @State private var activeRequestActionId: String? = nil
     @State private var chatThreads: [ChatThread] = []
     @State private var selectedThread: ChatThread? = nil
     @State private var chatMessages: [ChatMessage] = []
@@ -148,7 +150,24 @@ struct TrainerInboxView: View {
         } else {
             VStack(spacing: 10) {
                 ForEach(matchRequests) { req in
-                    MatchRequestCard(request: req)
+                    MatchRequestCard(
+                        request: req,
+                        actionInFlight: activeRequestActionId == req.id,
+                        onAccept: {
+                            Task { await updateRequestStatus(requestId: req.id, action: "accept") }
+                        },
+                        onDecline: {
+                            Task { await updateRequestStatus(requestId: req.id, action: "decline") }
+                        }
+                    )
+                }
+
+                if let requestActionError {
+                    Text(requestActionError)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.red)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top, 4)
                 }
             }
         }
@@ -166,6 +185,39 @@ struct TrainerInboxView: View {
         struct Response: Decodable { let matches: [TrainerMatchRequest] }
         if let response = try? JSONDecoder().decode(Response.self, from: data) {
             matchRequests = response.matches
+        }
+    }
+
+    private func updateRequestStatus(requestId: String, action: String) async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: true),
+              let url = MontraAPIConfig.url(for: "/api/trainers/matches/\(requestId)/\(action)") else { return }
+
+        activeRequestActionId = requestId
+        defer { activeRequestActionId = nil }
+
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("Bearer \(tokenResult.token)", forHTTPHeaderField: "Authorization")
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: req)
+            guard let http = response as? HTTPURLResponse else {
+                requestActionError = "No response from server"
+                return
+            }
+
+            guard (200...299).contains(http.statusCode) else {
+                struct APIError: Decodable { let error: String }
+                let payload = try? JSONDecoder().decode(APIError.self, from: data)
+                requestActionError = payload?.error ?? "Unable to update request"
+                return
+            }
+
+            requestActionError = nil
+            await fetchMatchRequests()
+        } catch {
+            requestActionError = error.localizedDescription
         }
     }
 
@@ -466,6 +518,9 @@ struct TrainerMatchRequest: Identifiable, Decodable {
 
 struct MatchRequestCard: View {
     let request: TrainerMatchRequest
+    let actionInFlight: Bool
+    let onAccept: () -> Void
+    let onDecline: () -> Void
 
     var body: some View {
         HStack(spacing: 14) {
@@ -511,6 +566,42 @@ struct MatchRequestCard: View {
         }
         .padding(14)
         .montraCard(radius: 14)
+        .overlay(alignment: .bottomTrailing) {
+            if request.status == "pending" {
+                HStack(spacing: 8) {
+                    Button(action: onDecline) {
+                        Text("Decline")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(.montraTextSecondary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(Color.white.opacity(0.08))
+                            .clipShape(Capsule())
+                    }
+                    .disabled(actionInFlight)
+
+                    Button(action: onAccept) {
+                        if actionInFlight {
+                            ProgressView()
+                                .tint(.black)
+                                .frame(width: 58, height: 28)
+                                .background(Color.montraOrange)
+                                .clipShape(Capsule())
+                        } else {
+                            Text("Accept")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundColor(.black)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Color.montraOrange)
+                                .clipShape(Capsule())
+                        }
+                    }
+                    .disabled(actionInFlight)
+                }
+                .padding(12)
+            }
+        }
     }
 }
 

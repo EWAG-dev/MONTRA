@@ -18,8 +18,10 @@ import {
 } from "./trainerStore.js";
 import {
   createMatchRequest,
+  getMatchRequest,
   listClientRequests,
   listTrainerMatches,
+  updateMatchRequestStatus,
 } from "./matchStore.js";
 import {
   getConversation,
@@ -170,6 +172,25 @@ function trainerClientRequestEmailHtml(trainerName, clientName) {
     3) Lock in their first session
   </div>
   <p style="color:#777;font-size:14px;line-height:1.6">Thanks for coaching with MONTRA.</p>
+  <hr style="border:none;border-top:1px solid #222;margin:40px 0">
+  <p style="color:#555;font-size:11px">MONTRA &middot; Powered by Elite Home Fitness</p>
+</div></body></html>`;
+}
+
+function clientRequestAcceptedEmailHtml(clientName, trainerName) {
+  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+<div style="max-width:560px;margin:0 auto;padding:48px 24px">
+  <p style="color:#FF6820;font-size:11px;font-weight:700;letter-spacing:2px;margin:0 0 32px">MONTRA</p>
+  <h1 style="color:#fff;font-size:24px;font-weight:900;margin:0 0 16px">Your coach accepted</h1>
+  <p style="font-size:15px;line-height:1.7;color:#ccc">Hi ${escapeHtml(clientName || "there")},<br><br>
+  ${escapeHtml(trainerName || "Your coach")} accepted your request in MONTRA.</p>
+  <div style="background:#151515;border-radius:10px;padding:18px;margin:24px 0;border:1px solid #222;color:#bbb;font-size:14px;line-height:1.7">
+    Open the app to:
+    <br>1) Chat with your coach
+    <br>2) Confirm your preferred times
+    <br>3) Book your first session
+  </div>
+  <p style="color:#777;font-size:14px;line-height:1.6">Your training journey is officially underway.</p>
   <hr style="border:none;border-top:1px solid #222;margin:40px 0">
   <p style="color:#555;font-size:11px">MONTRA &middot; Powered by Elite Home Fitness</p>
 </div></body></html>`;
@@ -521,6 +542,70 @@ app.get("/api/trainers/my-matches", requireFirebaseAuth, async (req, res) => {
 
   const matches = await listTrainerMatches(trainer.id);
   res.status(200).json({ trainer, matches });
+});
+
+app.post("/api/trainers/matches/:requestId/accept", requireFirebaseAuth, async (req, res) => {
+  const trainer = await getTrainerByAccountUid(req.user.uid);
+  if (!trainer) {
+    res.status(404).json({ error: "Trainer profile not found" });
+    return;
+  }
+
+  const existing = await getMatchRequest(req.params.requestId);
+  if (!existing) {
+    res.status(404).json({ error: "Match request not found" });
+    return;
+  }
+
+  if (existing.trainerId !== trainer.id) {
+    res.status(403).json({ error: "Not allowed to update this request" });
+    return;
+  }
+
+  if (existing.status === "accepted") {
+    res.status(200).json({ request: existing, alreadyAccepted: true });
+    return;
+  }
+
+  const request = await updateMatchRequestStatus(existing.id, "accepted");
+
+  if (request?.clientEmail) {
+    const clientName = request?.clientProfile?.firstName || "";
+    sendEmail(
+      request.clientEmail,
+      "Your MONTRA coach accepted your request",
+      clientRequestAcceptedEmailHtml(clientName, trainer.name)
+    ).catch((error) => console.error("Failed to send client acceptance email:", error.message));
+  }
+
+  res.status(200).json({ request });
+});
+
+app.post("/api/trainers/matches/:requestId/decline", requireFirebaseAuth, async (req, res) => {
+  const trainer = await getTrainerByAccountUid(req.user.uid);
+  if (!trainer) {
+    res.status(404).json({ error: "Trainer profile not found" });
+    return;
+  }
+
+  const existing = await getMatchRequest(req.params.requestId);
+  if (!existing) {
+    res.status(404).json({ error: "Match request not found" });
+    return;
+  }
+
+  if (existing.trainerId !== trainer.id) {
+    res.status(403).json({ error: "Not allowed to update this request" });
+    return;
+  }
+
+  if (existing.status === "declined") {
+    res.status(200).json({ request: existing, alreadyDeclined: true });
+    return;
+  }
+
+  const request = await updateMatchRequestStatus(existing.id, "declined");
+  res.status(200).json({ request });
 });
 
 app.get("/api/trainers", async (req, res) => {
