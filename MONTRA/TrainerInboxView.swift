@@ -11,6 +11,14 @@ struct TrainerInboxView: View {
     @AppStorage("trainer.profileImageData") private var trainerProfileImageData: Data = Data()
     @State private var matchRequests: [TrainerMatchRequest] = []
     @State private var requestsLoading = false
+    @State private var chatThreads: [ChatThread] = []
+    @State private var selectedThread: ChatThread? = nil
+    @State private var chatMessages: [ChatMessage] = []
+    @State private var chatLoadingThreads = false
+    @State private var chatLoadingMessages = false
+    @State private var chatSending = false
+    @State private var chatMessageText = ""
+    @State private var chatError: String? = nil
 
     enum Segment: String, CaseIterable {
         case requests      = "Requests"
@@ -111,7 +119,10 @@ struct TrainerInboxView: View {
             .padding(.horizontal, 20)
         }
         .background(Color.montraBackground)
-        .task { await fetchMatchRequests() }
+        .task {
+            await fetchMatchRequests()
+            await refreshChatThreads()
+        }
         .sheet(isPresented: $showTrainerMenu) {
             ProfileMenuSheet(isClient: false)
         }
@@ -162,10 +173,182 @@ struct TrainerInboxView: View {
 
     @ViewBuilder
     private var messagesContent: some View {
-        VStack(spacing: 10) {
-            ForEach(conversations) { convo in
-                ConversationRow(convo: convo)
+        VStack(spacing: 14) {
+            if chatLoadingThreads {
+                HStack { Spacer(); ProgressView().tint(.montraOrange); Spacer() }
+                    .padding(.top, 24)
+            } else if chatThreads.isEmpty {
+                VStack(spacing: 10) {
+                    Image(systemName: "bubble.left.and.bubble.right")
+                        .font(.system(size: 32))
+                        .foregroundColor(.montraTextSecondary)
+                    Text("No conversations yet")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.montraTextSecondary)
+                    Text("Client requests will appear here once they select you in the app.")
+                        .font(.system(size: 12))
+                        .foregroundColor(.montraTextSecondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.top, 32)
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(chatThreads) { thread in
+                            Button {
+                                selectedThread = thread
+                                Task { await loadChatMessages(for: thread) }
+                            } label: {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(thread.clientName.isEmpty ? "New Client" : thread.clientName)
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundColor(selectedThread?.id == thread.id ? .black : .montraTextPrimary)
+                                    Text(thread.lastMessage.isEmpty ? "Say hello" : thread.lastMessage)
+                                        .font(.system(size: 11))
+                                        .foregroundColor(selectedThread?.id == thread.id ? .black.opacity(0.75) : .montraTextSecondary)
+                                        .lineLimit(1)
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 10)
+                                .frame(width: 180, alignment: .leading)
+                                .background(selectedThread?.id == thread.id ? Color.montraOrange : Color.white.opacity(0.05))
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                            }
+                        }
+                    }
+                }
+
+                VStack(spacing: 10) {
+                    if chatLoadingMessages {
+                        ProgressView().tint(.montraOrange)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                    } else if chatMessages.isEmpty {
+                        Text("No messages yet. Send the first one.")
+                            .font(.system(size: 13))
+                            .foregroundColor(.montraTextSecondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        ForEach(chatMessages) { message in
+                            chatBubble(message)
+                        }
+                    }
+                }
+
+                if let chatError {
+                    Text(chatError)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.red)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                HStack(spacing: 10) {
+                    TextField("Write a message...", text: $chatMessageText)
+                        .textFieldStyle(.plain)
+                        .foregroundColor(.montraTextPrimary)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 12)
+                        .montraCard(radius: 12)
+
+                    Button {
+                        Task { await sendChatMessage() }
+                    } label: {
+                        if chatSending {
+                            ProgressView().tint(.black)
+                                .frame(width: 44, height: 44)
+                                .background(Color.montraOrange)
+                                .clipShape(Circle())
+                        } else {
+                            Image(systemName: "paperplane.fill")
+                                .foregroundColor(.black)
+                                .frame(width: 44, height: 44)
+                                .background(Color.montraOrange)
+                                .clipShape(Circle())
+                        }
+                    }
+                    .disabled(chatSending || chatMessageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || selectedThread == nil)
+                }
             }
+        }
+    }
+
+    @ViewBuilder
+    private func chatBubble(_ message: ChatMessage) -> some View {
+        let isMine = message.senderUid == auth.user?.uid
+        HStack {
+            if isMine { Spacer(minLength: 24) }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(message.senderName)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(isMine ? .black.opacity(0.75) : .montraTextSecondary)
+                Text(message.text)
+                    .font(.system(size: 14))
+                    .foregroundColor(isMine ? .black : .montraTextPrimary)
+            }
+            .padding(12)
+            .background(isMine ? Color.montraOrange : Color.white.opacity(0.05))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            if !isMine { Spacer(minLength: 24) }
+        }
+    }
+
+    private func refreshChatThreads() async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: true) else { return }
+
+        chatLoadingThreads = true
+        defer { chatLoadingThreads = false }
+
+        do {
+            let threads = try await ChatAPI.loadMyThreads(token: tokenResult.token)
+            chatThreads = threads
+            if selectedThread == nil || !threads.contains(where: { $0.id == selectedThread?.id }) {
+                selectedThread = threads.first
+            }
+            if let selectedThread {
+                await loadChatMessages(for: selectedThread)
+            }
+        } catch {
+            chatError = error.localizedDescription
+        }
+    }
+
+    private func loadChatMessages(for thread: ChatThread) async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: true) else { return }
+
+        chatLoadingMessages = true
+        defer { chatLoadingMessages = false }
+
+        do {
+            let response = try await ChatAPI.loadMessages(conversationId: thread.id, token: tokenResult.token)
+            selectedThread = response.conversation
+            chatMessages = response.messages
+            chatError = nil
+        } catch {
+            chatError = error.localizedDescription
+        }
+    }
+
+    private func sendChatMessage() async {
+        guard let thread = selectedThread else { return }
+        let trimmed = chatMessageText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: true) else { return }
+
+        chatSending = true
+        defer { chatSending = false }
+
+        do {
+            let message = try await ChatAPI.sendMessage(conversationId: thread.id, text: trimmed, token: tokenResult.token)
+            chatMessages.append(message)
+            chatMessageText = ""
+            chatError = nil
+            await refreshChatThreads()
+        } catch {
+            chatError = error.localizedDescription
         }
     }
 

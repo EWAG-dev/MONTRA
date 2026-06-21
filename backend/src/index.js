@@ -21,6 +21,13 @@ import {
   listClientRequests,
   listTrainerMatches,
 } from "./matchStore.js";
+import {
+  getConversation,
+  listConversationMessages,
+  listConversationsForClient,
+  listConversationsForTrainer,
+  sendConversationMessage,
+} from "./chatStore.js";
 
 const app = express();
 const port = Number(process.env.PORT || 8080);
@@ -66,6 +73,15 @@ async function sendEmail(to, subject, html) {
     throw new Error(`Resend error ${res.status}: ${body}`);
   }
   console.log(`[Email] Sent successfully. Resend response: ${body}`);
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 function approvalEmailHtml(name, resetLink) {
@@ -120,6 +136,21 @@ function applicationReceivedEmailHtml(name) {
     3) Approval email with setup link
   </div>
   <p style="color:#777;font-size:14px;line-height:1.6">Thank you for applying to MONTRA.</p>
+  <hr style="border:none;border-top:1px solid #222;margin:40px 0">
+  <p style="color:#555;font-size:11px">MONTRA &middot; Powered by Elite Home Fitness</p>
+</div></body></html>`;
+}
+
+function chatMessageEmailHtml(senderName, messageText) {
+  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+<div style="max-width:560px;margin:0 auto;padding:48px 24px">
+  <p style="color:#FF6820;font-size:11px;font-weight:700;letter-spacing:2px;margin:0 0 32px">MONTRA</p>
+  <h1 style="color:#fff;font-size:24px;font-weight:900;margin:0 0 16px">New message</h1>
+  <p style="font-size:15px;line-height:1.7;color:#ccc">You have a new message from ${escapeHtml(senderName || "your MONTRA match") }.</p>
+  <div style="background:#151515;border-radius:10px;padding:18px;margin:24px 0;border:1px solid #222;color:#fff;font-size:14px;line-height:1.7">
+    ${escapeHtml(messageText)}
+  </div>
+  <p style="color:#777;font-size:14px;line-height:1.6">Open the MONTRA app to reply and schedule your next session.</p>
   <hr style="border:none;border-top:1px solid #222;margin:40px 0">
   <p style="color:#555;font-size:11px">MONTRA &middot; Powered by Elite Home Fitness</p>
 </div></body></html>`;
@@ -573,6 +604,90 @@ app.post("/api/client/requests", requireFirebaseAuth, async (req, res) => {
 app.get("/api/client/requests", requireFirebaseAuth, async (req, res) => {
   const requests = await listClientRequests(req.user.uid);
   res.status(200).json({ requests });
+});
+
+app.get("/api/conversations/my-threads", requireFirebaseAuth, async (req, res) => {
+  const trainer = await getTrainerByAccountUid(req.user.uid);
+  if (trainer) {
+    const conversations = await listConversationsForTrainer(trainer.id);
+    res.status(200).json({ conversations, role: "trainer" });
+    return;
+  }
+
+  const conversations = await listConversationsForClient(req.user.uid);
+  res.status(200).json({ conversations, role: "client" });
+});
+
+app.get("/api/conversations/:conversationId/messages", requireFirebaseAuth, async (req, res) => {
+  const conversation = await getConversation(req.params.conversationId);
+  if (!conversation) {
+    res.status(404).json({ error: "Conversation not found" });
+    return;
+  }
+
+  const trainer = await getTrainerByAccountUid(req.user.uid);
+  const canAccess =
+    conversation.clientUid === req.user.uid ||
+    (trainer && trainer.id === conversation.trainerId);
+
+  if (!canAccess) {
+    res.status(403).json({ error: "Conversation access denied" });
+    return;
+  }
+
+  const messages = await listConversationMessages(conversation.id);
+  res.status(200).json({ conversation, messages });
+});
+
+app.post("/api/conversations/:conversationId/messages", requireFirebaseAuth, async (req, res) => {
+  const conversation = await getConversation(req.params.conversationId);
+  if (!conversation) {
+    res.status(404).json({ error: "Conversation not found" });
+    return;
+  }
+
+  const trainer = await getTrainerByAccountUid(req.user.uid);
+  const canAccess =
+    conversation.clientUid === req.user.uid ||
+    (trainer && trainer.id === conversation.trainerId);
+
+  if (!canAccess) {
+    res.status(403).json({ error: "Conversation access denied" });
+    return;
+  }
+
+  const senderRole = trainer && trainer.id === conversation.trainerId ? "trainer" : "client";
+  const senderName =
+    senderRole === "trainer"
+      ? trainer?.name || req.user.name || req.user.email || "Trainer"
+      : req.user.name || req.user.email || "Client";
+
+  try {
+    const message = await sendConversationMessage({
+      conversationId: conversation.id,
+      senderUid: req.user.uid,
+      senderRole,
+      senderName,
+      text: String(req.body?.text || "").trim(),
+    });
+
+    const recipientEmail =
+      senderRole === "trainer"
+        ? conversation.clientEmail
+        : trainer?.email || "";
+
+    if (recipientEmail) {
+      sendEmail(
+        recipientEmail,
+        "New MONTRA message",
+        chatMessageEmailHtml(senderName, message.text)
+      ).catch((error) => console.error("Failed to send chat notification email:", error.message));
+    }
+
+    res.status(201).json({ message });
+  } catch (error) {
+    res.status(400).json({ error: error.message || "Unable to send message" });
+  }
 });
 
 app.get("/api/admin/trainer-applications", requireFirebaseAuth, requireAdmin, async (req, res) => {

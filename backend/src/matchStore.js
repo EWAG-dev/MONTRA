@@ -1,4 +1,5 @@
 import { getFirestore } from "./firebase.js";
+import { ensureConversationThread, conversationIdFor } from "./chatStore.js";
 
 const COLLECTION_NAME = "matchRequests";
 
@@ -26,6 +27,7 @@ export async function createMatchRequest(input) {
   const trainerId = normalizeString(input.trainerId);
   const clientUid = normalizeString(input.clientUid);
   const clientEmail = normalizeString(input.clientEmail);
+  const clientName = normalizeString(input.clientName || input.clientProfile?.firstName);
 
   if (!trainerId) {
     throw new Error("trainerId is required");
@@ -36,6 +38,7 @@ export async function createMatchRequest(input) {
   }
 
   const payload = {
+    conversationId: conversationIdFor({ trainerId, clientUid }),
     trainerId,
     trainerName: normalizeString(input.trainerName),
     trainerStatus: normalizeString(input.trainerStatus || "approved"),
@@ -46,6 +49,14 @@ export async function createMatchRequest(input) {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
+
+  await ensureConversationThread({
+    trainerId,
+    clientUid,
+    trainerName: payload.trainerName,
+    clientEmail,
+    clientName,
+  });
 
   const ref = await collection().add(payload);
   return {
