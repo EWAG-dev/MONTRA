@@ -145,8 +145,8 @@ struct TrainerInboxView: View {
 
     private func fetchMatchRequests() async {
         guard let user = auth.user,
-              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
-              let url = MontraAPIConfig.url(for: "/api/trainers/my-profile") else { return }
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: true),
+              let url = MontraAPIConfig.url(for: "/api/trainers/my-matches") else { return }
         requestsLoading = true
         defer { requestsLoading = false }
         var req = URLRequest(url: url)
