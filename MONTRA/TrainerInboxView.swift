@@ -153,6 +153,9 @@ struct TrainerInboxView: View {
                     MatchRequestCard(
                         request: req,
                         actionInFlight: activeRequestActionId == req.id,
+                        onMessage: {
+                            Task { await openConversationForRequest(req) }
+                        },
                         onAccept: {
                             Task { await updateRequestStatus(requestId: req.id, action: "accept") }
                         },
@@ -171,6 +174,36 @@ struct TrainerInboxView: View {
                 }
             }
         }
+    }
+
+    private func openConversationForRequest(_ request: TrainerMatchRequest) async {
+        selectedSegment = .messages
+        requestActionError = nil
+
+        if chatThreads.isEmpty {
+            await refreshChatThreads()
+        }
+
+        let expectedConversationId: String
+        if !(request.conversationId ?? "").isEmpty {
+            expectedConversationId = request.conversationId ?? ""
+        } else {
+            expectedConversationId = ChatAPI.conversationId(trainerId: request.trainerId ?? "", clientUid: request.clientUid)
+        }
+
+        if let thread = chatThreads.first(where: { $0.id == expectedConversationId }) {
+            selectedThread = thread
+            await loadChatMessages(for: thread)
+            return
+        }
+
+        if let fallback = chatThreads.first(where: { $0.clientUid == request.clientUid }) ?? chatThreads.first {
+            selectedThread = fallback
+            await loadChatMessages(for: fallback)
+            return
+        }
+
+        chatError = "Could not open conversation yet. Pull to refresh and try again."
     }
 
     private func fetchMatchRequests() async {
@@ -237,7 +270,7 @@ struct TrainerInboxView: View {
                     Text("No conversations yet")
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(.montraTextSecondary)
-                    Text("Client requests will appear here once they select you in the app.")
+                    Text("Check the Requests tab for new client requests.")
                         .font(.system(size: 12))
                         .foregroundColor(.montraTextSecondary)
                         .multilineTextAlignment(.center)
@@ -270,57 +303,58 @@ struct TrainerInboxView: View {
                         }
                     }
                 }
+            }
 
-                VStack(spacing: 10) {
-                    if chatLoadingMessages {
-                        ProgressView().tint(.montraOrange)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 10)
-                    } else if chatMessages.isEmpty {
-                        Text("No messages yet. Send the first one.")
-                            .font(.system(size: 13))
-                            .foregroundColor(.montraTextSecondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    } else {
-                        ForEach(chatMessages) { message in
-                            chatBubble(message)
-                        }
-                    }
-                }
-
-                if let chatError {
-                    Text(chatError)
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.red)
+            VStack(spacing: 10) {
+                if chatLoadingMessages {
+                    ProgressView().tint(.montraOrange)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                } else if chatMessages.isEmpty {
+                    Text(chatThreads.isEmpty ? "Select or accept a request to start messaging." : "No messages yet. Send the first one.")
+                        .font(.system(size: 13))
+                        .foregroundColor(.montraTextSecondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                }
-
-                HStack(spacing: 10) {
-                    TextField("Write a message...", text: $chatMessageText)
-                        .textFieldStyle(.plain)
-                        .foregroundColor(.montraTextPrimary)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 12)
-                        .montraCard(radius: 12)
-
-                    Button {
-                        Task { await sendChatMessage() }
-                    } label: {
-                        if chatSending {
-                            ProgressView().tint(.black)
-                                .frame(width: 44, height: 44)
-                                .background(Color.montraOrange)
-                                .clipShape(Circle())
-                        } else {
-                            Image(systemName: "paperplane.fill")
-                                .foregroundColor(.black)
-                                .frame(width: 44, height: 44)
-                                .background(Color.montraOrange)
-                                .clipShape(Circle())
-                        }
+                } else {
+                    ForEach(chatMessages) { message in
+                        chatBubble(message)
                     }
-                    .disabled(chatSending || chatMessageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || selectedThread == nil)
                 }
+            }
+
+            if let chatError {
+                Text(chatError)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.red)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            HStack(spacing: 10) {
+                TextField(chatThreads.isEmpty ? "No thread available yet" : "Write a message...", text: $chatMessageText)
+                    .textFieldStyle(.plain)
+                    .foregroundColor(.montraTextPrimary)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .montraCard(radius: 12)
+                    .disabled(chatThreads.isEmpty)
+
+                Button {
+                    Task { await sendChatMessage() }
+                } label: {
+                    if chatSending {
+                        ProgressView().tint(.black)
+                            .frame(width: 44, height: 44)
+                            .background(Color.montraOrange)
+                            .clipShape(Circle())
+                    } else {
+                        Image(systemName: "paperplane.fill")
+                            .foregroundColor(.black)
+                            .frame(width: 44, height: 44)
+                            .background(Color.montraOrange)
+                            .clipShape(Circle())
+                    }
+                }
+                .disabled(chatThreads.isEmpty || chatSending || chatMessageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || selectedThread == nil)
             }
         }
     }
@@ -486,6 +520,8 @@ struct TrainerConversation: Identifiable {
 
 struct TrainerMatchRequest: Identifiable, Decodable {
     let id: String
+    let trainerId: String?
+    let conversationId: String?
     let clientUid: String
     let clientEmail: String
     let clientProfile: ClientProfile
@@ -519,6 +555,7 @@ struct TrainerMatchRequest: Identifiable, Decodable {
 struct MatchRequestCard: View {
     let request: TrainerMatchRequest
     let actionInFlight: Bool
+    let onMessage: () -> Void
     let onAccept: () -> Void
     let onDecline: () -> Void
 
@@ -567,8 +604,19 @@ struct MatchRequestCard: View {
         .padding(14)
         .montraCard(radius: 14)
         .overlay(alignment: .bottomTrailing) {
-            if request.status == "pending" {
-                HStack(spacing: 8) {
+            HStack(spacing: 8) {
+                Button(action: onMessage) {
+                    Text("Message")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.montraTextPrimary)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Color.white.opacity(0.08))
+                        .clipShape(Capsule())
+                }
+                .disabled(actionInFlight)
+
+                if request.status == "pending" {
                     Button(action: onDecline) {
                         Text("Decline")
                             .font(.system(size: 11, weight: .semibold))
@@ -599,8 +647,8 @@ struct MatchRequestCard: View {
                     }
                     .disabled(actionInFlight)
                 }
-                .padding(12)
             }
+            .padding(12)
         }
     }
 }

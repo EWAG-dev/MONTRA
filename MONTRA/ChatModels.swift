@@ -26,6 +26,10 @@ struct ChatMessage: Identifiable, Decodable, Hashable {
 }
 
 enum ChatAPI {
+    static func conversationId(trainerId: String, clientUid: String) -> String {
+        "trainer_\(trainerId.trimmingCharacters(in: .whitespacesAndNewlines))__client_\(clientUid.trimmingCharacters(in: .whitespacesAndNewlines))"
+    }
+
     struct ThreadResponse: Decodable {
         let conversations: [ChatThread]
     }
