@@ -217,7 +217,7 @@ struct ProfileMenuSheet: View {
         } message: {
             Text(deleteError ?? "")
         }
-        .sheet(isPresented: $showPersonalInfo)      { PersonalInfoSheet() }
+        .sheet(isPresented: $showPersonalInfo)      { PersonalInfoSheet(isClient: isClient).environmentObject(auth) }
         .sheet(isPresented: $showNotificationPrefs) { NotificationPrefsSheet() }
         .sheet(isPresented: $showAppearanceSheet)   { AppearanceSettingsSheet() }
         .sheet(isPresented: $showGiftShareSheet) {
@@ -341,6 +341,10 @@ struct ProfileRow: View {
 
 struct PersonalInfoSheet: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var auth: AuthManager
+
+    let isClient: Bool
+
     @AppStorage("quiz.firstName")    private var storedFirst: String = ""
     @AppStorage("profile.lastName")  private var storedLast:  String = ""
     @AppStorage("profile.email")     private var storedEmail: String = ""
@@ -350,6 +354,13 @@ struct PersonalInfoSheet: View {
     @State private var draftLast  = ""
     @State private var draftEmail = ""
     @State private var draftPhone = ""
+
+    private func splitDisplayName(_ full: String) -> (first: String, last: String) {
+        let parts = full.trimmingCharacters(in: .whitespacesAndNewlines)
+            .split(separator: " ", maxSplits: 1, omittingEmptySubsequences: true)
+            .map(String.init)
+        return (parts.first ?? "", parts.count > 1 ? parts[1] : "")
+    }
 
     var body: some View {
         ZStack {
@@ -365,10 +376,7 @@ struct PersonalInfoSheet: View {
                         .foregroundColor(.montraTextPrimary)
                     Spacer()
                     Button("Save") {
-                        storedFirst = draftFirst.trimmingCharacters(in: .whitespacesAndNewlines)
-                        storedLast  = draftLast.trimmingCharacters(in: .whitespacesAndNewlines)
-                        storedEmail = draftEmail.trimmingCharacters(in: .whitespacesAndNewlines)
-                        storedPhone = draftPhone.trimmingCharacters(in: .whitespacesAndNewlines)
+                        save()
                         dismiss()
                     }
                     .font(.system(size: 15, weight: .semibold))
@@ -390,15 +398,44 @@ struct PersonalInfoSheet: View {
                 }
             }
         }
-        .onAppear {
-            draftFirst = storedFirst
-            draftLast  = storedLast
-            draftEmail = storedEmail
-            draftPhone = storedPhone
-        }
+        .onAppear(perform: loadDrafts)
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
         .presentationBackground(Color.montraBackground)
+    }
+
+    private func loadDrafts() {
+        let trimmedFirst: String
+        let trimmedLast: String
+        if isClient {
+            trimmedFirst = storedFirst
+            trimmedLast = storedLast
+        } else {
+            let split = splitDisplayName(auth.userDisplayName)
+            trimmedFirst = split.first
+            trimmedLast = split.last
+        }
+        draftFirst = trimmedFirst
+        draftLast = trimmedLast
+        draftEmail = storedEmail
+        draftPhone = storedPhone
+    }
+
+    private func save() {
+        let first = draftFirst.trimmingCharacters(in: .whitespacesAndNewlines)
+        let last  = draftLast.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        storedFirst = first
+        storedLast  = last
+        storedEmail = draftEmail.trimmingCharacters(in: .whitespacesAndNewlines)
+        storedPhone = draftPhone.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if !isClient {
+            let fullName = last.isEmpty ? first : "\(first) \(last)"
+            if !fullName.isEmpty {
+                Task { await auth.setUserDisplayName(fullName) }
+            }
+        }
     }
 }
 

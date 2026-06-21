@@ -986,6 +986,10 @@ struct OnboardingQuizView: View {
 
         do {
             try await auth.createAccount(email: email, password: accountPassword)
+            let trimmedName = savedFirstName.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmedName.isEmpty {
+                await auth.setUserDisplayName(trimmedName)
+            }
             advance(by: 1)
         } catch {
             accountError = "Account creation failed. If you already have an account, use Sign in below."
