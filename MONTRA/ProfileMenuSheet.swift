@@ -317,7 +317,7 @@ struct ProfileRow: View {
          .padding(.horizontal, 16)
          .padding(.vertical, 15)
          .background(Color.clear)
-         .contentShape(Rectangle)
+         .contentShape(Rectangle())
       }
    }
 
@@ -346,7 +346,7 @@ struct PersonalInfoSheet: View {
         get {
             isClient ? clientProfileImageData : trainerProfileImageData
         }
-        set {
+        nonmutating set {
             if isClient {
                 clientProfileImageData = newValue
             } else {
@@ -388,84 +388,8 @@ struct PersonalInfoSheet: View {
 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 14) {
-                        // ── Profile Photo Section ──────────────────────
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("PROFILE PHOTO")
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundColor(.montraTextSecondary)
-                                .kerning(0.8)
-                            
-                            HStack(spacing: 16) {
-                                // Current avatar preview
-                                ZStack {
-                                    if let uiImage = UIImage(data: profileImageData), !profileImageData.isEmpty {
-                                        Image(uiImage: uiImage)
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width: 80, height: 80)
-                                            .clipShape(Circle())
-                                    } else {
-                                        Circle()
-                                            .fill(Color.montraSurface)
-                                            .frame(width: 80, height: 80)
-                                            .overlay(
-                                                Text("A")
-                                                    .font(.system(size: 28, weight: .black))
-                                                    .foregroundColor(.montraOrange)
-                                            )
-                                    }
-                                }
-                                .overlay(Circle().stroke(Color.montraOrange, lineWidth: 1.5))
-                                
-                                VStack(alignment: .leading, spacing: 8) {
-                                    PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-                                        HStack(spacing: 8) {
-                                            Image(systemName: "camera.fill")
-                                                .font(.system(size: 12, weight: .semibold))
-                                            Text("Change Photo")
-                                                .font(.system(size: 13, weight: .semibold))
-                                        }
-                                        .foregroundColor(.montraTextPrimary)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 10)
-                                        .background(Color.white.opacity(0.07))
-                                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 10)
-                                                .stroke(Color.white.opacity(0.12), lineWidth: 0.8)
-                                        )
-                                    }
-                                    
-                                    if !profileImageData.isEmpty {
-                                        Button {
-                                            profileImageData = Data()
-                                        } label: {
-                                            HStack(spacing: 8) {
-                                                Image(systemName: "trash.fill")
-                                                    .font(.system(size: 12, weight: .semibold))
-                                                Text("Remove Photo")
-                                                    .font(.system(size: 13, weight: .semibold))
-                                            }
-                                            .foregroundColor(Color(hex: "#FF6B6B"))
-                                            .padding(.horizontal, 12)
-                                            .padding(.vertical, 10)
-                                            .background(Color(hex: "#FF6B6B").opacity(0.1))
-                                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                                        }
-                                    }
-                                }
-                                
-                                Spacer()
-                            }
-                            .padding(12)
-                            .background(Color.white.opacity(0.04))
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.white.opacity(0.08), lineWidth: 0.8)
-                            )
-                        }
-                        
+                        profilePhotoSection
+
                         Divider()
                             .background(Color.white.opacity(0.06))
                             .padding(.vertical, 8)
@@ -492,6 +416,103 @@ struct PersonalInfoSheet: View {
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
         .presentationBackground(Color.montraBackground)
+    }
+
+    // MARK: - Profile Photo Section
+
+    @ViewBuilder
+    private var profilePhotoSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("PROFILE PHOTO")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundColor(.montraTextSecondary)
+                .kerning(0.8)
+
+            HStack(spacing: 16) {
+                avatarPreview
+                photoActionButtons
+                Spacer()
+            }
+            .padding(12)
+            .background(Color.white.opacity(0.04))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.white.opacity(0.08), lineWidth: 0.8)
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var avatarPreview: some View {
+        ZStack {
+            if let uiImage = UIImage(data: profileImageData), !profileImageData.isEmpty {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 80, height: 80)
+                    .clipShape(Circle())
+            } else {
+                Circle()
+                    .fill(Color.montraSurface)
+                    .frame(width: 80, height: 80)
+                    .overlay(
+                        Text("A")
+                            .font(.system(size: 28, weight: .black))
+                            .foregroundColor(.montraOrange)
+                    )
+            }
+        }
+        .overlay(Circle().stroke(Color.montraOrange, lineWidth: 1.5))
+    }
+
+    @ViewBuilder
+    private var photoActionButtons: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                changePhotoLabel
+            }
+
+            if !profileImageData.isEmpty {
+                Button {
+                    profileImageData = Data()
+                } label: {
+                    removePhotoLabel
+                }
+            }
+        }
+    }
+
+    private var changePhotoLabel: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "camera.fill")
+                .font(.system(size: 12, weight: .semibold))
+            Text("Change Photo")
+                .font(.system(size: 13, weight: .semibold))
+        }
+        .foregroundColor(.montraTextPrimary)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(Color.white.opacity(0.07))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(Color.white.opacity(0.12), lineWidth: 0.8)
+        )
+    }
+
+    private var removePhotoLabel: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "trash.fill")
+                .font(.system(size: 12, weight: .semibold))
+            Text("Remove Photo")
+                .font(.system(size: 13, weight: .semibold))
+        }
+        .foregroundColor(Color(hex: "#FF6B6B"))
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(Color(hex: "#FF6B6B").opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
     private func loadDrafts() {

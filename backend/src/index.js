@@ -45,11 +45,19 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
   .split(",")
   .map((v) => v.trim())
   .filter(Boolean);
+const defaultOrigins = [
+  "https://montra-27532.web.app",
+  "https://montra-production.up.railway.app",
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+];
+const corsOrigins = [...new Set([...defaultOrigins, ...allowedOrigins])];
 
 app.use(express.json({ limit: "5mb" }));
 app.use(
   cors({
-    origin: allowedOrigins.length ? allowedOrigins : true,
+    origin: corsOrigins.length ? corsOrigins : true,
   })
 );
 
