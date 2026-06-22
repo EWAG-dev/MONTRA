@@ -8,9 +8,9 @@ struct ProfileMenuSheet: View {
 
     let isClient: Bool
 
-    @AppStorage("dashboardProfileImageData") private var profileImageData: Data = Data()
+    @AppStorage("dashboardProfileImageData") private var clientProfileImageData: Data = Data()
+    @AppStorage("trainerProfileImageData") private var trainerProfileImageData: Data = Data()
     @AppStorage("quiz.firstName") private var quizFirstName: String = ""
-    @State private var selectedPhotoItem: PhotosPickerItem? = nil
     @AppStorage("onboarding.completed") private var onboardingCompleted = false
     @AppStorage("quiz.step")            private var quizStep = 1
     @State private var showPersonalInfo      = false
@@ -27,6 +27,10 @@ struct ProfileMenuSheet: View {
 
     private var roleLabel: String {
         isClient ? "MONTRA Member" : "Personal Trainer · MONTRA"
+    }
+
+    private var profileImageData: Data {
+        isClient ? clientProfileImageData : trainerProfileImageData
     }
 
     var body: some View {
@@ -56,24 +60,10 @@ struct ProfileMenuSheet: View {
 
                         // ── Hero card ─────────────────────────────────
                         HStack(spacing: 16) {
-                            // Avatar — tappable for client to change photo
-                            PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-                                ZStack(alignment: .bottomTrailing) {
-                                    avatarView
-                                    if isClient {
-                                        Circle()
-                                            .fill(Color.montraOrange)
-                                            .frame(width: 22, height: 22)
-                                            .overlay(
-                                                Image(systemName: "camera.fill")
-                                                    .font(.system(size: 9, weight: .semibold))
-                                                    .foregroundColor(.black)
-                                            )
-                                            .offset(x: 3, y: 3)
-                                    }
-                                }
+                            // Avatar — tap to edit profile
+                            Button { showPersonalInfo = true } label: {
+                                avatarView
                             }
-                            .disabled(!isClient)
                             .buttonStyle(.plain)
 
                             VStack(alignment: .leading, spacing: 4) {
@@ -186,14 +176,6 @@ struct ProfileMenuSheet: View {
                 }
             }
         }
-        .onChange(of: selectedPhotoItem) { _, newItem in
-            guard let newItem else { return }
-            Task {
-                if let data = try? await newItem.loadTransferable(type: Data.self) {
-                    profileImageData = data
-                }
-            }
-        }
         .alert("Delete Account", isPresented: $showDeleteConfirm) {
             Button("Delete", role: .destructive) {
                 Task {
@@ -240,7 +222,7 @@ struct ProfileMenuSheet: View {
     @ViewBuilder
     private var avatarView: some View {
         ZStack {
-            if isClient, let uiImage = UIImage(data: profileImageData), !profileImageData.isEmpty {
+            if let uiImage = UIImage(data: profileImageData), !profileImageData.isEmpty {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFill()
@@ -332,12 +314,14 @@ struct ProfileRow: View {
                     .foregroundColor(Color.white.opacity(0.18))
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 15)
-    }
-}
+         .padding(.horizontal, 16)
+         .padding(.vertical, 15)
+         .background(Color.clear)
+         .contentShape(Rectangle)
+      }
+   }
 
-// MARK: - Personal Information Sheet
+   // MARK: - Personal Information Sheet
 
 struct PersonalInfoSheet: View {
     @Environment(\.dismiss) private var dismiss
@@ -345,15 +329,31 @@ struct PersonalInfoSheet: View {
 
     let isClient: Bool
 
+    @AppStorage("dashboardProfileImageData") private var clientProfileImageData: Data = Data()
+    @AppStorage("trainerProfileImageData") private var trainerProfileImageData: Data = Data()
     @AppStorage("quiz.firstName")    private var storedFirst: String = ""
     @AppStorage("profile.lastName")  private var storedLast:  String = ""
     @AppStorage("profile.email")     private var storedEmail: String = ""
     @AppStorage("profile.phone")     private var storedPhone: String = ""
 
+    @State private var selectedPhotoItem: PhotosPickerItem? = nil
     @State private var draftFirst = ""
     @State private var draftLast  = ""
     @State private var draftEmail = ""
     @State private var draftPhone = ""
+
+    private var profileImageData: Data {
+        get {
+            isClient ? clientProfileImageData : trainerProfileImageData
+        }
+        set {
+            if isClient {
+                clientProfileImageData = newValue
+            } else {
+                trainerProfileImageData = newValue
+            }
+        }
+    }
 
     private func splitDisplayName(_ full: String) -> (first: String, last: String) {
         let parts = full.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -388,6 +388,88 @@ struct PersonalInfoSheet: View {
 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 14) {
+                        // ── Profile Photo Section ──────────────────────
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("PROFILE PHOTO")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundColor(.montraTextSecondary)
+                                .kerning(0.8)
+                            
+                            HStack(spacing: 16) {
+                                // Current avatar preview
+                                ZStack {
+                                    if let uiImage = UIImage(data: profileImageData), !profileImageData.isEmpty {
+                                        Image(uiImage: uiImage)
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 80, height: 80)
+                                            .clipShape(Circle())
+                                    } else {
+                                        Circle()
+                                            .fill(Color.montraSurface)
+                                            .frame(width: 80, height: 80)
+                                            .overlay(
+                                                Text("A")
+                                                    .font(.system(size: 28, weight: .black))
+                                                    .foregroundColor(.montraOrange)
+                                            )
+                                    }
+                                }
+                                .overlay(Circle().stroke(Color.montraOrange, lineWidth: 1.5))
+                                
+                                VStack(alignment: .leading, spacing: 8) {
+                                    PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                                        HStack(spacing: 8) {
+                                            Image(systemName: "camera.fill")
+                                                .font(.system(size: 12, weight: .semibold))
+                                            Text("Change Photo")
+                                                .font(.system(size: 13, weight: .semibold))
+                                        }
+                                        .foregroundColor(.montraTextPrimary)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 10)
+                                        .background(Color.white.opacity(0.07))
+                                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 10)
+                                                .stroke(Color.white.opacity(0.12), lineWidth: 0.8)
+                                        )
+                                    }
+                                    
+                                    if !profileImageData.isEmpty {
+                                        Button {
+                                            profileImageData = Data()
+                                        } label: {
+                                            HStack(spacing: 8) {
+                                                Image(systemName: "trash.fill")
+                                                    .font(.system(size: 12, weight: .semibold))
+                                                Text("Remove Photo")
+                                                    .font(.system(size: 13, weight: .semibold))
+                                            }
+                                            .foregroundColor(Color(hex: "#FF6B6B"))
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 10)
+                                            .background(Color(hex: "#FF6B6B").opacity(0.1))
+                                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                                        }
+                                    }
+                                }
+                                
+                                Spacer()
+                            }
+                            .padding(12)
+                            .background(Color.white.opacity(0.04))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.white.opacity(0.08), lineWidth: 0.8)
+                            )
+                        }
+                        
+                        Divider()
+                            .background(Color.white.opacity(0.06))
+                            .padding(.vertical, 8)
+                        
                         PersonalInfoField(label: "FIRST NAME",    text: $draftFirst, contentType: .givenName)
                         PersonalInfoField(label: "LAST NAME",     text: $draftLast,  contentType: .familyName)
                         PersonalInfoField(label: "EMAIL ADDRESS", text: $draftEmail, contentType: .emailAddress, keyboardType: .emailAddress)
@@ -399,6 +481,14 @@ struct PersonalInfoSheet: View {
             }
         }
         .onAppear(perform: loadDrafts)
+        .onChange(of: selectedPhotoItem) { _, newItem in
+            guard let newItem else { return }
+            Task {
+                if let data = try? await newItem.loadTransferable(type: Data.self) {
+                    profileImageData = data
+                }
+            }
+        }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
         .presentationBackground(Color.montraBackground)
