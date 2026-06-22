@@ -6,10 +6,21 @@
       "**/.*",
       "**/node_modules/**"
     ],
-    "rewrites": [
+    "redirects": [
       {
-        "source": "**",
-        "destination": "/index.html"
+        "source": "/index.html",
+        "destination": "/",
+        "type": 301
+      },
+      {
+        "source": "/find-a-coach.html",
+        "destination": "/",
+        "type": 301
+      },
+      {
+        "source": "/coaches.html",
+        "destination": "/",
+        "type": 301
       }
     ]
   }
