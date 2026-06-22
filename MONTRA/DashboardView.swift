@@ -5,6 +5,7 @@ import SwiftUI
 struct DashboardView: View {
     @Binding var selectedTab: ContentView.Tab
     let onOpenCoachChat: () -> Void
+    @EnvironmentObject private var auth: AuthManager
     @Environment(\.colorScheme) private var colorScheme
     @State private var showProfileSheet = false
     @State private var showNotifications = false
@@ -398,6 +399,9 @@ struct DashboardView: View {
         .sheet(isPresented: $showProfileSheet) {
             ProfileMenuSheet(isClient: true)
         }
+        .task {
+            await loadBookedSessions()
+        }
         } // NavigationStack
     }
 
@@ -430,20 +434,23 @@ struct DashboardView: View {
 
     private let trainerProgress = TrainerProgressSnapshot.empty
 
-    @AppStorage("sessions.booked") private var bookedRaw: String = ""
+    @State private var bookedSessions: [BookedSession] = []
+
+    private func loadBookedSessions() async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
+              let sessions = try? await BookingAPI.loadMySessions(token: tokenResult.token) else { return }
+        bookedSessions = sessions
+    }
 
     private var nextBookedDate: Date? {
-        let cal = Calendar.current
         let now = Date()
-        let keys = bookedRaw.split(separator: ",").map(String.init).filter { !$0.isEmpty }
-        let dates: [Date] = keys.compactMap { key in
-            let parts = key.split(separator: "-").compactMap { Int($0) }
-            guard parts.count == 4 else { return nil }
-            var comps = DateComponents()
-            comps.year = parts[0]; comps.month = parts[1]; comps.day = parts[2]; comps.hour = parts[3]
-            return cal.date(from: comps)
-        }
-        return dates.filter { $0 >= now }.sorted().first
+        return bookedSessions
+            .filter { $0.status == "scheduled" }
+            .compactMap { $0.startDate }
+            .filter { $0 >= now }
+            .sorted()
+            .first
     }
 
     private var nextSession: SessionItem? {

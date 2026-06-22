@@ -32,6 +32,13 @@ import {
   listConversationsForTrainer,
   sendConversationMessage,
 } from "./chatStore.js";
+import {
+  cancelBookedSession,
+  createBookedSession,
+  getBookedSession,
+  listClientSessions,
+  listTrainerSessions,
+} from "./sessionStore.js";
 
 const app = express();
 const port = Number(process.env.PORT || 8080);
@@ -201,6 +208,19 @@ function clientRequestAcceptedEmailHtml(clientName, trainerName) {
     <br>3) Book your first session
   </div>
   <p style="color:#777;font-size:14px;line-height:1.6">Your training journey is officially underway.</p>
+  <hr style="border:none;border-top:1px solid #222;margin:40px 0">
+  <p style="color:#555;font-size:11px">MONTRA &middot; Powered by Elite Home Fitness</p>
+</div></body></html>`;
+}
+
+function sessionBookedEmailHtml(trainerName, clientName, startTimeDisplay) {
+  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+<div style="max-width:560px;margin:0 auto;padding:48px 24px">
+  <p style="color:#FF6820;font-size:11px;font-weight:700;letter-spacing:2px;margin:0 0 32px">MONTRA</p>
+  <h1 style="color:#fff;font-size:24px;font-weight:900;margin:0 0 16px">New session booked</h1>
+  <p style="font-size:15px;line-height:1.7;color:#ccc">Hi ${escapeHtml(trainerName || "there")},<br><br>
+  ${escapeHtml(clientName || "A client")} booked a session with you for <strong>${escapeHtml(startTimeDisplay || "")}</strong>.</p>
+  <p style="color:#777;font-size:14px;line-height:1.6">Open the app to see it on your schedule.</p>
   <hr style="border:none;border-top:1px solid #222;margin:40px 0">
   <p style="color:#555;font-size:11px">MONTRA &middot; Powered by Elite Home Fitness</p>
 </div></body></html>`;
@@ -564,6 +584,42 @@ app.get("/api/trainers/my-matches", requireFirebaseAuth, async (req, res) => {
   res.status(200).json({ trainer, matches });
 });
 
+app.get("/api/trainers/my-sessions", requireFirebaseAuth, async (req, res) => {
+  const trainer = await getTrainerByAccountUid(req.user.uid);
+  if (!trainer) {
+    res.status(404).json({ error: "Trainer profile not found" });
+    return;
+  }
+
+  if (trainer.status !== "approved") {
+    res.status(403).json({
+      error: "Trainer account is not approved yet",
+      status: trainer.status,
+    });
+    return;
+  }
+
+  const sessions = await listTrainerSessions(trainer.id);
+  res.status(200).json({ trainer, sessions });
+});
+
+app.post("/api/trainers/sessions/:id/cancel", requireFirebaseAuth, async (req, res) => {
+  const trainer = await getTrainerByAccountUid(req.user.uid);
+  const existing = await getBookedSession(req.params.id);
+  if (!existing) {
+    res.status(404).json({ error: "Session not found" });
+    return;
+  }
+
+  if (!trainer || existing.trainerId !== trainer.id) {
+    res.status(403).json({ error: "Not your session" });
+    return;
+  }
+
+  const session = await cancelBookedSession(req.params.id);
+  res.status(200).json({ session });
+});
+
 app.post("/api/trainers/matches/:requestId/accept", requireFirebaseAuth, async (req, res) => {
   const trainer = await getTrainerByAccountUid(req.user.uid);
   if (!trainer) {
@@ -747,15 +803,82 @@ app.get("/api/client/requests", requireFirebaseAuth, async (req, res) => {
   res.status(200).json({ requests });
 });
 
+app.post("/api/client/sessions", requireFirebaseAuth, async (req, res) => {
+  try {
+    const trainerId = String(req.body.trainerId || "").trim();
+    const startTime = String(req.body.startTime || "").trim();
+    const durationMin = Number(req.body.durationMin) || 60;
+
+    const trainer = await getTrainer(trainerId);
+    if (!trainer || trainer.status !== "approved") {
+      res.status(400).json({ error: "Selected trainer is unavailable" });
+      return;
+    }
+
+    const clientRequests = await listClientRequests(req.user.uid);
+    const hasAcceptedMatch = clientRequests.some(
+      (request) => request.trainerId === trainer.id && request.status === "accepted"
+    );
+    if (!hasAcceptedMatch) {
+      res.status(403).json({ error: "You need an accepted match with this trainer before booking a session" });
+      return;
+    }
+
+    const session = await createBookedSession({
+      trainerId: trainer.id,
+      trainerName: trainer.name,
+      clientUid: req.user.uid,
+      clientEmail: req.user.email || "",
+      clientName: String(req.body.clientName || "").trim(),
+      startTime,
+      durationMin,
+    });
+
+    if (trainer.email) {
+      sendEmail(
+        trainer.email,
+        "New session booked on MONTRA",
+        sessionBookedEmailHtml(trainer.name, session.clientName, startTime)
+      ).catch((e) => console.error("Failed to send session-booked email:", e.message));
+    }
+
+    res.status(201).json({ session });
+  } catch (error) {
+    res.status(400).json({ error: error.message || "Unable to book session" });
+  }
+});
+
+app.get("/api/client/sessions", requireFirebaseAuth, async (req, res) => {
+  const sessions = await listClientSessions(req.user.uid);
+  res.status(200).json({ sessions });
+});
+
+app.post("/api/client/sessions/:id/cancel", requireFirebaseAuth, async (req, res) => {
+  const existing = await getBookedSession(req.params.id);
+  if (!existing) {
+    res.status(404).json({ error: "Session not found" });
+    return;
+  }
+
+  if (existing.clientUid !== req.user.uid) {
+    res.status(403).json({ error: "Not your session" });
+    return;
+  }
+
+  const session = await cancelBookedSession(req.params.id);
+  res.status(200).json({ session });
+});
+
 app.get("/api/notifications/my", requireFirebaseAuth, async (req, res) => {
   try {
     const trainer = await getTrainerByAccountUid(req.user.uid);
     const notifications = [];
 
     if (trainer) {
-      const [matches, conversations] = await Promise.all([
+      const [matches, conversations, sessions] = await Promise.all([
         listTrainerMatches(trainer.id),
         listConversationsForTrainer(trainer.id),
+        listTrainerSessions(trainer.id),
       ]);
 
       for (const match of matches) {
@@ -767,6 +890,20 @@ app.get("/api/notifications/my", requireFirebaseAuth, async (req, res) => {
             createdAt: match.updatedAt || match.createdAt || "",
             unread: true,
             category: "request",
+          });
+        }
+      }
+
+      const nowIso = new Date().toISOString();
+      for (const session of sessions) {
+        if (session.status === "scheduled" && session.startTime > nowIso) {
+          notifications.push({
+            id: `sess_${session.id}`,
+            title: "New session booked",
+            detail: `${session.clientName || "A client"} booked a session for ${session.startTime}.`,
+            createdAt: session.createdAt || "",
+            unread: true,
+            category: "session",
           });
         }
       }

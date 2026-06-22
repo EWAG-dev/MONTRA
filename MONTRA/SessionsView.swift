@@ -6,6 +6,7 @@ import UIKit
 struct SessionsView: View {
     let onOpenCoachChat: () -> Void
 
+    @EnvironmentObject private var auth: AuthManager
     private let cal = Calendar.current
 
     @State private var selectedDate: Date = Calendar.current.startOfDay(for: Date())
@@ -13,14 +14,17 @@ struct SessionsView: View {
     @State private var showConfirm = false
     @State private var showProfileSheet = false
     @State private var showNotifications = false
+    @State private var bookedSessions: [BookedSession] = []
+    @State private var bookingError: String? = nil
+    @State private var isBooking = false
 
-    @AppStorage("sessions.booked")           private var bookedRaw: String = ""
     @AppStorage("client.schedule.days")      private var scheduleDaysRaw: String = ""
     @AppStorage("client.schedule.time")      private var scheduleTimeRaw: String = ""
     @AppStorage("trainer.availableDays")     private var trainerDaysRaw: String = ""
     @AppStorage("trainer.availableHours")    private var trainerHoursRaw: String = ""
     @AppStorage("quiz.requestedTrainerName") private var trainerFullName: String = ""
     @AppStorage("quiz.requestedTrainer")     private var requestedTrainerId: String = ""
+    @AppStorage("quiz.firstName")            private var clientFirstName: String = ""
 
     private func loadTrainerAvailability() async {
         guard let profile = await fetchPublicTrainerProfile(trainerId: requestedTrainerId) else { return }
@@ -60,7 +64,10 @@ struct SessionsView: View {
     }
 
     private var bookedKeys: Set<String> {
-        Set(bookedRaw.split(separator: ",").map(String.init).filter { !$0.isEmpty })
+        Set(bookedSessions.compactMap { session -> String? in
+            guard session.status == "scheduled", let date = session.startDate else { return nil }
+            return slotKey(date: date, hour: cal.component(.hour, from: date))
+        })
     }
 
     private var scheduleDays: Set<String> {
@@ -92,17 +99,16 @@ struct SessionsView: View {
         }
     }
 
-    private var upcomingBooked: [(Date, Int)] {
-        let today = cal.startOfDay(for: Date())
-        return bookedKeys.compactMap { key -> (Date, Int)? in
-            let p = key.split(separator: "-")
-            guard p.count == 4,
-                  let yr = Int(p[0]), let mo = Int(p[1]),
-                  let dy = Int(p[2]), let hr = Int(p[3]) else { return nil }
-            var c = DateComponents(); c.year = yr; c.month = mo; c.day = dy
-            guard let d = cal.date(from: c), d >= today else { return nil }
-            return (d, hr)
-        }.sorted { $0.0 < $1.0 }
+    private var upcomingBooked: [BookedSession] {
+        let now = Date()
+        return bookedSessions
+            .filter { $0.status == "scheduled" }
+            .compactMap { session -> (BookedSession, Date)? in
+                guard let date = session.startDate, date >= now else { return nil }
+                return (session, date)
+            }
+            .sorted { $0.1 < $1.1 }
+            .map { $0.0 }
     }
 
     var body: some View {
@@ -235,12 +241,13 @@ struct SessionsView: View {
                     if !upcomingBooked.isEmpty {
                         VStack(alignment: .leading, spacing: 12) {
                             SectionHeader(title: "YOUR UPCOMING SESSIONS")
-                            ForEach(upcomingBooked.prefix(8), id: \.0) { date, hour in
+                            ForEach(upcomingBooked.prefix(8)) { session in
                                 BookedSessionRow(
-                                    date: date,
-                                    hour: hour,
+                                    session: session,
                                     trainerName: trainerDisplayName
-                                )
+                                ) {
+                                    Task { await cancelSession(session) }
+                                }
                             }
                         }
                     }
@@ -254,6 +261,7 @@ struct SessionsView: View {
         }
         .task {
             await loadTrainerAvailability()
+            await loadMySessions()
         }
         .confirmationDialog(
             pendingSlot.map { "Book \($0.timeLabel) with \(trainerFirstName)?" } ?? "",
@@ -261,13 +269,18 @@ struct SessionsView: View {
             titleVisibility: .visible
         ) {
             if let slot = pendingSlot {
-                Button("Confirm Booking") { confirmBook(slot) }
+                Button("Confirm Booking") { Task { await confirmBook(slot) } }
             }
             Button("Cancel", role: .cancel) {}
         } message: {
             if let slot = pendingSlot {
                 Text("\(longDateLabel(slot.date)) · 60 min")
             }
+        }
+        .alert("Booking", isPresented: Binding(get: { bookingError != nil }, set: { if !$0 { bookingError = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(bookingError ?? "")
         }
         .sheet(isPresented: $showProfileSheet) {
             ProfileMenuSheet(isClient: true)
@@ -279,10 +292,46 @@ struct SessionsView: View {
 
     // MARK: - Helpers
 
-    private func confirmBook(_ slot: BookingSlot) {
-        var keys = bookedKeys
-        keys.insert(slot.key)
-        bookedRaw = keys.joined(separator: ",")
+    private func loadMySessions() async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
+              let sessions = try? await BookingAPI.loadMySessions(token: tokenResult.token) else { return }
+        bookedSessions = sessions
+    }
+
+    private func confirmBook(_ slot: BookingSlot) async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false) else {
+            bookingError = "You need to be signed in to book a session."
+            return
+        }
+
+        let startDate = cal.date(bySettingHour: slot.hour, minute: 0, second: 0, of: slot.date) ?? slot.date
+        isBooking = true
+        defer { isBooking = false }
+
+        do {
+            _ = try await BookingAPI.bookSession(
+                trainerId: requestedTrainerId,
+                clientName: clientFirstName,
+                startTime: startDate,
+                token: tokenResult.token
+            )
+            await loadMySessions()
+        } catch {
+            bookingError = error.localizedDescription
+        }
+    }
+
+    private func cancelSession(_ session: BookedSession) async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false) else { return }
+        do {
+            _ = try await BookingAPI.cancelClientSession(id: session.id, token: tokenResult.token)
+            await loadMySessions()
+        } catch {
+            bookingError = error.localizedDescription
+        }
     }
 
     private func slotKey(date: Date, hour: Int) -> String {
@@ -457,9 +506,13 @@ struct TimeSlotButton: View {
 // MARK: - Booked Session Row
 
 struct BookedSessionRow: View {
-    let date: Date
-    let hour: Int
+    let session: BookedSession
     let trainerName: String
+    let onCancel: () -> Void
+
+    @State private var showCancelConfirm = false
+
+    private var date: Date { session.startDate ?? Date() }
 
     var body: some View {
         HStack(spacing: 14) {
@@ -491,19 +544,26 @@ struct BookedSessionRow: View {
 
             Spacer()
 
-            Text("Confirmed")
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundColor(Color(hex: "#22C55E"))
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color(hex: "#22C55E").opacity(0.1))
-                .clipShape(Capsule())
+            Button { showCancelConfirm = true } label: {
+                Image(systemName: "xmark.circle")
+                    .font(.system(size: 18))
+                    .foregroundColor(.montraTextSecondary)
+            }
+            .buttonStyle(.plain)
         }
         .padding(12)
         .background(Color.white.opacity(0.04))
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .overlay(RoundedRectangle(cornerRadius: 14)
             .stroke(Color.white.opacity(0.07), lineWidth: 0.8))
+        .confirmationDialog(
+            "Cancel this session?",
+            isPresented: $showCancelConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Cancel Session", role: .destructive, action: onCancel)
+            Button("Keep Session", role: .cancel) {}
+        }
     }
 
     private var dayAbbrev: String {
@@ -514,8 +574,7 @@ struct BookedSessionRow: View {
         let f = DateFormatter(); f.dateFormat = "d"; return f.string(from: date)
     }
     private var timeLabel: String {
-        let h = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour)
-        return "\(h):00 \(hour >= 12 ? "PM" : "AM")"
+        let f = DateFormatter(); f.dateFormat = "h:mm a"; return f.string(from: date)
     }
 }
 

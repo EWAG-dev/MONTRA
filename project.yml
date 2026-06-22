@@ -22,10 +22,19 @@ targets:
       path: MONTRA/Info.plist
       properties:
         CFBundleDisplayName: MONTRA
+        CFBundleVersion: "4"
         UILaunchScreen:
           UIColorName: MontraLaunchBackground
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UIRequiresFullScreen: true
+        ITSAppUsesNonExemptEncryption: false
+        MONTRA_API_BASE_URL: https://montra-production.up.railway.app
     dependencies:
       - package: firebase-ios-sdk
         product: FirebaseAuth

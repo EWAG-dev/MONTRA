@@ -4,16 +4,46 @@ struct TrainerDashboardView: View {
 
     @Binding var selectedTab: TrainerTabView.TrainerTab
     @EnvironmentObject private var auth: AuthManager
-    @AppStorage("app.liveDataConnected") private var liveDataConnected = false
 
-    private let todaySessions: [TrainerClientSession] = []
-    private let upcomingSessions: [TrainerClientSession] = []
+    @State private var bookedSessions: [BookedSession] = []
 
     @State private var showProfileSheet = false
     @State private var showSchedules = false
     @State private var activeClientCount = 0
     @State private var pendingRequestCount = 0
     @State private var hasLoadedMatches = false
+
+    private func loadSessions() async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
+              let sessions = try? await BookingAPI.loadTrainerSessions(token: tokenResult.token) else { return }
+        bookedSessions = sessions
+    }
+
+    private var scheduledSessionsByDate: [(BookedSession, Date)] {
+        bookedSessions
+            .filter { $0.status == "scheduled" }
+            .compactMap { session -> (BookedSession, Date)? in
+                guard let date = session.startDate else { return nil }
+                return (session, date)
+            }
+            .sorted { $0.1 < $1.1 }
+    }
+
+    private var todaySessions: [TrainerClientSession] {
+        let cal = Calendar.current
+        return scheduledSessionsByDate
+            .filter { cal.isDateInToday($0.1) }
+            .compactMap { BookingAPI.asTrainerClientSession($0.0) }
+    }
+
+    private var upcomingSessions: [TrainerClientSession] {
+        let now = Date()
+        let cal = Calendar.current
+        return scheduledSessionsByDate
+            .filter { $0.1 >= now && !cal.isDateInToday($0.1) }
+            .compactMap { BookingAPI.asTrainerClientSession($0.0) }
+    }
 
     private func loadMatchCounts() async {
         guard let user = auth.user,
@@ -47,7 +77,7 @@ struct TrainerDashboardView: View {
                         Image(systemName: "exclamationmark.triangle")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.montraOrange)
-                        Text("Session scheduling isn't tracked yet — client and request counts below are live.")
+                        Text("Can't reach the MONTRA server right now — pull to refresh once you're back online.")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.montraTextSecondary)
                         Spacer(minLength: 0)
@@ -119,6 +149,7 @@ struct TrainerDashboardView: View {
         .background(Color.montraBackground)
         .task {
             await loadMatchCounts()
+            await loadSessions()
         }
         .sheet(isPresented: $showProfileSheet) {
             ProfileMenuSheet(isClient: false)
@@ -132,7 +163,7 @@ struct TrainerDashboardView: View {
 struct TrainerSessionRow: View {
     let session: TrainerClientSession
     var showsDuration: Bool = false
-    var showsCompleteAction: Bool = false
+    var onCancel: (() -> Void)? = nil
 
     var body: some View {
         HStack(spacing: 14) {
@@ -165,12 +196,11 @@ struct TrainerSessionRow: View {
                     .background((session.status == .confirmed ? Color.green : Color.white).opacity(0.12))
                     .clipShape(RoundedRectangle(cornerRadius: 6))
 
-                if showsCompleteAction {
-                    Button {
-                    } label: {
-                        Image(systemName: "checkmark.circle")
+                if let onCancel {
+                    Button(action: onCancel) {
+                        Image(systemName: "xmark.circle")
                             .font(.system(size: 20))
-                            .foregroundColor(.montraOrange)
+                            .foregroundColor(.montraTextSecondary)
                     }
                     .buttonStyle(.plain)
                 }
@@ -207,7 +237,7 @@ struct TrainerActionButton: View {
 // MARK: - Data Model
 
 struct TrainerClientSession: Identifiable {
-    let id: Int
+    let id: String
     let clientName: String
     let time: String
     let type: String

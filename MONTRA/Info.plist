@@ -20,11 +20,17 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>4</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>MONTRA_API_BASE_URL</key>
+	<string>https://montra-production.up.railway.app</string>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>
 		<string>MontraLaunchBackground</string>
 	</dict>
+	<key>UIRequiresFullScreen</key>
+	<true/>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -36,11 +42,5 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>UIRequiresFullScreen</key>
-	<true/>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
-	<key>MONTRA_API_BASE_URL</key>
-	<string>https://montra-production.up.railway.app</string>
 </dict>
 </plist>
