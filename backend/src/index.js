@@ -24,6 +24,7 @@ import {
   updateMatchRequestStatus,
 } from "./matchStore.js";
 import {
+  ensureConversationThread,
   getConversation,
   listConversationMessages,
   listConversationsForClient,
@@ -606,6 +607,42 @@ app.post("/api/trainers/matches/:requestId/decline", requireFirebaseAuth, async 
 
   const request = await updateMatchRequestStatus(existing.id, "declined");
   res.status(200).json({ request });
+});
+
+app.post("/api/trainers/matches/:requestId/open-chat", requireFirebaseAuth, async (req, res) => {
+  const trainer = await getTrainerByAccountUid(req.user.uid);
+  if (!trainer) {
+    res.status(404).json({ error: "Trainer profile not found" });
+    return;
+  }
+
+  const existing = await getMatchRequest(req.params.requestId);
+  if (!existing) {
+    res.status(404).json({ error: "Match request not found" });
+    return;
+  }
+
+  if (existing.trainerId !== trainer.id) {
+    res.status(403).json({ error: "Not allowed to open chat for this request" });
+    return;
+  }
+
+  const requestConversationId = String(existing.conversationId || "").trim();
+  const fallbackConversationId = `trainer_${String(existing.trainerId || "").trim()}__client_${String(existing.clientUid || "").trim()}`;
+  const conversationId = requestConversationId || fallbackConversationId;
+
+  let conversation = await getConversation(conversationId);
+  if (!conversation) {
+    conversation = await ensureConversationThread({
+      trainerId: trainer.id,
+      trainerName: existing.trainerName || trainer.name,
+      clientUid: String(existing.clientUid || "").trim(),
+      clientEmail: String(existing.clientEmail || "").trim(),
+      clientName: String(existing?.clientProfile?.firstName || "").trim() || "Client",
+    });
+  }
+
+  res.status(200).json({ conversation });
 });
 
 app.get("/api/trainers", async (req, res) => {

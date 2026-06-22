@@ -30,6 +30,10 @@ struct TrainerInboxView: View {
         case notifications = "Notifications"
     }
 
+    private var actionableRequests: [TrainerMatchRequest] {
+        matchRequests.filter { $0.status != "declined" }
+    }
+
     private let conversations: [TrainerConversation] = []
 
     var body: some View {
@@ -190,6 +194,7 @@ struct TrainerInboxView: View {
     private func openConversationForRequest(_ request: TrainerMatchRequest) async {
         selectedSegment = .messages
         requestActionError = nil
+        chatError = nil
 
         if chatThreads.isEmpty {
             await refreshChatThreads()
@@ -214,7 +219,38 @@ struct TrainerInboxView: View {
             return
         }
 
+        if let ensuredConversation = await ensureConversationForRequest(request.id) {
+            selectedThread = ensuredConversation
+            await loadChatMessages(for: ensuredConversation)
+            await refreshChatThreads()
+            return
+        }
+
         chatError = "Could not open conversation yet. Pull to refresh and try again."
+    }
+
+    private func ensureConversationForRequest(_ requestId: String) async -> ChatThread? {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
+              let url = MontraAPIConfig.url(for: "/api/trainers/matches/\(requestId)/open-chat") else { return nil }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(tokenResult.token)", forHTTPHeaderField: "Authorization")
+
+        struct Response: Decodable {
+            let conversation: ChatThread
+        }
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+                return nil
+            }
+            return try JSONDecoder().decode(Response.self, from: data).conversation
+        } catch {
+            return nil
+        }
     }
 
     private func fetchMatchRequests() async {
@@ -285,6 +321,25 @@ struct TrainerInboxView: View {
                         .font(.system(size: 12))
                         .foregroundColor(.montraTextSecondary)
                         .multilineTextAlignment(.center)
+
+                    if !actionableRequests.isEmpty {
+                        VStack(spacing: 8) {
+                            ForEach(Array(actionableRequests.prefix(3))) { request in
+                                Button {
+                                    Task { await openConversationForRequest(request) }
+                                } label: {
+                                    Text("Message \(request.clientProfile.firstName.isEmpty ? "Client" : request.clientProfile.firstName)")
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundColor(.black)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 8)
+                                        .background(Color.montraOrange)
+                                        .clipShape(Capsule())
+                                }
+                            }
+                        }
+                        .padding(.top, 6)
+                    }
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.top, 32)
@@ -341,31 +396,40 @@ struct TrainerInboxView: View {
             }
 
             HStack(spacing: 10) {
-                TextField(chatThreads.isEmpty ? "No thread available yet" : "Write a message...", text: $chatMessageText)
+                TextField(selectedThread == nil ? "Open a request to start chat" : "Write a message...", text: $chatMessageText)
                     .textFieldStyle(.plain)
                     .foregroundColor(.montraTextPrimary)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 12)
                     .montraCard(radius: 12)
-                    .disabled(chatThreads.isEmpty)
 
                 Button {
                     Task { await sendChatMessage() }
                 } label: {
-                    if chatSending {
-                        ProgressView().tint(.black)
-                            .frame(width: 44, height: 44)
-                            .background(Color.montraOrange)
-                            .clipShape(Circle())
-                    } else {
-                        Image(systemName: "paperplane.fill")
-                            .foregroundColor(.black)
-                            .frame(width: 44, height: 44)
-                            .background(Color.montraOrange)
-                            .clipShape(Circle())
+                    HStack(spacing: 6) {
+                        if chatSending {
+                            ProgressView()
+                                .tint(.black)
+                                .scaleEffect(0.8)
+                            Text("Sending")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(.black)
+                        } else {
+                            Image(systemName: "paperplane.fill")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(.black)
+                            Text("Send")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(.black)
+                        }
                     }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .background(Color.montraOrange)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
-                .disabled(chatThreads.isEmpty || chatSending || chatMessageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || selectedThread == nil)
+                .opacity((chatSending || chatMessageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || selectedThread == nil) ? 0.55 : 1)
+                .disabled(chatSending || chatMessageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || selectedThread == nil)
             }
         }
     }
