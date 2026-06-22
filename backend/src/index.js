@@ -458,6 +458,101 @@ app.post("/api/dev/set-trainer-claim", async (req, res) => {
   }
 });
 
+// DEV ONLY — remove after testing. Creates an email-verified client account
+// (no role claim) for end-to-end booking-flow testing.
+app.post("/api/dev/create-test-client", requireFirebaseAuth, requireAdmin, async (req, res) => {
+  if (!process.env.ALLOW_DEV_ENDPOINTS) {
+    return res.status(404).json({ error: "Not found" });
+  }
+  try {
+    const { email, password, name } = req.body;
+    const auth = getAuth();
+    let user;
+    try {
+      user = await auth.createUser({ email, password, displayName: name, emailVerified: true });
+    } catch (e) {
+      if (e.code === "auth/email-already-exists") {
+        user = await auth.getUserByEmail(email);
+        await auth.updateUser(user.uid, { password, emailVerified: true });
+      } else throw e;
+    }
+    res.json({ ok: true, uid: user.uid });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// DEV ONLY — remove after testing. Deletes test trainer/client accounts and
+// any trainer/match/session/conversation docs referencing them.
+app.post("/api/dev/cleanup-test-data", requireFirebaseAuth, requireAdmin, async (req, res) => {
+  if (!process.env.ALLOW_DEV_ENDPOINTS) {
+    return res.status(404).json({ error: "Not found" });
+  }
+  try {
+    const { trainerUid, clientUid } = req.body;
+    const db = getFirestore();
+    const auth = getAuth();
+
+    let trainerDocId = null;
+    if (trainerUid) {
+      const snap = await db.collection("trainers").where("accountUid", "==", trainerUid).limit(1).get();
+      if (!snap.empty) {
+        trainerDocId = snap.docs[0].id;
+        await snap.docs[0].ref.delete();
+      }
+    }
+
+    const matchesDeletion = (async () => {
+      const snap = await db.collection("matchRequests").get();
+      await Promise.all(
+        snap.docs
+          .filter((d) => {
+            const data = d.data();
+            return (trainerDocId && data.trainerId === trainerDocId) || (clientUid && data.clientUid === clientUid);
+          })
+          .map((d) => d.ref.delete())
+      );
+    })();
+
+    const sessionsDeletion = (async () => {
+      const snap = await db.collection("bookedSessions").get();
+      await Promise.all(
+        snap.docs
+          .filter((d) => {
+            const data = d.data();
+            return (trainerDocId && data.trainerId === trainerDocId) || (clientUid && data.clientUid === clientUid);
+          })
+          .map((d) => d.ref.delete())
+      );
+    })();
+
+    const conversationsDeletion = (async () => {
+      const snap = await db.collection("conversations").get();
+      await Promise.all(
+        snap.docs
+          .filter((d) => {
+            const data = d.data();
+            return (trainerDocId && data.trainerId === trainerDocId) || (clientUid && data.clientUid === clientUid);
+          })
+          .map((d) => d.ref.delete())
+      );
+    })();
+
+    await Promise.all([matchesDeletion, sessionsDeletion, conversationsDeletion]);
+
+    if (trainerUid) {
+      try { await auth.deleteUser(trainerUid); } catch (e) { /* already gone */ }
+    }
+    if (clientUid) {
+      try { await auth.deleteUser(clientUid); } catch (e) { /* already gone */ }
+    }
+
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
 // Dev-only: run full approval flow for a trainer doc without requiring admin auth
 app.post("/api/dev/approve-trainer", async (req, res) => {
   if (!process.env.ALLOW_DEV_ENDPOINTS) {
