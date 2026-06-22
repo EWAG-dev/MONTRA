@@ -58,9 +58,9 @@ struct RootView: View {
                 MontraSplashView(showMatchingCard: preAuthOnboardingActive || !onboardingCompleted) {
                     splashDone = true
                 }
-            } else if auth.user == nil && auth.demoRole == nil {
+            } else if auth.user == nil {
                 LoginView()
-            } else if auth.userRole == .trainer || auth.demoRole == .trainer {
+            } else if auth.userRole == .trainer {
                 if !trainerAgreementSigned {
                     TrainerAgreementView()
                 } else if !trainerOrientationCompleted {

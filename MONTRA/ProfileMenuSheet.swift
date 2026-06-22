@@ -21,6 +21,7 @@ struct ProfileMenuSheet: View {
     @State private var showDeleteConfirm     = false
     @State private var deleteError: String?  = nil
     @State private var showTrainerOrientation = false
+    @State private var comingSoonFeature: String? = nil
 
     private var displayName: String {
         isClient ? (quizFirstName.isEmpty ? "Member" : quizFirstName) : (auth.user?.displayName ?? "Trainer")
@@ -116,10 +117,16 @@ struct ProfileMenuSheet: View {
                             }
                             .buttonStyle(.plain)
                             rowDivider
-                            ProfileRow(icon: "creditcard.fill",   label: "Payment Methods")
+                            Button { comingSoonFeature = "Payment Methods" } label: {
+                                ProfileRow(icon: "creditcard.fill", label: "Payment Methods")
+                            }
+                            .buttonStyle(.plain)
                             rowDivider
                             if isClient {
-                                ProfileRow(icon: "location.fill", label: "Addresses")
+                                Button { comingSoonFeature = "Addresses" } label: {
+                                    ProfileRow(icon: "location.fill", label: "Addresses")
+                                }
+                                .buttonStyle(.plain)
                                 rowDivider
                             } else {
                                 Button { showTrainerOrientation = true } label: {
@@ -133,7 +140,10 @@ struct ProfileMenuSheet: View {
                             }
                             .buttonStyle(.plain)
                             rowDivider
-                            ProfileRow(icon: "lock.fill",         label: "Privacy & Security")
+                            Button { comingSoonFeature = "Privacy & Security" } label: {
+                                ProfileRow(icon: "lock.fill", label: "Privacy & Security")
+                            }
+                            .buttonStyle(.plain)
                         }
 
                         if isClient {
@@ -205,6 +215,11 @@ struct ProfileMenuSheet: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(deleteError ?? "")
+        }
+        .alert(comingSoonFeature ?? "", isPresented: Binding(get: { comingSoonFeature != nil }, set: { if !$0 { comingSoonFeature = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("\(comingSoonFeature ?? "This feature") is coming soon.")
         }
         .sheet(isPresented: $showPersonalInfo)      { PersonalInfoSheet(isClient: isClient).environmentObject(auth) }
         .sheet(isPresented: $showNotificationPrefs) { NotificationPrefsSheet() }
@@ -451,6 +466,12 @@ struct PersonalInfoSheet: View {
         }
     }
 
+    private var avatarInitial: String {
+        let name = isClient ? (draftFirst.isEmpty ? storedFirst : draftFirst) : auth.userDisplayName
+        let initial = name.prefix(1).uppercased()
+        return initial.isEmpty ? "?" : initial
+    }
+
     @ViewBuilder
     private var avatarPreview: some View {
         ZStack {
@@ -465,7 +486,7 @@ struct PersonalInfoSheet: View {
                     .fill(Color.montraSurface)
                     .frame(width: 80, height: 80)
                     .overlay(
-                        Text("A")
+                        Text(avatarInitial)
                             .font(.system(size: 28, weight: .black))
                             .foregroundColor(.montraOrange)
                     )

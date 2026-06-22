@@ -83,14 +83,13 @@ struct CoachChatSheet: View {
                                 .font(.system(size: 13))
                                 .foregroundColor(.montraTextSecondary)
 
-                            HStack(spacing: 5) {
-                                Circle()
-                                    .fill(Color(hex: "#22C55E"))
-                                    .frame(width: 7, height: 7)
-                                Text("Always here for you")
-                                    .font(.system(size: 12, weight: .semibold))
-                                    .foregroundColor(Color(hex: "#22C55E"))
-                            }
+                            Text("Coming soon")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundColor(.montraTextSecondary)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(Color.white.opacity(0.08))
+                                .clipShape(Capsule())
                         }
 
                         Spacer()
@@ -354,9 +353,9 @@ struct CoachChatSheet: View {
         case .coach:
             return "Training questions, schedule changes, and workout feedback."
         case .montraTeam:
-            return "AI-powered insights, accountability, and personalized support."
+            return "Insights, accountability, and personalized support — coming soon."
         case .support:
-            return "Technical help and urgent issue reporting."
+            return "Technical help and issue reporting — coming soon."
         }
     }
 

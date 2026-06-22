@@ -3,11 +3,6 @@ import SwiftUI
 // MARK: - Dashboard
 
 struct DashboardView: View {
-    enum ViewerRole {
-        case user
-        case trainer
-    }
-
     @Binding var selectedTab: ContentView.Tab
     let onOpenCoachChat: () -> Void
     @Environment(\.colorScheme) private var colorScheme
@@ -32,7 +27,6 @@ struct DashboardView: View {
     @AppStorage("onboarding.rematchActive") private var rematchActive: Bool = false
     @AppStorage("quiz.requestedTrainer") private var requestedTrainerId: String = ""
     @AppStorage("quiz.requestedTrainerName") private var requestedTrainerName: String = ""
-    private let viewerRole: ViewerRole = .user
 
     private var timeGreeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
@@ -79,19 +73,11 @@ struct DashboardView: View {
                                         .fill(Color.montraSurface)
                                         .frame(width: 40, height: 40)
                                         .overlay(
-                                            Group {
-                                                if viewerRole == .user {
-                                                    Text("Add\nPhoto")
-                                                        .font(.system(size: 7, weight: .semibold))
-                                                        .foregroundColor(.montraOrange)
-                                                        .multilineTextAlignment(.center)
-                                                        .lineSpacing(0)
-                                                } else {
-                                                    Text("J")
-                                                        .font(.system(size: 16, weight: .bold))
-                                                        .foregroundColor(.montraOrange)
-                                                }
-                                            }
+                                            Text("Add\nPhoto")
+                                                .font(.system(size: 7, weight: .semibold))
+                                                .foregroundColor(.montraOrange)
+                                                .multilineTextAlignment(.center)
+                                                .lineSpacing(0)
                                         )
                                 }
                             }
@@ -186,77 +172,101 @@ struct DashboardView: View {
                 .montraCard(radius: 16)
 
                 // ── Next Session ──────────────────────────────────────
-                NavigationLink {
-                    SessionDetailView(
-                        session: nextSession,
-                        onOpenCoachChat: onOpenCoachChat
-                    )
-                } label: {
-                VStack(alignment: .leading, spacing: 14) {
-                    Text("NEXT SESSION")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.montraTextSecondary)
-                        .kerning(1.2)
+                if let next = nextSession {
+                    NavigationLink {
+                        SessionDetailView(
+                            session: next,
+                            onOpenCoachChat: onOpenCoachChat
+                        )
+                    } label: {
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text("NEXT SESSION")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.montraTextSecondary)
+                            .kerning(1.2)
 
-                    HStack(spacing: 14) {
-                        // Date badge
-                        VStack(spacing: 2) {
-                            Text("MAY")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundColor(.montraOrange)
-                            Text("24")
-                                .font(.system(size: 30, weight: .black))
-                                .foregroundColor(.montraTextPrimary)
-                            Text("FRI")
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundColor(.montraTextSecondary)
-                        }
-                        .frame(width: 58)
-                        .padding(.vertical, 10)
-                        .background(Color.montraBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        HStack(spacing: 14) {
+                            // Date badge
+                            VStack(spacing: 2) {
+                                Text(next.month)
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundColor(.montraOrange)
+                                Text("\(next.date)")
+                                    .font(.system(size: 30, weight: .black))
+                                    .foregroundColor(.montraTextPrimary)
+                                Text(next.day)
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundColor(.montraTextSecondary)
+                            }
+                            .frame(width: 58)
+                            .padding(.vertical, 10)
+                            .background(Color.montraBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
 
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Tomorrow")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundColor(.montraOrange)
-                            Text("10:00 AM")
-                                .font(.system(size: 21, weight: .bold))
-                                .foregroundColor(.montraTextPrimary)
-                            Text("Full Body Strength")
-                                .font(.system(size: 15, weight: .medium))
-                                .foregroundColor(.montraTextPrimary)
-                            Text("with Alex Morgan")
-                                .font(.system(size: 13))
-                                .foregroundColor(.montraTextSecondary)
-                            Text("In-home session")
-                                .font(.system(size: 12))
-                                .foregroundColor(.montraTextSecondary)
-                                .padding(.top, 2)
-                        }
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(nextSessionRelativeDayLabel)
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundColor(.montraOrange)
+                                Text(next.time)
+                                    .font(.system(size: 21, weight: .bold))
+                                    .foregroundColor(.montraTextPrimary)
+                                Text(next.title)
+                                    .font(.system(size: 15, weight: .medium))
+                                    .foregroundColor(.montraTextPrimary)
+                                Text("with \(next.trainer)")
+                                    .font(.system(size: 13))
+                                    .foregroundColor(.montraTextSecondary)
+                                Text(next.location)
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.montraTextSecondary)
+                                    .padding(.top, 2)
+                            }
 
-                        Spacer()
-
-                        VStack(spacing: 8) {
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundColor(.montraTextSecondary)
                             Spacer()
-                            Text("Confirmed")
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundColor(.green)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 5)
-                                .background(Color.green.opacity(0.15))
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
+
+                            VStack(spacing: 8) {
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundColor(.montraTextSecondary)
+                                Spacer()
+                                Text("Scheduled")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundColor(Color(hex: "#5E9BF0"))
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 5)
+                                    .background(Color(hex: "#5E9BF0").opacity(0.15))
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                            }
+                            .frame(height: 80)
                         }
-                        .frame(height: 80)
                     }
+                    .padding(18)
+                    .montraCard(radius: 16)
+                    } // NavigationLink label
+                    .buttonStyle(.plain)
+                } else {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("NEXT SESSION")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.montraTextSecondary)
+                            .kerning(1.2)
+                        Text("No upcoming sessions")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(.montraTextPrimary)
+                        Text("Book a session to see it here.")
+                            .font(.system(size: 13))
+                            .foregroundColor(.montraTextSecondary)
+                        Button { selectedTab = .sessions } label: {
+                            Text("Book a Session")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(.montraOrange)
+                        }
+                        .padding(.top, 2)
+                    }
+                    .padding(18)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .montraCard(radius: 16)
                 }
-                .padding(18)
-                .montraCard(radius: 16)
-                } // NavigationLink label
-                .buttonStyle(.plain)
 
                 // ── Schedule ──────────────────────────────────────────
                 VStack(alignment: .leading, spacing: 14) {
@@ -303,6 +313,7 @@ struct DashboardView: View {
         }
         .background(Color.montraBackground)
         .overlay {
+            if nextSession != nil {
             GeometryReader { proxy in
                 let buttonSize = CGSize(width: 86, height: 40)
                 let baseX = proxy.size.width - 22 - (buttonSize.width / 2)
@@ -371,12 +382,15 @@ struct DashboardView: View {
                         }
                 )
             }
+            }
         }
         .navigationDestination(isPresented: $showFloatingMap) {
-            SessionDetailView(
-                session: nextSession,
-                onOpenCoachChat: onOpenCoachChat
-            )
+            if let next = nextSession {
+                SessionDetailView(
+                    session: next,
+                    onOpenCoachChat: onOpenCoachChat
+                )
+            }
         }
         .sheet(isPresented: $showNotifications) {
             NotificationsView()
@@ -414,17 +428,55 @@ struct DashboardView: View {
         )
     }
 
-    private let trainerProgress = TrainerProgressSnapshot.sample
+    private let trainerProgress = TrainerProgressSnapshot.empty
 
-    private let nextSession = SessionItem(
-        id: 0, day: "FRI", date: 24, month: "MAY",
-        time: "10:00 AM", endTime: "11:00 AM",
-        title: "Full Body Strength", trainer: "Alex Morgan",
-        location: "At Your Home", address: "123 Main St, Miami, FL",
-        focus: "Full Body Strength", durationMin: 60,
-        level: "Intermediate", equipment: "Dumbbells, Mat, Bands",
-        calories: "500–600"
-    )
+    @AppStorage("sessions.booked") private var bookedRaw: String = ""
+
+    private var nextBookedDate: Date? {
+        let cal = Calendar.current
+        let now = Date()
+        let keys = bookedRaw.split(separator: ",").map(String.init).filter { !$0.isEmpty }
+        let dates: [Date] = keys.compactMap { key in
+            let parts = key.split(separator: "-").compactMap { Int($0) }
+            guard parts.count == 4 else { return nil }
+            var comps = DateComponents()
+            comps.year = parts[0]; comps.month = parts[1]; comps.day = parts[2]; comps.hour = parts[3]
+            return cal.date(from: comps)
+        }
+        return dates.filter { $0 >= now }.sorted().first
+    }
+
+    private var nextSession: SessionItem? {
+        guard let date = nextBookedDate else { return nil }
+        let cal = Calendar.current
+        let dayFormatter = DateFormatter(); dayFormatter.dateFormat = "EEE"
+        let monthFormatter = DateFormatter(); monthFormatter.dateFormat = "MMM"
+        let timeFormatter = DateFormatter(); timeFormatter.dateFormat = "h:mm a"
+        let endDate = cal.date(byAdding: .hour, value: 1, to: date) ?? date
+        let trainerName = requestedTrainerName.isEmpty ? "Your Trainer" : requestedTrainerName
+
+        return SessionItem(
+            id: 0,
+            day: dayFormatter.string(from: date).uppercased(),
+            date: cal.component(.day, from: date),
+            month: monthFormatter.string(from: date).uppercased(),
+            time: timeFormatter.string(from: date),
+            endTime: timeFormatter.string(from: endDate),
+            title: "Training Session",
+            trainer: trainerName,
+            trainerId: requestedTrainerId.isEmpty ? nil : requestedTrainerId,
+            location: "In-home session"
+        )
+    }
+
+    private var nextSessionRelativeDayLabel: String {
+        guard let date = nextBookedDate else { return "" }
+        let cal = Calendar.current
+        if cal.isDateInToday(date) { return "Today" }
+        if cal.isDateInTomorrow(date) { return "Tomorrow" }
+        let f = DateFormatter(); f.dateFormat = "EEEE"
+        return f.string(from: date)
+    }
 
     private let scheduledSessions: [ScheduleSession] = []
 }

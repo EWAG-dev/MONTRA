@@ -997,7 +997,7 @@ struct OnboardingQuizView: View {
     }
 
     private var canCloseQuiz: Bool {
-        preAuthOnboardingActive || ((auth.user != nil || auth.demoRole != nil) && !isCompleted)
+        preAuthOnboardingActive || (auth.user != nil && !isCompleted)
     }
 
     private func closeQuiz() {
@@ -1006,7 +1006,7 @@ struct OnboardingQuizView: View {
             return
         }
 
-        if auth.user != nil || auth.demoRole != nil {
+        if auth.user != nil {
             isCompleted = true
             step = 1
         }

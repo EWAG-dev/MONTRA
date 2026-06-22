@@ -17,9 +17,24 @@ struct SessionsView: View {
     @AppStorage("sessions.booked")           private var bookedRaw: String = ""
     @AppStorage("client.schedule.days")      private var scheduleDaysRaw: String = ""
     @AppStorage("client.schedule.time")      private var scheduleTimeRaw: String = ""
-    @AppStorage("trainer.availableDays")     private var trainerDaysRaw: String = "Monday,Wednesday,Friday"
-    @AppStorage("trainer.availableHours")    private var trainerHoursRaw: String = "9,10,11,12,13,14,15,16"
+    @AppStorage("trainer.availableDays")     private var trainerDaysRaw: String = ""
+    @AppStorage("trainer.availableHours")    private var trainerHoursRaw: String = ""
     @AppStorage("quiz.requestedTrainerName") private var trainerFullName: String = ""
+    @AppStorage("quiz.requestedTrainer")     private var requestedTrainerId: String = ""
+
+    private func loadTrainerAvailability() async {
+        guard let profile = await fetchPublicTrainerProfile(trainerId: requestedTrainerId) else { return }
+        if !profile.availabilityDays.isEmpty {
+            trainerDaysRaw = profile.availabilityDays.joined(separator: ",")
+        }
+        if let start = profile.workingHours?.start, let end = profile.workingHours?.end {
+            let startHour = parseHour(start)
+            let endHour = parseHour(end)
+            if startHour >= 0, endHour > startHour {
+                trainerHoursRaw = Array(startHour..<endHour).map(String.init).joined(separator: ",")
+            }
+        }
+    }
 
     private var trainerFirstName: String {
         let name = trainerFullName.isEmpty ? "Your Trainer" : trainerFullName
@@ -102,6 +117,19 @@ struct SessionsView: View {
                         onProfileTap: { showProfileSheet = true }
                     )
 
+                    if requestedTrainerId.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("No trainer matched yet")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(.montraTextPrimary)
+                            Text("Complete matching to see your trainer's availability and book a session.")
+                                .font(.system(size: 13))
+                                .foregroundColor(.montraTextSecondary)
+                        }
+                        .padding(18)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .montraCard(radius: 16)
+                    } else {
                     // ── Trainer banner ────────────────────────────────
                     HStack(spacing: 12) {
                         Circle()
@@ -118,7 +146,7 @@ struct SessionsView: View {
                             Text(trainerDisplayName)
                                 .font(.system(size: 14, weight: .bold))
                                 .foregroundColor(.montraTextPrimary)
-                            Text("Available \(trainerDaysRaw.components(separatedBy: ",").map { String($0.trimmingCharacters(in: .whitespaces).prefix(3)) }.joined(separator: " · "))")
+                            Text(trainerDaysRaw.isEmpty ? "Loading availability…" : "Available \(trainerDaysRaw.components(separatedBy: ",").map { String($0.trimmingCharacters(in: .whitespaces).prefix(3)) }.joined(separator: " · "))")
                                 .font(.system(size: 12))
                                 .foregroundColor(.montraTextSecondary)
                         }
@@ -216,12 +244,16 @@ struct SessionsView: View {
                             }
                         }
                     }
+                    } // requestedTrainerId else-branch
 
                     Spacer(minLength: 90)
                 }
                 .padding(.horizontal, 20)
             }
             .background(Color.montraBackground)
+        }
+        .task {
+            await loadTrainerAvailability()
         }
         .confirmationDialog(
             pendingSlot.map { "Book \($0.timeLabel) with \(trainerFirstName)?" } ?? "",
@@ -496,13 +528,14 @@ struct SessionItem: Identifiable {
     let endTime: String
     let title: String
     let trainer: String
+    var trainerId: String? = nil
     let location: String
     var address: String?   = nil
-    var focus: String      = "Full Body Strength"
+    var focus: String      = "To be confirmed with your trainer"
     var durationMin: Int   = 60
-    var level: String      = "Intermediate"
-    var equipment: String  = "Dumbbells, Mat, Bands"
-    var calories: String   = "500–600"
+    var level: String      = "To be confirmed"
+    var equipment: String  = "To be confirmed with your trainer"
+    var calories: String   = "—"
 }
 
 struct SessionCard: View {

@@ -3,7 +3,6 @@ import SwiftUI
 struct TrainerSessionsView: View {
 
     @Environment(\.colorScheme) private var colorScheme
-    @AppStorage("app.liveDataConnected") private var liveDataConnected = false
     @State private var selectedFilter: SessionFilter = .upcoming
     @State private var showTrainerMenu = false
 
@@ -21,27 +20,22 @@ struct TrainerSessionsView: View {
                 VStack(alignment: .leading, spacing: 18) {
                     TrainerCompactTopBar(
                         title: "Sessions",
-                        onMenuTap: { showTrainerMenu = true },
-                        trailingIcon: "plus"
-                    ) {
-                        // Add session action — wired when booking is built
-                    }
+                        onMenuTap: { showTrainerMenu = true }
+                    )
 
-                    if !liveDataConnected {
-                        HStack(spacing: 8) {
-                            Image(systemName: "exclamationmark.triangle")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundColor(.montraOrange)
-                            Text("Preview data only. Live trainer session data is not connected yet.")
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(.montraTextSecondary)
-                            Spacer(minLength: 0)
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
-                        .background(Color.white.opacity(0.05))
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                    HStack(spacing: 8) {
+                        Image(systemName: "info.circle")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.montraOrange)
+                        Text("Session scheduling isn't built yet — booked sessions will show up here.")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.montraTextSecondary)
+                        Spacer(minLength: 0)
                     }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(Color.white.opacity(0.05))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
 
                     // MARK: Filter Pills
                     HStack(spacing: 8) {

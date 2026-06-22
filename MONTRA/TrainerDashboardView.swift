@@ -2,6 +2,7 @@ import SwiftUI
 
 struct TrainerDashboardView: View {
 
+    @Binding var selectedTab: TrainerTabView.TrainerTab
     @EnvironmentObject private var auth: AuthManager
     @AppStorage("app.liveDataConnected") private var liveDataConnected = false
 
@@ -10,6 +11,28 @@ struct TrainerDashboardView: View {
 
     @State private var showProfileSheet = false
     @State private var showSchedules = false
+    @State private var activeClientCount = 0
+    @State private var pendingRequestCount = 0
+    @State private var hasLoadedMatches = false
+
+    private func loadMatchCounts() async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
+              let url = MontraAPIConfig.url(for: "/api/trainers/my-matches") else { return }
+
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(tokenResult.token)", forHTTPHeaderField: "Authorization")
+
+        struct Response: Decodable { let matches: [TrainerMatchRequest] }
+
+        guard let (data, response) = try? await URLSession.shared.data(for: request),
+              let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode),
+              let payload = try? JSONDecoder().decode(Response.self, from: data) else { return }
+
+        activeClientCount = Set(payload.matches.filter { $0.status == "accepted" }.map(\.clientUid)).count
+        pendingRequestCount = payload.matches.filter { $0.status == "pending" }.count
+        hasLoadedMatches = true
+    }
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -19,12 +42,12 @@ struct TrainerDashboardView: View {
                     onMenuTap: { showProfileSheet = true }
                 )
 
-                if !liveDataConnected {
+                if !hasLoadedMatches {
                     HStack(spacing: 8) {
                         Image(systemName: "exclamationmark.triangle")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.montraOrange)
-                        Text("Preview data only. Live trainer data sync is not connected yet.")
+                        Text("Session scheduling isn't tracked yet — client and request counts below are live.")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.montraTextSecondary)
                         Spacer(minLength: 0)
@@ -37,9 +60,8 @@ struct TrainerDashboardView: View {
 
                 // MARK: Quick Stats
                 HStack(spacing: 12) {
-                    TrainerStatTile(value: "\(todaySessions.count)", label: "Today's\nSessions",   icon: "calendar.badge.clock", color: .montraOrange)
-                    TrainerStatTile(value: "5",                       label: "Active\nClients",     icon: "person.2.fill",        color: Color(hex: "#4CAF50"))
-                    TrainerStatTile(value: "12",                      label: "Sessions\nThis Week", icon: "chart.bar.fill",       color: Color(hex: "#4A90D9"))
+                    TrainerStatTile(value: "\(activeClientCount)",   label: "Active\nClients",      icon: "person.2.fill",        color: Color(hex: "#4CAF50"))
+                    TrainerStatTile(value: "\(pendingRequestCount)", label: "Pending\nRequests",     icon: "tray.fill",            color: Color(hex: "#4A90D9"))
                 }
 
                 // MARK: Today's Schedule
@@ -82,10 +104,9 @@ struct TrainerDashboardView: View {
                     SectionHeader(title: "QUICK ACTIONS")
 
                     HStack(spacing: 12) {
-                        TrainerActionButton(icon: "plus.circle.fill",      label: "Add Session")   { }
-                        TrainerActionButton(icon: "person.badge.plus.fill", label: "Add Client")    { }
-                        TrainerActionButton(icon: "calendar.badge.clock",    label: "Schedules")     { showSchedules = true }
-                        TrainerActionButton(icon: "bubble.left.fill",       label: "Message")       { }
+                        TrainerActionButton(icon: "calendar.badge.clock", label: "Schedules") { showSchedules = true }
+                        TrainerActionButton(icon: "tray.fill",            label: "Requests")  { selectedTab = .inbox }
+                        TrainerActionButton(icon: "bubble.left.fill",     label: "Message")   { selectedTab = .inbox }
                     }
                 }
                 .padding(18)
@@ -96,6 +117,9 @@ struct TrainerDashboardView: View {
             .padding(.horizontal, 20)
         }
         .background(Color.montraBackground)
+        .task {
+            await loadMatchCounts()
+        }
         .sheet(isPresented: $showProfileSheet) {
             ProfileMenuSheet(isClient: false)
         }
@@ -194,6 +218,6 @@ struct TrainerClientSession: Identifiable {
 enum TrainerSessionStatus { case confirmed, scheduled }
 
 #Preview {
-    TrainerDashboardView()
+    TrainerDashboardView(selectedTab: .constant(.dashboard))
         .environmentObject(AuthManager())
 }

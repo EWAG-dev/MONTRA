@@ -171,6 +171,10 @@ struct TrainerProgressSnapshot {
         }
     }
 
+    static var empty: TrainerProgressSnapshot {
+        TrainerProgressSnapshot(membershipStart: Date(), weeklyGoalSessions: 5, sessions: [])
+    }
+
     static var sample: TrainerProgressSnapshot {
         let calendar = Calendar.current
         let today = Date()

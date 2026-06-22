@@ -9,7 +9,6 @@ final class AuthManager: ObservableObject {
      @Published private(set) var userDisplayName: String = ""
      @Published private(set) var userRole: UserRole = .unknown
      @Published private(set) var isCheckingAuth = true   // true only on cold start
-     @Published private(set) var demoRole: UserRole? = nil   // set by demo login, bypasses Firebase
 
      enum UserRole {
          case unknown
@@ -52,17 +51,6 @@ final class AuthManager: ObservableObject {
             userRole = .user
         }
         isCheckingAuth = false
-    }
-
-    // MARK: - Demo Mode
-
-    func enableDemo(as role: UserRole) {
-        demoRole = role
-        isCheckingAuth = false
-    }
-
-    func disableDemo() {
-        demoRole = nil
     }
 
     // MARK: - Auth Actions
@@ -163,7 +151,6 @@ final class AuthManager: ObservableObject {
         }
         userDisplayName = ""
         try? Auth.auth().signOut()
-        demoRole = nil
      }
 
     func sendPasswordReset(to email: String) async throws {
@@ -173,6 +160,5 @@ final class AuthManager: ObservableObject {
     func deleteAccount() async throws {
         guard let user = Auth.auth().currentUser else { return }
         try await user.delete()
-        demoRole = nil
     }
 }

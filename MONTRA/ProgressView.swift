@@ -46,10 +46,9 @@ struct WorkoutProgressView: View {
     @State private var allergyInputText = ""
     @State private var mealSuggestionSeed = 0
     @State private var mealSuggestionNote = "Suggestions generated from your current profile."
-    @State private var isGeneratingAISuggestions = false
     private let tabs = ["Overview", "Workouts", "Nutrition", "Body Stats"]
 
-    private let trainerProgress = TrainerProgressSnapshot.sample
+    private let trainerProgress = TrainerProgressSnapshot.empty
 
     // Shared AppStorage keys — same as DashboardView
     @AppStorage("progress.currentWeight") private var currentWeightStr: String = ""
@@ -450,48 +449,6 @@ struct WorkoutProgressView: View {
         mealSuggestionNote = "Suggestions refreshed just now."
     }
 
-    private func requestMontraAISuggestions() async {
-        await MainActor.run {
-            isGeneratingAISuggestions = true
-            mealSuggestionNote = "Generating with MONTRA AI..."
-        }
-
-        guard let url = MontraAPIConfig.url(for: "/api/ai/coach-suggestion") else {
-            await MainActor.run {
-                isGeneratingAISuggestions = false
-                mealSuggestionNote = "MONTRA AI endpoint unavailable. Using local smart suggestions."
-                refreshWeeklyMeals()
-            }
-            return
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        let payload: [String: Any] = [
-            "goal": selectedNutritionGoal,
-            "mood": selectedDietType,
-            "availability": activeMealTags
-        ]
-
-        do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: payload)
-            _ = try await URLSession.shared.data(for: request)
-            await MainActor.run {
-                isGeneratingAISuggestions = false
-                mealSuggestionNote = "MONTRA AI refreshed your suggestions."
-                refreshWeeklyMeals()
-            }
-        } catch {
-            await MainActor.run {
-                isGeneratingAISuggestions = false
-                mealSuggestionNote = "MONTRA AI is not connected yet. Showing local smart suggestions."
-                refreshWeeklyMeals()
-            }
-        }
-    }
-
     private var activeMealTags: [String] {
         var tags: [String] = [selectedDietType]
         if wantsKeto { tags.append("Keto") }
@@ -504,56 +461,8 @@ struct WorkoutProgressView: View {
         return Array(Set(tags)).sorted()
     }
 
-    private let achievements: [Achievement] = [
-        Achievement(
-            icon: "flame.fill",
-            iconColor: Color(hex: "#FF6A00"),
-            badgeColor: Color(hex: "#5C2200"),
-            title: "Consistency King",
-            subtitle: nil,
-            date: "M90 /, 2024"
-        ),
-        Achievement(
-            icon: "trophy.fill",
-            iconColor: Color(hex: "#4A90D9"),
-            badgeColor: Color(hex: "#102040"),
-            title: "Early Riser",
-            subtitle: "3 early morning sessions",
-            date: "May 5, 2024"
-        ),
-        Achievement(
-            icon: "dumbbell.fill",
-            iconColor: Color(hex: "#4CAF50"),
-            badgeColor: Color(hex: "#0E3B0E"),
-            title: "First Milestone",
-            subtitle: "Completed 10 sessions",
-            date: "May 10, 2024"
-        ),
-        Achievement(
-            icon: "figure.run",
-            iconColor: Color(hex: "#22C55E"),
-            badgeColor: Color(hex: "#10321B"),
-            title: "Cardio Sprint",
-            subtitle: "5 cardio sessions in one week",
-            date: "Apr 24, 2024"
-        ),
-        Achievement(
-            icon: "heart.fill",
-            iconColor: Color(hex: "#EF4444"),
-            badgeColor: Color(hex: "#3A0F16"),
-            title: "Heart Health Win",
-            subtitle: "Resting HR improved by 6 bpm",
-            date: "Apr 14, 2024"
-        ),
-        Achievement(
-            icon: "bolt.fill",
-            iconColor: Color(hex: "#FACC15"),
-            badgeColor: Color(hex: "#3B3208"),
-            title: "Power Output PR",
-            subtitle: "New personal best in strength circuit",
-            date: "Mar 31, 2024"
-        )
-    ]
+    // No achievement-tracking backend exists yet, so there is nothing real to show here.
+    private let achievements: [Achievement] = []
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -705,19 +614,27 @@ struct WorkoutProgressView: View {
                     .foregroundColor(.montraTextPrimary)
                     .kerning(0.8)
                 Spacer()
-                Button("View All") { showAllAchievements = true }
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.montraOrange)
+                if !achievements.isEmpty {
+                    Button("View All") { showAllAchievements = true }
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.montraOrange)
+                }
             }
             .padding(.bottom, 16)
 
-            let recentAchievements = Array(achievements.prefix(3))
-            ForEach(Array(recentAchievements.enumerated()), id: \.element.id) { index, achievement in
-                AchievementRow(achievement: achievement)
-                if index < recentAchievements.count - 1 {
-                    Divider()
-                        .background(Color.montraDivider)
-                        .padding(.vertical, 12)
+            if achievements.isEmpty {
+                Text("No achievements yet — keep completing sessions to start earning badges.")
+                    .font(.system(size: 13))
+                    .foregroundColor(.montraTextSecondary)
+            } else {
+                let recentAchievements = Array(achievements.prefix(3))
+                ForEach(Array(recentAchievements.enumerated()), id: \.element.id) { index, achievement in
+                    AchievementRow(achievement: achievement)
+                    if index < recentAchievements.count - 1 {
+                        Divider()
+                            .background(Color.montraDivider)
+                            .padding(.vertical, 12)
+                    }
                 }
             }
         }
@@ -905,39 +822,16 @@ struct WorkoutProgressView: View {
                     )
                 }
 
-                HStack(spacing: 10) {
-                    Button {
-                        Task {
-                            await requestMontraAISuggestions()
-                        }
-                    } label: {
-                        HStack(spacing: 6) {
-                            if isGeneratingAISuggestions {
-                                ProgressView()
-                                    .tint(.black)
-                            }
-                            Text(isGeneratingAISuggestions ? "Generating..." : "Use MONTRA AI")
-                                .font(.system(size: 13, weight: .semibold))
-                        }
-                        .foregroundColor(.black)
-                        .frame(maxWidth: .infinity)
+                Button {
+                    refreshWeeklyMeals()
+                } label: {
+                    Text("Shuffle")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.montraTextPrimary)
+                        .padding(.horizontal, 16)
                         .padding(.vertical, 10)
-                        .background(Color.montraOrange)
+                        .background(Color.white.opacity(0.08))
                         .clipShape(Capsule())
-                    }
-                    .disabled(isGeneratingAISuggestions)
-
-                    Button {
-                        refreshWeeklyMeals()
-                    } label: {
-                        Text("Shuffle")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(.montraTextPrimary)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
-                            .background(Color.white.opacity(0.08))
-                            .clipShape(Capsule())
-                    }
                 }
 
                 Text(mealSuggestionNote)
@@ -949,7 +843,7 @@ struct WorkoutProgressView: View {
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(.orange)
                         .padding(.top, 1)
-                    Text("AI-generated meal suggestions are general guidance and may be incorrect. Please verify ingredients, allergens, and suitability before consumption.")
+                    Text("These meal suggestions are general guidance, not personalized nutrition advice. Please verify ingredients, allergens, and suitability before consumption.")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(.montraTextSecondary)
                         .fixedSize(horizontal: false, vertical: true)

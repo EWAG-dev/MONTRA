@@ -34,8 +34,6 @@ struct TrainerInboxView: View {
         matchRequests.filter { $0.status != "declined" }
     }
 
-    private let conversations: [TrainerConversation] = []
-
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 18) {
@@ -50,7 +48,7 @@ struct TrainerInboxView: View {
                         Image(systemName: "exclamationmark.triangle")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.montraOrange)
-                        Text("Preview data only. Live trainer inbox data is not connected yet.")
+                        Text("Can't reach the MONTRA server right now — pull to refresh once you're back online.")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.montraTextSecondary)
                         Spacer(minLength: 0)
@@ -547,72 +545,6 @@ struct TrainerInboxView: View {
         if let items = try? await NotificationsAPI.loadMine(token: tokenResult.token) {
             liveNotifications = items
         }
-    }
-}
-
-// MARK: - Conversation Row
-
-struct ConversationRow: View {
-    let convo: TrainerConversation
-
-    var body: some View {
-        HStack(spacing: 14) {
-            ZStack(alignment: .topTrailing) {
-                Circle()
-                    .fill(convo.tint.opacity(0.15))
-                    .frame(width: 46, height: 46)
-                    .overlay(
-                        Text(convo.initials)
-                            .font(.system(size: 13, weight: .black))
-                            .foregroundColor(convo.tint)
-                    )
-                    .overlay(Circle().stroke(convo.tint.opacity(0.8), lineWidth: 1))
-                if convo.unread {
-                    Circle()
-                        .fill(Color.montraOrange)
-                        .frame(width: 9, height: 9)
-                        .offset(x: 2, y: -2)
-                }
-            }
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(convo.clientName)
-                    .font(.system(size: 14, weight: convo.unread ? .semibold : .regular))
-                    .foregroundColor(.montraTextPrimary)
-                Text(convo.lastMessage)
-                    .font(.system(size: 12))
-                    .foregroundColor(.montraTextSecondary)
-                    .lineLimit(1)
-            }
-
-            Spacer()
-
-            Text(convo.time)
-                .font(.system(size: 11))
-                .foregroundColor(.montraTextSecondary)
-        }
-        .padding(14)
-        .montraCard(radius: 14)
-    }
-}
-
-// MARK: - Data Model
-
-struct TrainerConversation: Identifiable {
-    let id: Int
-    let clientName: String
-    let lastMessage: String
-    let time: String
-    let unread: Bool
-    let tint: Color
-
-    var initials: String {
-        clientName
-            .split(separator: " ")
-            .compactMap { $0.first }
-            .prefix(2)
-            .map(String.init)
-            .joined()
     }
 }
 

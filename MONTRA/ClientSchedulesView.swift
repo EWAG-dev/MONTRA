@@ -5,9 +5,9 @@ import SwiftUI
 struct ClientSchedulesView: View {
     @Environment(\.dismiss) private var dismiss
 
-    // Storage format: "jessica_r:Monday,Wednesday|9:00 AM;marcus_d:Tuesday,Thursday|10:00 AM"
+    // Storage format: "<clientKey>:Monday,Wednesday|9:00 AM;<clientKey2>:Tuesday,Thursday|10:00 AM"
     @AppStorage("trainerClientSchedules") private var schedulesRaw: String = ""
-    // Also write these so SessionsView can read them (demo: represents the "active" client)
+    // Also write these so SessionsView can read them — represents the single "active" client this device tracks
     @AppStorage("client.schedule.days") private var clientScheduleDays: String = ""
     @AppStorage("client.schedule.time") private var clientScheduleTime: String = ""
 
@@ -119,7 +119,8 @@ struct ClientSchedulesView: View {
         schedules.append((key, days, time))
         schedulesRaw = schedules.map { "\($0.0):\($0.1.joined(separator: ","))|\($0.2)" }.joined(separator: ";")
 
-        // Simplified demo: the first saved client becomes "the active client" for SessionsView
+        // Known limitation: there's no real per-client relationship model yet, so only the
+        // most recently saved client's schedule is reflected back into SessionsView.
         let sortedDays = days.sorted { allDaysFull.firstIndex(of: $0) ?? 99 < allDaysFull.firstIndex(of: $1) ?? 99 }
         clientScheduleDays = sortedDays.joined(separator: ",")
         clientScheduleTime = time

@@ -1,16 +1,10 @@
 import SwiftUI
 
 struct TrainerProgramsView: View {
-    @AppStorage("app.liveDataConnected") private var liveDataConnected = false
     @State private var showTrainerMenu = false
 
-    // Sample programs — replaced when Firestore data model is wired up
-    private let programs: [TrainerProgram] = [
-        TrainerProgram(id: 1, name: "Strength Builder",    description: "Progressive overload program focused on compound lifts.", weeks: 8,  sessionsPerWeek: 3, clientCount: 3, color: Color(hex: "#FF6A00")),
-        TrainerProgram(id: 2, name: "HIIT Conditioning",   description: "High-intensity intervals to build cardio and stamina.",    weeks: 6,  sessionsPerWeek: 2, clientCount: 2, color: Color(hex: "#4CAF50")),
-        TrainerProgram(id: 3, name: "Mobility Reset",      description: "Restore range of motion, posture, and joint health.",     weeks: 4,  sessionsPerWeek: 2, clientCount: 1, color: Color(hex: "#4A90D9")),
-        TrainerProgram(id: 4, name: "Athletic Performance",description: "Sport-specific training to peak physical output.",         weeks: 12, sessionsPerWeek: 4, clientCount: 1, color: Color(hex: "#9B59B6")),
-    ]
+    // No program-builder backend exists yet, so there is nothing real to show here.
+    private let programs: [TrainerProgram] = []
 
     var body: some View {
         NavigationStack {
@@ -18,41 +12,36 @@ struct TrainerProgramsView: View {
                 VStack(alignment: .leading, spacing: 18) {
                     TrainerCompactTopBar(
                         title: "Programs",
-                        onMenuTap: { showTrainerMenu = true },
-                        trailingIcon: "plus"
-                    ) {
-                        // New program action
-                    }
+                        onMenuTap: { showTrainerMenu = true }
+                    )
 
-                    if !liveDataConnected {
-                        HStack(spacing: 8) {
-                            Image(systemName: "exclamationmark.triangle")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundColor(.montraOrange)
-                            Text("Preview data only. Live trainer program data is not connected yet.")
-                                .font(.system(size: 12, weight: .medium))
+                    if programs.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("No programs yet")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(.montraTextPrimary)
+                            Text("Program building is coming soon — you'll be able to create and assign training programs to your clients here.")
+                                .font(.system(size: 13))
                                 .foregroundColor(.montraTextSecondary)
-                            Spacer(minLength: 0)
                         }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
-                        .background(Color.white.opacity(0.05))
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                    }
+                        .padding(18)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .montraCard(radius: 16)
+                    } else {
+                        // MARK: Stats Row
+                        HStack(spacing: 12) {
+                            TrainerStatTile(value: "\(programs.count)", label: "Active\nPrograms", icon: "doc.text.fill",    color: .montraOrange)
+                            TrainerStatTile(value: "\(programs.reduce(0) { $0 + $1.clientCount })", label: "Clients\nEnrolled", icon: "person.2.fill", color: Color(hex: "#4CAF50"))
+                            TrainerStatTile(value: "\(programs.reduce(0) { $0 + $1.sessionsPerWeek * $1.clientCount })", label: "Sessions/\nWeek", icon: "calendar", color: Color(hex: "#4A90D9"))
+                        }
 
-                    // MARK: Stats Row
-                    HStack(spacing: 12) {
-                        TrainerStatTile(value: "\(programs.count)", label: "Active\nPrograms", icon: "doc.text.fill",    color: .montraOrange)
-                        TrainerStatTile(value: "\(programs.reduce(0) { $0 + $1.clientCount })", label: "Clients\nEnrolled", icon: "person.2.fill", color: Color(hex: "#4CAF50"))
-                        TrainerStatTile(value: "\(programs.reduce(0) { $0 + $1.sessionsPerWeek * $1.clientCount })", label: "Sessions/\nWeek", icon: "calendar", color: Color(hex: "#4A90D9"))
-                    }
+                        // MARK: Program Cards
+                        SectionHeader(title: "YOUR PROGRAMS")
 
-                    // MARK: Program Cards
-                    SectionHeader(title: "YOUR PROGRAMS")
-
-                    VStack(spacing: 14) {
-                        ForEach(programs) { program in
-                            TrainerProgramCard(program: program)
+                        VStack(spacing: 14) {
+                            ForEach(programs) { program in
+                                TrainerProgramCard(program: program)
+                            }
                         }
                     }
 
