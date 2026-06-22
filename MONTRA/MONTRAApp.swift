@@ -88,11 +88,38 @@ struct RootView: View {
                 await refreshLiveDataConnectivity()
             }
         }
+        .task(id: auth.userRole) {
+            guard auth.userRole == .trainer, !trainerOrientationCompleted else { return }
+            await syncOrientationStatusFromBackend()
+        }
     }
 
     @MainActor
     private func refreshLiveDataConnectivity() async {
         liveDataConnected = await LiveDataConnectivityProbe.detect()
+    }
+
+    @MainActor
+    private func syncOrientationStatusFromBackend() async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
+              let url = MontraAPIConfig.url(for: "/api/trainers/my-profile") else { return }
+
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(tokenResult.token)", forHTTPHeaderField: "Authorization")
+
+        struct TrainerProfileResponse: Decodable {
+            struct Trainer: Decodable { let orientationCompleted: Bool? }
+            let trainer: Trainer
+        }
+
+        guard let (data, response) = try? await URLSession.shared.data(for: request),
+              let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode),
+              let payload = try? JSONDecoder().decode(TrainerProfileResponse.self, from: data) else { return }
+
+        if payload.trainer.orientationCompleted == true {
+            trainerOrientationCompleted = true
+        }
     }
 }
 

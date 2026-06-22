@@ -141,6 +141,8 @@ function serializeTrainer(doc) {
     introVideoUrl: data.introVideoUrl || "",
     backgroundCheckConsent: data.backgroundCheckConsent === true,
     policyAgreement: data.policyAgreement === true,
+    orientationCompleted: data.orientationCompleted === true,
+    orientationCompletedAt: data.orientationCompletedAt || null,
     createdAt: data.createdAt || null,
     updatedAt: data.updatedAt || null,
   };
@@ -452,6 +454,23 @@ export async function upsertTrainerForAccount(accountUid, input) {
 
 export async function approveTrainer(id) {
   return updateTrainer(id, { status: "approved", isActive: true });
+}
+
+export async function markOrientationCompleted(accountUid) {
+  const trainer = await getTrainerByAccountUid(accountUid);
+  if (!trainer) {
+    return null;
+  }
+
+  await trainersCollection().doc(trainer.id).set(
+    {
+      orientationCompleted: true,
+      orientationCompletedAt: new Date().toISOString(),
+    },
+    { merge: true }
+  );
+
+  return getTrainer(trainer.id);
 }
 
 export async function rejectTrainer(id) {

@@ -156,9 +156,7 @@ final class AuthManager: ObservableObject {
             "quiz.requestedTrainerName",
             "quiz.matchChecklistShown",
             "dashboardProfileImageData",
-            "onboarding.completed",
-            "trainer.agreementSigned",
-            "trainer.orientationCompleted"
+            "onboarding.completed"
         ]
         for key in keys {
             UserDefaults.standard.removeObject(forKey: key)

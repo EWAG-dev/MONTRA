@@ -1,7 +1,10 @@
 import SwiftUI
 
 struct TrainerOrientationView: View {
+    var isReplay: Bool = false
+    @EnvironmentObject private var auth: AuthManager
     @AppStorage("trainer.orientationCompleted") private var orientationCompleted = false
+    @Environment(\.dismiss) private var dismiss
     @State private var watched: Set<Int> = []
 
     private let videos: [(title: String, description: String, url: String)] = [
@@ -35,17 +38,35 @@ struct TrainerOrientationView: View {
     private var allWatched: Bool { watched.count == videos.count }
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .topTrailing) {
             Color.montraBackground.ignoresSafeArea()
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) {
                     headerSection
                     progressSection
                     videoSection
-                    ctaSection
+                    if !isReplay {
+                        ctaSection
+                    }
                 }
             }
+            if isReplay {
+                closeButton
+            }
         }
+    }
+
+    private var closeButton: some View {
+        Button { dismiss() } label: {
+            Image(systemName: "xmark")
+                .font(.system(size: 13, weight: .bold))
+                .foregroundColor(.montraTextSecondary)
+                .frame(width: 32, height: 32)
+                .background(Color.white.opacity(0.08))
+                .clipShape(Circle())
+        }
+        .padding(.top, 56)
+        .padding(.trailing, 24)
     }
 
     private var headerSection: some View {
@@ -139,6 +160,7 @@ struct TrainerOrientationView: View {
         return Button {
             guard allWatched else { return }
             orientationCompleted = true
+            Task { await syncOrientationCompletion() }
         } label: {
             Text(label)
                 .font(.system(size: 16, weight: .bold))
@@ -150,6 +172,17 @@ struct TrainerOrientationView: View {
         }
         .disabled(!allWatched)
         .animation(Animation.easeInOut(duration: 0.2), value: allWatched)
+    }
+
+    private func syncOrientationCompletion() async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
+              let url = MontraAPIConfig.url(for: "/api/trainers/my-profile/orientation-complete") else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(tokenResult.token)", forHTTPHeaderField: "Authorization")
+        _ = try? await URLSession.shared.data(for: request)
     }
 }
 
@@ -237,4 +270,5 @@ private struct OrientationVideoCard: View {
 
 #Preview {
     TrainerOrientationView()
+        .environmentObject(AuthManager())
 }

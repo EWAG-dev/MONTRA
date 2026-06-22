@@ -11,6 +11,7 @@ import {
   getTrainerByAccountUid,
   getTrainer,
   listTrainers,
+  markOrientationCompleted,
   matchTrainers,
   rejectTrainer,
   upsertTrainerForAccount,
@@ -505,6 +506,16 @@ app.post("/api/trainers/provision", async (req, res) => {
 
 app.get("/api/trainers/my-profile", requireFirebaseAuth, async (req, res) => {
   const trainer = await getTrainerByAccountUid(req.user.uid);
+  if (!trainer) {
+    res.status(404).json({ error: "Trainer profile not found" });
+    return;
+  }
+
+  res.status(200).json({ trainer });
+});
+
+app.post("/api/trainers/my-profile/orientation-complete", requireFirebaseAuth, async (req, res) => {
+  const trainer = await markOrientationCompleted(req.user.uid);
   if (!trainer) {
     res.status(404).json({ error: "Trainer profile not found" });
     return;

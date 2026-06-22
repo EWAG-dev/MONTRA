@@ -20,6 +20,7 @@ struct ProfileMenuSheet: View {
     @State private var showReferShareSheet   = false
     @State private var showDeleteConfirm     = false
     @State private var deleteError: String?  = nil
+    @State private var showTrainerOrientation = false
 
     private var displayName: String {
         isClient ? (quizFirstName.isEmpty ? "Member" : quizFirstName) : (auth.user?.displayName ?? "Trainer")
@@ -120,6 +121,12 @@ struct ProfileMenuSheet: View {
                             if isClient {
                                 ProfileRow(icon: "location.fill", label: "Addresses")
                                 rowDivider
+                            } else {
+                                Button { showTrainerOrientation = true } label: {
+                                    ProfileRow(icon: "play.rectangle.fill", label: "Trainer Orientation")
+                                }
+                                .buttonStyle(.plain)
+                                rowDivider
                             }
                             Button { showNotificationPrefs = true } label: {
                                 ProfileRow(icon: "bell.fill", label: "Notification Preferences")
@@ -202,6 +209,7 @@ struct ProfileMenuSheet: View {
         .sheet(isPresented: $showPersonalInfo)      { PersonalInfoSheet(isClient: isClient).environmentObject(auth) }
         .sheet(isPresented: $showNotificationPrefs) { NotificationPrefsSheet() }
         .sheet(isPresented: $showAppearanceSheet)   { AppearanceSettingsSheet() }
+        .sheet(isPresented: $showTrainerOrientation) { TrainerOrientationView(isReplay: true) }
         .sheet(isPresented: $showGiftShareSheet) {
             ShareSheet(activityItems: [
                 "I gifted you a MONTRA personal training session. Redeem here: https://elitehomefitness.com"
