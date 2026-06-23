@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mike Rodriguez | Elite Home Fitness</title>
+  <title>Coach Profile | Elite Home Fitness</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,16 +15,6 @@
   </script>
   <style>
     body { font-family: 'Inter', sans-serif; }
-    .faq-answer { display: none; }
-    .faq-item.open .faq-answer { display: block; }
-    .faq-item.open .faq-icon { transform: rotate(45deg); }
-    .faq-icon { transition: transform 0.2s; }
-    .active-nav {
-      color: #E85D04 !important;
-      font-weight: 600;
-      border-bottom: 2px solid #E85D04;
-      padding-bottom: 0.25rem;
-    }
     nav.dark-nav { background-color: #000000 !important; border-color: #1f2937 !important; }
     nav.dark-nav .text-gray-700 { color: #d1d5db !important; }
     nav.dark-nav .text-gray-900 { color: #ffffff !important; }
@@ -55,7 +45,7 @@
           <a href="for-trainers.html" class="text-sm font-medium text-gray-700 hover:text-brand transition-colors">Become a Trainer</a>
         </div>
         <div class="flex items-center gap-3">
-          <a href="#book" class="bg-brand !text-white rounded-lg px-4 py-2 text-sm font-bold hover:bg-orange-700 transition-colors">Book Now</a>
+          <a href="quiz.html" class="bg-brand !text-white rounded-lg px-4 py-2 text-sm font-bold hover:bg-orange-700 transition-colors">Book Now</a>
         </div>
       </div>
     </div>
@@ -63,555 +53,131 @@
 
   <!-- BREADCRUMB -->
   <div class="max-w-7xl mx-auto px-6 lg:px-8 py-3">
-    <div class="flex items-center gap-2 text-xs text-gray-400">
+    <div id="breadcrumb" class="flex items-center gap-2 text-xs text-gray-400">
       <a href="/" class="hover:text-gray-700 transition-colors">Home</a>
       <span>›</span>
       <a href="/" class="hover:text-gray-700 transition-colors">Find a Coach</a>
       <span>›</span>
-      <a href="/" class="hover:text-gray-700 transition-colors">Boston</a>
-      <span>›</span>
-      <span class="text-gray-700">Mike Rodriguez</span>
+      <span class="text-gray-700">Coach Profile</span>
     </div>
   </div>
 
-  <!-- PROFILE HERO -->
-  <section class="max-w-7xl mx-auto px-6 lg:px-8 pb-10">
-    <div class="flex flex-col lg:flex-row gap-8">
-
-      <!-- Left: Photo + info -->
-      <div class="flex-1">
-        <div class="flex flex-col sm:flex-row gap-6 mb-6">
-          <!-- Photo -->
-          <div class="w-48 h-56 bg-gray-200 rounded-2xl overflow-hidden flex-shrink-0 relative">
-            <img src="assets/images/coach-hero.png" alt="Mike Rodriguez" class="w-full h-full object-cover object-top"/>
-            <div class="absolute top-2 left-2 flex items-center gap-1 bg-white/90 backdrop-blur rounded-full px-2 py-1">
-              <svg class="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
-              <span class="text-[10px] font-bold text-green-600">Verified Coach</span>
-            </div>
-          </div>
-
-          <!-- Info -->
-          <div class="flex-1">
-            <h1 class="text-3xl font-black mb-1">Mike Rodriguez</h1>
-            <p class="text-gray-500 text-base mb-3">In-Home Personal Trainer in Boston</p>
-            <div class="flex flex-wrap items-center gap-3 mb-4 text-sm">
-
-              <span class="flex items-center gap-1.5 border border-brand/30 bg-brand/5 text-brand rounded-full px-3 py-0.5 text-xs font-bold">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
-                Elite Pro Coach
-              </span>
-              <span class="text-gray-500 text-xs">8+ Years Experience</span>
-            </div>
-            <p class="text-gray-700 text-base mb-4 leading-relaxed max-w-xl">I help busy professionals get stronger, leaner, and more confident with personalized training and nutrition.</p>
-            <!-- Certs -->
-            <div class="flex flex-wrap gap-3 mb-5 text-xs text-gray-500">
-              <span class="flex items-center gap-1"><svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>NASM Certified</span>
-              <span class="flex items-center gap-1"><svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>CPR / AED Certified</span>
-              <span class="flex items-center gap-1"><svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>Insured</span>
-              <span class="flex items-center gap-1"><svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>Nutrition Coach</span>
-            </div>
-            <!-- Action buttons -->
-            <div class="flex gap-3 flex-wrap">
-              <a href="#book" class="flex items-center gap-2 bg-brand hover:bg-orange-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                Book a Free Consult
-              </a>
-              <a href="#" class="flex items-center gap-2 border border-gray-300 hover:bg-gray-50 text-gray-700 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                View Availability
-              </a>
-              <button class="border border-gray-300 hover:bg-gray-50 text-gray-700 p-2.5 rounded-xl transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Serving areas -->
-        <div class="mb-2">
-          <p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Serving Areas</p>
-          <div class="flex flex-wrap gap-2">
-            <span class="bg-gray-100 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-full">Back Bay</span>
-            <span class="bg-gray-100 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-full">Seaport District</span>
-            <span class="bg-gray-100 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-full">South End</span>
-            <span class="bg-gray-100 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-full">Beacon Hill</span>
-            <span class="bg-gray-100 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-full">Fenway</span>
-            <span class="bg-gray-100 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-full">Cambridge</span>
-            <span class="bg-gray-100 text-brand text-xs font-semibold px-3 py-1.5 rounded-full">+3 more</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right: Booking panel -->
-      <div id="book" class="lg:w-72 flex-shrink-0">
-        <div class="border border-gray-200 rounded-2xl p-6 sticky top-20">
-          <h3 class="font-bold text-lg mb-4">Ready to reach your goals?<br><span class="text-gray-500 text-base font-normal">Let's build your plan together.</span></h3>
-          <div class="space-y-3 mb-5 text-sm">
-            <div class="flex items-start gap-3">
-              <div class="w-8 h-8 bg-brand/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                <svg class="w-4 h-4 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-              </div>
-              <div>
-                <p class="font-semibold text-gray-800">In-Home Training</p>
-                <p class="text-xs text-gray-500">I come to you with all the equipment needed.</p>
-              </div>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-8 h-8 bg-brand/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                <svg class="w-4 h-4 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-              </div>
-              <div>
-                <p class="font-semibold text-gray-800">Online Coaching</p>
-                <p class="text-xs text-gray-500">Personalized programs, accountability & check-ins.</p>
-              </div>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-8 h-8 bg-brand/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                <svg class="w-4 h-4 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-              </div>
-              <div>
-                <p class="font-semibold text-gray-800">Nutrition Guidance</p>
-                <p class="text-xs text-gray-500">Simple, sustainable plans that fit your lifestyle.</p>
-              </div>
-            </div>
-          </div>
-          <a href="#" class="block w-full bg-brand hover:bg-orange-700 text-white py-3 rounded-xl text-sm font-bold text-center transition-colors mb-3">Book a Free Consult →</a>
-          <a href="#" class="block w-full border border-gray-300 hover:bg-gray-50 text-gray-700 py-2.5 rounded-xl text-sm font-bold text-center transition-colors mb-3">View Availability</a>
-          <a href="#" class="block w-full border border-gray-300 hover:bg-gray-50 text-gray-700 py-2.5 rounded-xl text-sm font-bold text-center transition-colors mb-3">
-            <span class="flex items-center justify-center gap-2">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
-              Message Coach
-            </span>
-          </a>
-          <p class="text-center text-xs text-gray-400 flex items-center justify-center gap-1">
-            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
-            Typically replies within 1 hour
-          </p>
-        </div>
-      </div>
+  <!-- LOADING STATE -->
+  <div id="loading-state" class="max-w-7xl mx-auto px-6 lg:px-8 py-24 text-center">
+    <div class="w-16 h-16 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center mx-auto mb-4">
+      <svg class="w-7 h-7 text-gray-300 animate-pulse" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+      </svg>
     </div>
-  </section>
+    <p class="font-bold text-gray-400 text-base">Loading coach profile…</p>
+  </div>
 
-  <!-- ABOUT + CERTIFICATIONS + SOCIAL -->
-  <section class="border-t border-gray-100 py-12">
-    <div class="max-w-7xl mx-auto px-6 lg:px-8">
-      <div class="grid md:grid-cols-3 gap-10">
+  <!-- NOT FOUND STATE -->
+  <div id="not-found-state" class="hidden max-w-7xl mx-auto px-6 lg:px-8 py-24 text-center">
+    <p class="font-bold text-gray-700 text-lg mb-2">We couldn't find that coach.</p>
+    <p class="text-gray-500 text-sm mb-6">They may no longer be active, or the link may be out of date.</p>
+    <a href="/" class="inline-block bg-brand hover:bg-orange-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-colors">Browse Coaches</a>
+  </div>
 
-        <!-- About -->
-        <div>
-          <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-            <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-            About Mike
-          </h2>
-          <p class="text-gray-600 text-sm leading-relaxed mb-3">I'm passionate about helping people unlock their potential and build a body and mindset they're proud of. My approach is personalized, efficient, and built around sustainable results.</p>
-          <p class="text-gray-600 text-sm leading-relaxed mb-5">With 8+ years of experience and hundreds of successful clients, I'll create a plan that fits your goals, lifestyle, and schedule.</p>
-          <!-- Stats -->
-          <div class="flex gap-6">
-            <div class="text-center">
-              <div class="text-2xl font-black text-brand">8+</div>
-              <div class="text-xs text-gray-500">Years Experience</div>
+  <!-- PROFILE (populated from the backend) -->
+  <div id="profile-content" class="hidden">
+
+    <!-- PROFILE HERO -->
+    <section class="max-w-7xl mx-auto px-6 lg:px-8 pb-10">
+      <div class="flex flex-col lg:flex-row gap-8">
+
+        <!-- Left: Photo + info -->
+        <div class="flex-1">
+          <div class="flex flex-col sm:flex-row gap-6 mb-6">
+            <!-- Photo -->
+            <div id="coach-photo" class="w-48 h-56 bg-gray-100 rounded-2xl overflow-hidden flex-shrink-0 relative flex items-center justify-center">
+              <span id="coach-initials" class="text-brand font-black text-5xl"></span>
+              <div id="verified-badge" class="hidden absolute top-2 left-2 items-center gap-1 bg-white/90 backdrop-blur rounded-full px-2 py-1">
+                <svg class="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+                <span class="text-[10px] font-bold text-green-600">Verified Coach</span>
+              </div>
             </div>
-            <div class="text-center">
-              <div class="text-2xl font-black text-brand">350+</div>
-              <div class="text-xs text-gray-500">Clients Helped</div>
-            </div>
-            <div class="text-center">
-              <div class="text-2xl font-black text-brand">98%</div>
-              <div class="text-xs text-gray-500">Client Satisfaction</div>
+
+            <!-- Info -->
+            <div class="flex-1">
+              <h1 id="coach-name" class="text-3xl font-black mb-1"></h1>
+              <p id="coach-tagline" class="text-gray-500 text-base mb-3"></p>
+              <div class="flex flex-wrap items-center gap-3 mb-4 text-sm">
+                <span class="flex items-center gap-1.5 text-yellow-500 font-bold text-sm">
+                  ★ <span id="coach-rating"></span>
+                  <span id="coach-review-count" class="text-gray-400 font-normal text-xs"></span>
+                </span>
+                <span id="coach-experience-badge" class="hidden text-gray-500 text-xs"></span>
+              </div>
+              <p id="coach-bio" class="text-gray-700 text-base mb-4 leading-relaxed max-w-xl"></p>
+              <!-- Certs / qualification tags -->
+              <div id="coach-tags" class="flex flex-wrap gap-3 mb-5 text-xs text-gray-500"></div>
+              <!-- Action buttons -->
+              <div class="flex gap-3 flex-wrap">
+                <a id="cta-get-matched" href="quiz.html" class="flex items-center gap-2 bg-brand hover:bg-orange-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                  Get Matched
+                </a>
+                <a id="intro-video-link" href="#" target="_blank" rel="noopener" class="hidden items-center gap-2 border border-gray-300 hover:bg-gray-50 text-gray-700 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  Watch Intro Video
+                </a>
+              </div>
             </div>
           </div>
-          <a href="#" class="inline-flex items-center gap-1 text-brand text-sm font-semibold hover:underline mt-4">Read My Story →</a>
+
+          <!-- Specialties -->
+          <div id="specialties-section" class="hidden mb-5">
+            <p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Specialties</p>
+            <div id="specialties-list" class="flex flex-wrap gap-2"></div>
+          </div>
+
+          <!-- Serving areas -->
+          <div id="locations-section" class="hidden mb-5">
+            <p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Serving Areas</p>
+            <div id="locations-list" class="flex flex-wrap gap-2"></div>
+          </div>
+
+          <!-- Availability -->
+          <div id="availability-section" class="hidden mb-2">
+            <p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Availability</p>
+            <p id="working-hours" class="text-sm text-gray-600 mb-2"></p>
+            <div id="availability-days" class="flex flex-wrap gap-2"></div>
+          </div>
         </div>
 
-        <!-- Certifications -->
-        <div>
-          <h2 class="text-lg font-bold mb-4">Certifications & Qualifications</h2>
-          <ul class="space-y-3">
-            <li class="flex items-center gap-3 text-sm text-gray-700">
-              <svg class="w-4 h-4 text-brand flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-              NASM Certified Personal Trainer
-            </li>
-            <li class="flex items-center gap-3 text-sm text-gray-700">
-              <svg class="w-4 h-4 text-brand flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-              CPR / AED Certified
-            </li>
-            <li class="flex items-center gap-3 text-sm text-gray-700">
-              <svg class="w-4 h-4 text-brand flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              Precision Nutrition Level 1
-            </li>
-            <li class="flex items-center gap-3 text-sm text-gray-700">
-              <svg class="w-4 h-4 text-brand flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-              TRX Suspension Training Certified
-            </li>
-            <li class="flex items-center gap-3 text-sm text-gray-700">
-              <svg class="w-4 h-4 text-brand flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              Title Boxing Coach
-            </li>
-          </ul>
-        </div>
-
-        <!-- Social -->
-        <div>
-          <h2 class="text-lg font-bold mb-2">Connect with Mike</h2>
-          <p class="text-gray-500 text-sm mb-4">Follow me for fitness tips, client results, and daily motivation.</p>
-          <div class="space-y-2">
-            <div class="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
-              <div class="flex items-center gap-2.5">
-                <div class="w-7 h-7 bg-pink-500 rounded-lg flex items-center justify-center">
-                  <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+        <!-- Right: Get matched panel -->
+        <div class="lg:w-72 flex-shrink-0">
+          <div class="border border-gray-200 rounded-2xl p-6 sticky top-20">
+            <h3 id="panel-heading" class="font-bold text-lg mb-4">Ready to reach your goals?<br><span class="text-gray-500 text-base font-normal">Let's build your plan together.</span></h3>
+            <div class="space-y-3 mb-5 text-sm">
+              <div class="flex items-start gap-3">
+                <div class="w-8 h-8 bg-brand/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg class="w-4 h-4 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                 </div>
                 <div>
-                  <div class="text-xs font-semibold">@mikerodriguez_fit</div>
-                  <div class="text-[10px] text-gray-400">Instagram</div>
+                  <p class="font-semibold text-gray-800">In-Home Training</p>
+                  <p class="text-xs text-gray-500">Your coach comes to you with all the equipment needed.</p>
                 </div>
               </div>
-              <span class="text-xs bg-pink-100 text-pink-600 font-bold px-2 py-0.5 rounded-full">Follow</span>
-            </div>
-            <div class="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
-              <div class="flex items-center gap-2.5">
-                <div class="w-7 h-7 bg-red-600 rounded-lg flex items-center justify-center">
-                  <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M23.495 6.205a3.007 3.007 0 00-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 00.527 6.205a31.247 31.247 0 00-.522 5.805 31.247 31.247 0 00.522 5.783 3.007 3.007 0 002.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 002.088-2.088 31.247 31.247 0 00.5-5.783 31.247 31.247 0 00-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>
+              <div class="flex items-start gap-3">
+                <div class="w-8 h-8 bg-brand/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg class="w-4 h-4 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                 </div>
                 <div>
-                  <div class="text-xs font-semibold">Mike Rodriguez Fitness</div>
-                  <div class="text-[10px] text-gray-400">YouTube</div>
+                  <p class="font-semibold text-gray-800">Personalized Matching</p>
+                  <p class="text-xs text-gray-500">Take our quick quiz so we can connect you directly.</p>
                 </div>
               </div>
-              <span class="text-xs bg-red-100 text-red-600 font-bold px-2 py-0.5 rounded-full">Subscribe</span>
             </div>
-            <div class="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
-              <div class="flex items-center gap-2.5">
-                <div class="w-7 h-7 bg-black rounded-lg flex items-center justify-center">
-                  <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
-                </div>
-                <div>
-                  <div class="text-xs font-semibold">@mikerodriguez_fit</div>
-                  <div class="text-[10px] text-gray-400">TikTok</div>
-                </div>
-              </div>
-              <span class="text-xs bg-gray-200 text-gray-700 font-bold px-2 py-0.5 rounded-full">Follow</span>
-            </div>
-            <div class="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
-              <div class="flex items-center gap-2.5">
-                <div class="w-7 h-7 bg-gray-700 rounded-lg flex items-center justify-center text-white text-[10px] font-bold">W</div>
-                <div>
-                  <div class="text-xs font-semibold">mikerodriguezfitness.com</div>
-                  <div class="text-[10px] text-gray-400">Website</div>
-                </div>
-              </div>
-              <span class="text-xs bg-gray-200 text-gray-700 font-bold px-2 py-0.5 rounded-full">Visit</span>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- RESULTS & TRANSFORMATIONS -->
-  <section class="py-12 border-t border-gray-100">
-    <div class="max-w-7xl mx-auto px-6 lg:px-8">
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-xl font-bold">Results & Transformations <span class="text-gray-400 font-normal text-base ml-1">Real people. Real results.</span></h2>
-        <a href="#" class="text-brand text-sm font-semibold hover:underline">View More Transformations →</a>
-      </div>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="rounded-2xl overflow-hidden relative aspect-[3/4] bg-gray-200">
-          <img src="https://placehold.co/300x400/1a1a1a/444?text=Before+%2F+After" alt="Transformation" class="w-full h-full object-cover"/>
-          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-            <div class="flex justify-between text-white text-xs font-bold"><span>-28 LBS</span><span>12 WEEKS</span></div>
-          </div>
-        </div>
-        <div class="rounded-2xl overflow-hidden relative aspect-[3/4] bg-gray-200">
-          <img src="https://placehold.co/300x400/1a1a1a/444?text=Before+%2F+After" alt="Transformation" class="w-full h-full object-cover"/>
-          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-            <div class="flex justify-between text-white text-xs font-bold"><span>-18 LBS</span><span>10 WEEKS</span></div>
-          </div>
-        </div>
-        <div class="rounded-2xl overflow-hidden relative aspect-[3/4] bg-gray-200">
-          <img src="https://placehold.co/300x400/1a1a1a/444?text=Before+%2F+After" alt="Transformation" class="w-full h-full object-cover"/>
-          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-            <div class="flex justify-between text-white text-xs font-bold"><span>+16 LBS MUSCLE</span><span>16 WEEKS</span></div>
-          </div>
-        </div>
-        <div class="rounded-2xl overflow-hidden relative aspect-[3/4] bg-gray-200">
-          <img src="https://placehold.co/300x400/1a1a1a/444?text=Before+%2F+After" alt="Transformation" class="w-full h-full object-cover"/>
-          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-            <div class="flex justify-between text-white text-xs font-bold"><span>-22 LBS</span><span>12 WEEKS</span></div>
+            <a href="quiz.html" class="block w-full bg-brand hover:bg-orange-700 text-white py-3 rounded-xl text-sm font-bold text-center transition-colors mb-3">Get Matched →</a>
+            <p class="text-center text-xs text-gray-400">Booking and messaging happen in the MONTRA app once you're matched.</p>
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- SERVICES & OFFERINGS -->
-  <section class="py-12 border-t border-gray-100">
-    <div class="max-w-7xl mx-auto px-6 lg:px-8">
-      <h2 class="text-xl font-bold mb-6">Services & Offerings <span class="text-gray-400 font-normal text-base ml-1">Choose the option that fits your goals and schedule.</span></h2>
-      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-
-        <!-- In-Home -->
-        <div class="border border-gray-200 rounded-2xl p-5">
-          <div class="flex items-center gap-2 mb-4">
-            <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-              <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-            </div>
-            <div>
-              <p class="text-xs font-black uppercase tracking-wider text-green-600">In-Home Training</p>
-              <p class="text-[10px] text-gray-400">I'll come to you.</p>
-            </div>
-          </div>
-          <div class="space-y-2 text-sm mb-4">
-            <div class="flex justify-between"><span class="text-gray-600">60-Min Session</span><span class="font-semibold">$65 – $150</span></div>
-            <div class="flex justify-between"><span class="text-gray-600">90-Min Session</span><span class="font-semibold">$90 – $300</span></div>
-            <div class="flex justify-between items-center"><span class="text-gray-600">5-Session Pack</span><div class="text-right"><span class="font-semibold">$300 – $675</span><span class="block text-[10px] text-green-500">Save 5%</span></div></div>
-            <div class="flex justify-between items-center"><span class="text-gray-600">10-Session Pack</span><div class="text-right"><span class="font-semibold">$550 – $1,350</span><span class="block text-[10px] text-green-500">Save 10%</span></div></div>
-          </div>
-          <a href="#book" class="block text-center border border-gray-300 hover:bg-gray-50 text-gray-700 py-2 rounded-xl text-xs font-bold transition-colors">Book In-Home Session</a>
-        </div>
-
-        <!-- Online -->
-        <div class="border border-gray-200 rounded-2xl p-5">
-          <div class="flex items-center gap-2 mb-4">
-            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-              <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-            </div>
-            <div>
-              <p class="text-xs font-black uppercase tracking-wider text-blue-600">Online Coaching</p>
-              <p class="text-[10px] text-gray-400">Train from anywhere.</p>
-            </div>
-          </div>
-          <div class="mb-2">
-            <p class="text-sm font-semibold mb-2">Monthly Coaching <span class="text-brand">$99 – $299/mo</span></p>
-            <ul class="space-y-1.5 text-xs text-gray-500">
-              <li class="flex items-center gap-1.5"><svg class="w-3 h-3 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Custom workouts</li>
-              <li class="flex items-center gap-1.5"><svg class="w-3 h-3 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Weekly check-ins</li>
-              <li class="flex items-center gap-1.5"><svg class="w-3 h-3 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Nutrition guidance</li>
-              <li class="flex items-center gap-1.5"><svg class="w-3 h-3 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Unlimited messaging</li>
-              <li class="flex items-center gap-1.5"><svg class="w-3 h-3 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Progress tracking</li>
-            </ul>
-          </div>
-          <a href="#book" class="block text-center border border-blue-300 text-blue-600 hover:bg-blue-50 py-2 rounded-xl text-xs font-bold transition-colors mt-4">Choose Online Coaching</a>
-        </div>
-
-        <!-- Programs -->
-        <div class="border border-gray-200 rounded-2xl p-5">
-          <div class="flex items-center gap-2 mb-4">
-            <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-              <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-            </div>
-            <div>
-              <p class="text-xs font-black uppercase tracking-wider text-purple-600">Programs</p>
-              <p class="text-[10px] text-gray-400">Do it on your own time.</p>
-            </div>
-          </div>
-          <div class="space-y-2 text-sm mb-4">
-            <div class="flex justify-between"><span class="text-gray-600">8-Week Strength Program</span><span class="font-semibold">$149</span></div>
-            <div class="flex justify-between"><span class="text-gray-600">Fat Loss Blueprint</span><span class="font-semibold">$129</span></div>
-            <div class="flex justify-between"><span class="text-gray-600">Mobility Reset Program</span><span class="font-semibold">$89</span></div>
-            <div class="flex justify-between"><span class="text-gray-600">Athletic Performance Plan</span><span class="font-semibold">$179</span></div>
-          </div>
-          <a href="#" class="block text-center border border-purple-300 text-purple-600 hover:bg-purple-50 py-2 rounded-xl text-xs font-bold transition-colors">View All Programs</a>
-        </div>
-
-        <!-- Nutrition -->
-        <div class="border border-gray-200 rounded-2xl p-5">
-          <div class="flex items-center gap-2 mb-4">
-            <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-              <svg class="w-4 h-4 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-            </div>
-            <div>
-              <p class="text-xs font-black uppercase tracking-wider text-brand">Nutrition Coaching</p>
-              <p class="text-[10px] text-gray-400">Nutrition guidance for real results.</p>
-            </div>
-          </div>
-          <p class="text-2xl font-black text-brand mb-1">$89 <span class="text-sm font-normal text-gray-400">/month</span></p>
-          <ul class="space-y-1.5 text-xs text-gray-500 mb-4">
-            <li class="flex items-center gap-1.5"><svg class="w-3 h-3 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Personalized meal plans</li>
-            <li class="flex items-center gap-1.5"><svg class="w-3 h-3 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Macro tracking</li>
-            <li class="flex items-center gap-1.5"><svg class="w-3 h-3 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Grocery lists</li>
-            <li class="flex items-center gap-1.5"><svg class="w-3 h-3 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Weekly adjustments</li>
-          </ul>
-          <a href="#book" class="block text-center border border-brand text-brand hover:bg-brand hover:text-white py-2 rounded-xl text-xs font-bold transition-colors">Explore Nutrition Coaching</a>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- REVIEWS + SOCIAL -->
-  <section class="py-12 border-t border-gray-100">
-    <div class="max-w-7xl mx-auto px-6 lg:px-8">
-      <div class="grid lg:grid-cols-2 gap-12">
-
-        <!-- Reviews -->
-        <div>
-          <div class="flex items-center justify-between mb-6">
-            <div class="flex items-center gap-3">
-              <h2 class="text-xl font-bold">Client Reviews</h2>
-              <div class="flex items-center gap-1">
-                <span class="text-yellow-400">★★★★★</span>
-                <span class="font-bold text-lg">4.9</span>
-                <span class="text-gray-400 text-sm">(128 Reviews)</span>
-              </div>
-            </div>
-            <a href="#" class="text-brand text-sm font-semibold hover:underline">View All Reviews →</a>
-          </div>
-          <div class="grid sm:grid-cols-2 gap-4">
-            <div class="bg-gray-50 rounded-2xl p-4">
-              <div class="flex items-center gap-2 mb-2">
-                <div class="w-8 h-8 bg-gray-300 rounded-full overflow-hidden"><img src="https://placehold.co/32x32/555/888?text=J" alt="Jessica M." class="w-full h-full object-cover"/></div>
-                <div><p class="text-sm font-bold leading-none">Jessica M.</p><p class="text-[10px] text-gray-400">3 weeks ago</p></div>
-                <div class="ml-auto text-yellow-400 text-xs">★★★★★</div>
-              </div>
-              <p class="text-xs text-gray-600 leading-relaxed">Mike is the best! He pushes me in every session and truly cares about my progress. I've never felt stronger.</p>
-            </div>
-            <div class="bg-gray-50 rounded-2xl p-4">
-              <div class="flex items-center gap-2 mb-2">
-                <div class="w-8 h-8 bg-gray-300 rounded-full overflow-hidden"><img src="https://placehold.co/32x32/555/888?text=D" alt="David R." class="w-full h-full object-cover"/></div>
-                <div><p class="text-sm font-bold leading-none">David R.</p><p class="text-[10px] text-gray-400">1 month ago</p></div>
-                <div class="ml-auto text-yellow-400 text-xs">★★★★★</div>
-              </div>
-              <p class="text-xs text-gray-600 leading-relaxed">Incredible trainer and even better person. Workouts are tough but fun, and the results speak for themselves.</p>
-            </div>
-            <div class="bg-gray-50 rounded-2xl p-4">
-              <div class="flex items-center gap-2 mb-2">
-                <div class="w-8 h-8 bg-gray-300 rounded-full overflow-hidden"><img src="https://placehold.co/32x32/555/888?text=A" alt="Amanda T." class="w-full h-full object-cover"/></div>
-                <div><p class="text-sm font-bold leading-none">Amanda T.</p><p class="text-[10px] text-gray-400">1 month ago</p></div>
-                <div class="ml-auto text-yellow-400 text-xs">★★★★★</div>
-              </div>
-              <p class="text-xs text-gray-600 leading-relaxed">Mike comes to my home and brings everything needed. Super convenient and very effective!</p>
-            </div>
-            <div class="bg-gray-50 rounded-2xl p-4">
-              <div class="flex items-center gap-2 mb-2">
-                <div class="w-8 h-8 bg-gray-300 rounded-full overflow-hidden"><img src="https://placehold.co/32x32/555/888?text=R" alt="Ryan K." class="w-full h-full object-cover"/></div>
-                <div><p class="text-sm font-bold leading-none">Ryan K.</p><p class="text-[10px] text-gray-400">2 months ago</p></div>
-                <div class="ml-auto text-yellow-400 text-xs">★★★★★</div>
-              </div>
-              <p class="text-xs text-gray-600 leading-relaxed">Lost 20 lbs in 3 months. Mike's nutrition guidance combined with the training was a complete game changer.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Social Content -->
-        <div>
-          <div class="flex items-center justify-between mb-6">
-            <div>
-              <h2 class="text-xl font-bold">Social Content</h2>
-              <p class="text-gray-500 text-sm">Training tips, client wins, and daily motivation.</p>
-            </div>
-            <div class="flex gap-2 text-gray-400">
-              <a href="#" class="hover:text-pink-500 transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
-              <a href="#" class="hover:text-red-500 transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.495 6.205a3.007 3.007 0 00-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 00.527 6.205a31.247 31.247 0 00-.522 5.805 31.247 31.247 0 00.522 5.783 3.007 3.007 0 002.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 002.088-2.088 31.247 31.247 0 00.5-5.783 31.247 31.247 0 00-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg></a>
-            </div>
-          </div>
-          <div class="grid grid-cols-3 gap-2">
-            <div class="aspect-square bg-gray-200 rounded-xl overflow-hidden relative cursor-pointer group">
-              <img src="https://placehold.co/200x200/1a1a1a/444?text=Video" alt="Social post" class="w-full h-full object-cover"/>
-              <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-              </div>
-              <div class="absolute bottom-1.5 right-1.5 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded font-semibold">0:45</div>
-            </div>
-            <div class="aspect-square bg-gray-200 rounded-xl overflow-hidden relative cursor-pointer group">
-              <img src="https://placehold.co/200x200/1a1a1a/444?text=Video" alt="Social post" class="w-full h-full object-cover"/>
-              <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-              </div>
-              <div class="absolute bottom-1.5 right-1.5 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded font-semibold">0:52</div>
-            </div>
-            <div class="aspect-square bg-gray-200 rounded-xl overflow-hidden relative cursor-pointer group">
-              <img src="https://placehold.co/200x200/1a1a1a/444?text=Video" alt="Social post" class="w-full h-full object-cover"/>
-              <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-              </div>
-              <div class="absolute bottom-1.5 right-1.5 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded font-semibold">5:01</div>
-            </div>
-            <div class="aspect-square bg-gray-200 rounded-xl overflow-hidden relative cursor-pointer group">
-              <img src="https://placehold.co/200x200/1a1a1a/444?text=Video" alt="Social post" class="w-full h-full object-cover"/>
-              <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-              </div>
-              <div class="absolute bottom-1.5 right-1.5 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded font-semibold">0:41</div>
-            </div>
-            <div class="aspect-square bg-gray-200 rounded-xl overflow-hidden relative cursor-pointer group">
-              <img src="https://placehold.co/200x200/1a1a1a/444?text=Video" alt="Social post" class="w-full h-full object-cover"/>
-              <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-              </div>
-              <div class="absolute bottom-1.5 right-1.5 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded font-semibold">9:40</div>
-            </div>
-            <div class="aspect-square bg-gray-200 rounded-xl overflow-hidden relative cursor-pointer group">
-              <img src="https://placehold.co/200x200/1a1a1a/444?text=Video" alt="Social post" class="w-full h-full object-cover"/>
-              <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-              </div>
-              <div class="absolute bottom-1.5 right-1.5 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded font-semibold">5:12</div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- FAQ -->
-  <section class="py-12 border-t border-gray-100">
-    <div class="max-w-7xl mx-auto px-6 lg:px-8">
-      <h2 class="text-xl font-bold mb-6">Frequently Asked Questions</h2>
-      <div class="grid md:grid-cols-2 gap-3">
-
-        <div class="faq-item border border-gray-200 rounded-xl overflow-hidden">
-          <button onclick="this.closest('.faq-item').classList.toggle('open')" class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
-            <span class="text-sm font-semibold">Do you bring equipment?</span>
-            <svg class="faq-icon w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-          </button>
-          <div class="faq-answer px-4 pb-4 text-sm text-gray-600 leading-relaxed">Yes! I bring all necessary equipment including resistance bands, dumbbells, and more. You just need comfortable workout clothes and a clear space.</div>
-        </div>
-
-        <div class="faq-item border border-gray-200 rounded-xl overflow-hidden">
-          <button onclick="this.closest('.faq-item').classList.toggle('open')" class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
-            <span class="text-sm font-semibold">Do you offer online coaching?</span>
-            <svg class="faq-icon w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-          </button>
-          <div class="faq-answer px-4 pb-4 text-sm text-gray-600 leading-relaxed">Absolutely. I offer full online coaching programs with custom workouts, nutrition guidance, weekly check-ins, and unlimited messaging starting at $99/month.</div>
-        </div>
-
-        <div class="faq-item border border-gray-200 rounded-xl overflow-hidden">
-          <button onclick="this.closest('.faq-item').classList.toggle('open')" class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
-            <span class="text-sm font-semibold">How much do sessions cost?</span>
-            <svg class="faq-icon w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-          </button>
-          <div class="faq-answer px-4 pb-4 text-sm text-gray-600 leading-relaxed">In-home sessions range from $65–$150 for 60 minutes depending on the package. Package deals offer up to 10% savings. Book a free consultation to discuss the best option for you.</div>
-        </div>
-
-        <div class="faq-item border border-gray-200 rounded-xl overflow-hidden">
-          <button onclick="this.closest('.faq-item').classList.toggle('open')" class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
-            <span class="text-sm font-semibold">Can I train at my building gym?</span>
-            <svg class="faq-icon w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-          </button>
-          <div class="faq-answer px-4 pb-4 text-sm text-gray-600 leading-relaxed">Yes! I can meet you at your building gym, a private gym, your apartment, or outdoors. We'll pick whatever location works best for you.</div>
-        </div>
-
-        <div class="faq-item border border-gray-200 rounded-xl overflow-hidden">
-          <button onclick="this.closest('.faq-item').classList.toggle('open')" class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
-            <span class="text-sm font-semibold">How do I get started?</span>
-            <svg class="faq-icon w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-          </button>
-          <div class="faq-answer px-4 pb-4 text-sm text-gray-600 leading-relaxed">Book a free 15-minute consult using the button above. We'll chat about your goals, schedule a first session, and I'll build your personalized plan from there.</div>
-        </div>
-
-        <div class="faq-item border border-gray-200 rounded-xl overflow-hidden">
-          <button onclick="this.closest('.faq-item').classList.toggle('open')" class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
-            <span class="text-sm font-semibold">Do you offer nutrition coaching?</span>
-            <svg class="faq-icon w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-          </button>
-          <div class="faq-answer px-4 pb-4 text-sm text-gray-600 leading-relaxed">Yes — I'm a certified nutrition coach. I offer standalone nutrition coaching for $89/month, or it can be bundled with your training package for the best results.</div>
-        </div>
-
-      </div>
-    </div>
-  </section>
+  </div>
 
   <!-- BOTTOM CTA BAR -->
   <div class="bg-brand text-white py-5 sticky bottom-0 z-40 shadow-2xl">
@@ -622,12 +188,11 @@
         </div>
         <div>
           <p class="font-bold text-sm">Ready to take the first step?</p>
-          <p class="text-orange-100 text-xs">Book a free 15-minute call and let's create a plan that gets you real results.</p>
+          <p class="text-orange-100 text-xs">Answer a few questions and we'll match you with the perfect coach.</p>
         </div>
       </div>
       <div class="flex gap-3 flex-shrink-0">
-        <a href="#book" class="bg-white text-brand font-bold px-5 py-2.5 rounded-xl text-sm hover:bg-orange-50 transition-colors">Book a Free Consult →</a>
-        <a href="#" class="border border-white/40 text-white font-bold px-5 py-2.5 rounded-xl text-sm hover:bg-white/10 transition-colors">View Availability</a>
+        <a href="quiz.html" class="bg-white text-brand font-bold px-5 py-2.5 rounded-xl text-sm hover:bg-orange-50 transition-colors">Take The Quiz →</a>
       </div>
     </div>
   </div>
@@ -639,45 +204,163 @@
         <div class="col-span-2 md:col-span-1">
           <a href="/" class="flex items-center gap-2 mb-4"><img src="assets/images/logo.png" alt="Elite Home Fitness" class="h-10"/><div class="border-l border-gray-600 pl-2"><div class="text-[8px] text-gray-500">POWERED BY</div><div class="text-brand font-bold text-xs">MONTRA</div></div></a>
           <p class="text-gray-500 text-xs leading-relaxed mb-5">Premium in-home personal training.<br>Elite results. Unmatched convenience.</p>
-          <div class="flex gap-3 text-gray-500">
-            <a href="#" class="hover:text-white"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
-            <a href="#" class="hover:text-white"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
-            <a href="#" class="hover:text-white"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a>
-          </div>
         </div>
-        <div><h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">Company</h4><ul class="space-y-2.5 text-sm text-gray-400"><li><a href="about.html" class="hover:text-white">About Us</a></li><li><a href="#" class="hover:text-white">Careers</a></li><li><a href="#" class="hover:text-white">Blog</a></li><li><a href="#" class="hover:text-white">Contact</a></li></ul></div>
-        <div><h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">Support</h4><ul class="space-y-2.5 text-sm text-gray-400"><li><a href="#" class="hover:text-white">Help Center</a></li><li><a href="#" class="hover:text-white">FAQ</a></li><li><a href="#" class="hover:text-white">Safety</a></li><li><a href="#" class="hover:text-white">Cancellation Policy</a></li><li><a href="#" class="hover:text-white">Privacy Policy</a></li></ul></div>
-        <div><h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">For Clients</h4><ul class="space-y-2.5 text-sm text-gray-400"><li><a href="services.html" class="hover:text-white">Training Options</a></li><li><a href="pricing.html" class="hover:text-white">Prices</a></li><li><a href="#" class="hover:text-white">Gift Cards</a></li><li><a href="#" class="hover:text-white">Refer a Friend</a></li></ul></div>
-        <div>
-          <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">For Trainers</h4>
-          <ul class="space-y-2.5 text-sm text-gray-400 mb-6"><li><a href="for-trainers.html" class="hover:text-white">Become a Coach</a></li><li><a href="#" class="hover:text-white">Coach Login</a></li><li><a href="#" class="hover:text-white">Resources</a></li></ul>
-          <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Download the App</h4>
-          <div class="space-y-2">
-            <a href="#" class="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 rounded-xl px-3 py-2 transition-colors"><svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg><div><div class="text-[10px] text-gray-500">Download on the</div><div class="text-xs font-semibold">App Store</div></div></a>
-            <a href="#" class="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 rounded-xl px-3 py-2 transition-colors"><svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M3.18 23.76c.3.17.66.19.98.06l.06-.04 11.2-6.47-2.44-2.44-9.8 8.89zm-1.02-20.9c-.1.21-.16.44-.16.69v19.9c0 .25.06.48.16.69l.04.06 11.15-11.15v-.26L2.2 2.8l-.04.06zM20.38 10.9L17.8 9.4l-2.7 2.7 2.7 2.7 2.6-1.51c.74-.43.74-1.13 0-1.56l-.02.07zM4.16.28L15.36 6.75l-2.44 2.44-9.8-8.9.04.01z"/></svg><div><div class="text-[10px] text-gray-500">GET IT ON</div><div class="text-xs font-semibold">Google Play</div></div></a>
-          </div>
-        </div>
+        <div><h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">Company</h4><ul class="space-y-2.5 text-sm text-gray-400"><li><a href="about.html" class="hover:text-white">About Us</a></li></ul></div>
+        <div><h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">For Clients</h4><ul class="space-y-2.5 text-sm text-gray-400"><li><a href="services.html" class="hover:text-white">Training Options</a></li><li><a href="pricing.html" class="hover:text-white">Prices</a></li></ul></div>
+        <div><h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">For Trainers</h4><ul class="space-y-2.5 text-sm text-gray-400"><li><a href="for-trainers.html" class="hover:text-white">Become a Coach</a></li></ul></div>
       </div>
       <div class="border-t border-gray-800 pt-6 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-gray-600">
         <span>© 2024 Elite Home Fitness. All rights reserved.</span>
-        <div class="flex gap-4"><a href="#" class="hover:text-gray-400">Terms of Use</a><a href="#" class="hover:text-gray-400">Privacy Policy</a></div>
       </div>
     </div>
   </footer>
-  <script>
-    function toggleLocationDropdown() {
-      document.getElementById('location-menu').classList.toggle('hidden');
+
+  <script type="module">
+    const MONTRA_API_BASE = 'https://montra-production.up.railway.app';
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     }
-    function selectLocation(name) {
-      document.getElementById('selected-location').textContent = name;
-      document.getElementById('location-menu').classList.add('hidden');
+
+    function show(id) { document.getElementById(id)?.classList.remove('hidden'); }
+    function hide(id) { document.getElementById(id)?.classList.add('hidden'); }
+
+    function renderChips(containerId, values) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = values
+        .map((value) => `<span class="bg-gray-100 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-full">${escapeHtml(value)}</span>`)
+        .join('');
     }
-    document.addEventListener('click', function(e) {
-      const container = document.getElementById('location-dropdown-container');
-      if (container && !container.contains(e.target)) {
-        document.getElementById('location-menu').classList.add('hidden');
+
+    function renderProfile(trainer) {
+      document.title = `${trainer.name || 'Coach'} | Elite Home Fitness`;
+
+      const firstName = (trainer.name || '').split(' ')[0] || 'this coach';
+      const primaryLocation = Array.isArray(trainer.locations) && trainer.locations.length > 0 ? trainer.locations[0] : '';
+
+      // Breadcrumb
+      document.getElementById('breadcrumb').innerHTML = `
+        <a href="/" class="hover:text-gray-700 transition-colors">Home</a>
+        <span>›</span>
+        <a href="/" class="hover:text-gray-700 transition-colors">Find a Coach</a>
+        ${primaryLocation ? `<span>›</span><span class="text-gray-500">${escapeHtml(primaryLocation)}</span>` : ''}
+        <span>›</span>
+        <span class="text-gray-700">${escapeHtml(trainer.name || 'Coach')}</span>
+      `;
+
+      // Photo / initials
+      const photoEl = document.getElementById('coach-photo');
+      if (trainer.photoDataUrl) {
+        const img = document.createElement('img');
+        img.src = trainer.photoDataUrl;
+        img.alt = trainer.name || 'Coach photo';
+        img.className = 'w-full h-full object-cover absolute inset-0';
+        photoEl.prepend(img);
+      } else {
+        document.getElementById('coach-initials').textContent = trainer.initials || (trainer.name || '?').slice(0, 2).toUpperCase();
       }
-    });
+      if (trainer.status === 'approved') show('verified-badge');
+
+      document.getElementById('coach-name').textContent = trainer.name || 'Coach';
+      document.getElementById('coach-tagline').textContent = primaryLocation
+        ? `In-Home Personal Trainer in ${primaryLocation}`
+        : 'In-Home Personal Trainer';
+
+      document.getElementById('coach-rating').textContent = Number(trainer.rating || 4.9).toFixed(1);
+      const reviewCount = Number(trainer.reviewCount || 0);
+      document.getElementById('coach-review-count').textContent = `(${reviewCount} ${reviewCount === 1 ? 'Review' : 'Reviews'})`;
+
+      if (Number(trainer.experienceYears) > 0) {
+        document.getElementById('coach-experience-badge').textContent = `${trainer.experienceYears}+ Years Experience`;
+        show('coach-experience-badge');
+      }
+
+      document.getElementById('coach-bio').textContent = trainer.bio || '';
+
+      // Tags: certification, CPR, insurance
+      const tags = [];
+      if (trainer.certification) tags.push(trainer.certification);
+      if (trainer.cprCertification) tags.push('CPR / AED Certified');
+      if (trainer.hasInsurance) tags.push('Insured');
+      if (Array.isArray(trainer.experienceLevels) && trainer.experienceLevels.length) {
+        tags.push(`Trains ${trainer.experienceLevels.join(', ')} clients`);
+      }
+      document.getElementById('coach-tags').innerHTML = tags
+        .map((tag) => `<span class="flex items-center gap-1"><svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>${escapeHtml(tag)}</span>`)
+        .join('');
+
+      document.getElementById('cta-get-matched').textContent = `Get Matched with ${firstName}`;
+
+      if (trainer.introVideoUrl) {
+        const link = document.getElementById('intro-video-link');
+        link.href = trainer.introVideoUrl;
+        link.classList.remove('hidden');
+        link.classList.add('flex');
+      }
+
+      // Specialties
+      if (Array.isArray(trainer.specialties) && trainer.specialties.length) {
+        renderChips('specialties-list', trainer.specialties);
+        show('specialties-section');
+      }
+
+      // Serving areas
+      if (Array.isArray(trainer.locations) && trainer.locations.length) {
+        renderChips('locations-list', trainer.locations);
+        show('locations-section');
+      }
+
+      // Availability
+      const hasWorkingHours = trainer.workingHours?.start && trainer.workingHours?.end;
+      const hasAvailabilityDays = Array.isArray(trainer.availabilityDays) && trainer.availabilityDays.length;
+      if (hasWorkingHours || hasAvailabilityDays) {
+        if (hasWorkingHours) {
+          document.getElementById('working-hours').textContent = `${trainer.workingHours.start} – ${trainer.workingHours.end}`;
+        }
+        if (hasAvailabilityDays) {
+          renderChips('availability-days', trainer.availabilityDays);
+        }
+        show('availability-section');
+      }
+
+      document.getElementById('panel-heading').innerHTML = `Ready to train with ${escapeHtml(firstName)}?<br><span class="text-gray-500 text-base font-normal">Let's build your plan together.</span>`;
+
+      hide('loading-state');
+      show('profile-content');
+    }
+
+    async function loadCoachProfile() {
+      const id = new URLSearchParams(window.location.search).get('id');
+      if (!id) {
+        hide('loading-state');
+        show('not-found-state');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${MONTRA_API_BASE}/api/trainers/${encodeURIComponent(id)}`, {
+          headers: { Accept: 'application/json' },
+        });
+        if (!response.ok) throw new Error('Not found');
+
+        const { trainer } = await response.json();
+        if (!trainer || trainer.status !== 'approved' || trainer.isActive === false) {
+          throw new Error('Not available');
+        }
+
+        renderProfile(trainer);
+      } catch (error) {
+        hide('loading-state');
+        show('not-found-state');
+      }
+    }
+
+    loadCoachProfile();
   </script>
 </body>
 </html>

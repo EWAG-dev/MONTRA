@@ -85,7 +85,8 @@
           <div class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2">
             <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
           </div>
-          <select class="appearance-none w-full bg-white text-gray-700 text-sm rounded-lg pl-10 pr-10 py-3 outline-none border-0">
+          <select id="hero-location" class="appearance-none w-full bg-white text-gray-700 text-sm rounded-lg pl-10 pr-10 py-3 outline-none border-0">
+            <option value="">Any Location</option>
             <option>Boston, MA</option>
             <option>New York, NY</option>
             <option>New Jersey, NJ</option>
@@ -95,8 +96,8 @@
           <svg class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </div>
         <div class="relative">
-          <select class="appearance-none bg-white text-gray-700 text-sm rounded-lg pl-4 pr-10 py-3 outline-none border-0 min-w-[180px]">
-            <option>All Services</option>
+          <select id="hero-service" class="appearance-none bg-white text-gray-700 text-sm rounded-lg pl-4 pr-10 py-3 outline-none border-0 min-w-[180px]">
+            <option value="all">All Services</option>
             <option>Personal Training</option>
             <option>Boxing</option>
             <option>Yoga</option>
@@ -111,12 +112,12 @@
           </select>
           <svg class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </div>
-        <button class="bg-brand hover:bg-orange-700 text-white px-6 py-3 rounded-lg text-sm font-bold transition-colors">Search Coaches</button>
+        <button id="hero-search-button" class="bg-brand hover:bg-orange-700 text-white px-6 py-3 rounded-lg text-sm font-bold transition-colors">Search Coaches</button>
       </div>
 
       <!-- Count + review -->
       <div class="flex items-center justify-between mt-6 max-w-2xl">
-        <p class="text-gray-400 text-sm">100+ certified trainers across MA, RI, NJ, CT & NY</p>
+        <p id="trainer-count-label" class="text-gray-400 text-sm">Certified trainers across MA, RI, NJ, CT & NY</p>
       </div>
     </div>
   </section>
@@ -554,9 +555,12 @@
     }
 
     function selectedValues(selector) {
+      // Checkboxes here have no value="" attribute, so .value defaults to the meaningless
+      // browser default "on" — the real filter value lives in the data-filter-* attribute.
+      // Must check those first, or every checked checkbox (regardless of which) resolves to "on".
       return Array.from(document.querySelectorAll(selector))
         .filter((input) => input.checked)
-        .map((input) => input.value || input.dataset.filterService || input.dataset.filterAvailability || '');
+        .map((input) => input.dataset.filterService || input.dataset.filterAvailability || input.value || '');
     }
 
     function matchesService(trainer, services) {
@@ -590,6 +594,20 @@
       return String(trainer.gender || '').toLowerCase() === gender.toLowerCase();
     }
 
+    // Location formatting drifts across surfaces ("Boston MA" vs "Boston, MA" — see
+    // CLAUDE.md), so compare with punctuation/whitespace stripped rather than exact match.
+    function normalizeLocationToken(value) {
+      return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
+
+    function matchesLocation(trainer, location) {
+      if (!location) return true;
+      const target = normalizeLocationToken(location);
+      const locations = Array.isArray(trainer.locations) ? trainer.locations : [];
+      if (!locations.length) return true; // don't hide trainers who haven't set a location yet
+      return locations.some((loc) => normalizeLocationToken(loc).includes(target) || target.includes(normalizeLocationToken(loc)));
+    }
+
     function sortTrainers(trainers, sortBy) {
       const copy = [...trainers];
       const byRating = (a, b) => Number(b.rating || 0) - Number(a.rating || 0);
@@ -609,6 +627,8 @@
       }
     }
 
+    let heroLocationFilter = '';
+
     function applyFilters() {
       const grid = document.getElementById('coach-grid');
       if (!grid) return;
@@ -625,7 +645,8 @@
           if (price !== null && price > maxPrice) return false;
           return matchesService(trainer, services)
             && matchesAvailability(trainer, availability)
-            && matchesGender(trainer, gender);
+            && matchesGender(trainer, gender)
+            && matchesLocation(trainer, heroLocationFilter);
         }),
         sortBy
       );
@@ -729,7 +750,36 @@
             sortSelect.value = 'highest-rated';
           }
 
+          heroLocationFilter = '';
+          const heroLocation = document.getElementById('hero-location');
+          const heroService = document.getElementById('hero-service');
+          if (heroLocation) heroLocation.value = '';
+          if (heroService) heroService.value = 'all';
+
           applyFilters();
+        });
+      }
+
+      const heroSearchButton = document.getElementById('hero-search-button');
+      if (heroSearchButton) {
+        heroSearchButton.addEventListener('click', () => {
+          heroLocationFilter = (document.getElementById('hero-location') || {}).value || '';
+
+          const selectedService = (document.getElementById('hero-service') || {}).value || 'all';
+          if (selectedService === 'all') {
+            if (allServices) allServices.checked = true;
+            serviceInputs.forEach((input) => { input.checked = false; });
+          } else {
+            const matchingInput = serviceInputs.find((input) => (input.dataset.filterService || '').toLowerCase() === selectedService.toLowerCase())
+              || serviceInputs.find((input) => selectedService.toLowerCase().includes('sports') && input.dataset.filterService === 'Sports Performance');
+            if (matchingInput) {
+              if (allServices) allServices.checked = false;
+              serviceInputs.forEach((input) => { input.checked = input === matchingInput; });
+            }
+          }
+
+          applyFilters();
+          document.getElementById('all-coaches')?.scrollIntoView({ behavior: 'smooth' });
         });
       }
     }
@@ -796,6 +846,13 @@
         const trainers = Array.isArray(payload.trainers)
           ? payload.trainers.filter((trainer) => (trainer.status === 'approved' || !trainer.status) && trainer.isActive !== false)
           : [];
+
+        const countLabel = document.getElementById('trainer-count-label');
+        if (countLabel) {
+          countLabel.textContent = trainers.length
+            ? `${trainers.length} certified ${trainers.length === 1 ? 'trainer' : 'trainers'} across MA, RI, NJ, CT & NY`
+            : 'Certified trainers across MA, RI, NJ, CT & NY';
+        }
 
         if (!trainers.length) {
           grid.innerHTML = renderEmptyState('No approved trainers yet', 'Approved trainer accounts will appear here as soon as they are added.');
