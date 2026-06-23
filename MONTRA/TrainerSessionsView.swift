@@ -8,6 +8,7 @@ struct TrainerSessionsView: View {
     @State private var showTrainerMenu = false
     @State private var bookedSessions: [BookedSession] = []
     @State private var hasLoaded = false
+    @State private var cancelError: String?
 
     enum SessionFilter: String, CaseIterable {
         case upcoming = "Upcoming"
@@ -26,8 +27,12 @@ struct TrainerSessionsView: View {
     private func cancel(_ session: BookedSession) async {
         guard let user = auth.user,
               let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false) else { return }
-        _ = try? await BookingAPI.cancelTrainerSession(id: session.id, token: tokenResult.token)
-        await loadSessions()
+        do {
+            _ = try await BookingAPI.cancelTrainerSession(id: session.id, token: tokenResult.token)
+            await loadSessions()
+        } catch {
+            cancelError = error.localizedDescription
+        }
     }
 
     private var allSessions: [(BookedSession, TrainerClientSession)] {
@@ -142,6 +147,11 @@ struct TrainerSessionsView: View {
         }
         .sheet(isPresented: $showTrainerMenu) {
             ProfileMenuSheet(isClient: false)
+        }
+        .alert("Couldn't cancel session", isPresented: Binding(get: { cancelError != nil }, set: { if !$0 { cancelError = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(cancelError ?? "")
         }
         .task {
             await loadSessions()

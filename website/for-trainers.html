@@ -97,22 +97,22 @@
         <div class="bg-white/10 border border-white/10 backdrop-blur rounded-xl p-5 flex items-center gap-4">
           <svg class="w-8 h-8 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
           <div>
-            <div class="text-2xl font-black text-white">100+</div>
-            <div class="text-xs text-gray-400">Trainers</div>
+            <div id="trainer-count-stat" class="text-2xl font-black text-white">—</div>
+            <div class="text-xs text-gray-400">Active Coaches</div>
           </div>
         </div>
         <div class="bg-white/10 border border-white/10 backdrop-blur rounded-xl p-5 flex items-center gap-4">
           <svg class="w-8 h-8 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
           <div>
-            <div class="text-2xl font-black text-brand">7,000+</div>
-            <div class="text-xs text-gray-400">Consultations</div>
+            <div class="text-2xl font-black text-brand">5 States</div>
+            <div class="text-xs text-gray-400">Service Areas</div>
           </div>
         </div>
         <div class="bg-white/10 border border-white/10 backdrop-blur rounded-xl p-5 flex items-center gap-4">
           <svg class="w-8 h-8 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
           <div>
-            <div class="text-2xl font-black text-white">$18,000+</div>
-            <div class="text-xs text-gray-400">Donated to Charity</div>
+            <div class="text-2xl font-black text-white">100%</div>
+            <div class="text-xs text-gray-400">Client Focused</div>
           </div>
         </div>
       </div>
@@ -307,6 +307,18 @@
         document.getElementById('location-menu').classList.add('hidden');
       }
     });
+  </script>
+  <script>
+    fetch('https://montra-production.up.railway.app/api/trainers', { headers: { Accept: 'application/json' } })
+      .then(r => r.json())
+      .then(data => {
+        const count = Array.isArray(data.trainers)
+          ? data.trainers.filter(t => t.status === 'approved' && t.isActive !== false).length
+          : 0;
+        const el = document.getElementById('trainer-count-stat');
+        if (el && count > 0) el.textContent = count;
+      })
+      .catch(() => {});
   </script>
 </body>
 </html>
