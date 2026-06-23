@@ -471,13 +471,21 @@ struct DashboardView: View {
     }
 
     private var nextSession: SessionItem? {
-        guard let date = nextBookedDate else { return nil }
+        let now = Date()
+        guard let booked = bookedSessions
+            .filter({ $0.status == "scheduled" })
+            .filter({ $0.startDate.map { $0 >= now } ?? false })
+            .sorted(by: { ($0.startDate ?? .distantFuture) < ($1.startDate ?? .distantFuture) })
+            .first,
+              let date = booked.startDate else { return nil }
+
         let cal = Calendar.current
         let dayFormatter = DateFormatter(); dayFormatter.dateFormat = "EEE"
         let monthFormatter = DateFormatter(); monthFormatter.dateFormat = "MMM"
         let timeFormatter = DateFormatter(); timeFormatter.dateFormat = "h:mm a"
-        let endDate = cal.date(byAdding: .hour, value: 1, to: date) ?? date
-        let trainerName = requestedTrainerName.isEmpty ? "Your Trainer" : requestedTrainerName
+        let durationMins = booked.durationMin > 0 ? booked.durationMin : 60
+        let endDate = cal.date(byAdding: .minute, value: durationMins, to: date) ?? date
+        let trainerName = booked.trainerName.isEmpty ? "Your Trainer" : booked.trainerName
 
         return SessionItem(
             id: 0,
@@ -488,7 +496,7 @@ struct DashboardView: View {
             endTime: timeFormatter.string(from: endDate),
             title: "Training Session",
             trainer: trainerName,
-            trainerId: requestedTrainerId.isEmpty ? nil : requestedTrainerId,
+            trainerId: booked.trainerId.isEmpty ? nil : booked.trainerId,
             location: "In-home session"
         )
     }
