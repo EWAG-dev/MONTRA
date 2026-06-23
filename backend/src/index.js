@@ -490,7 +490,7 @@ app.post("/api/dev/cleanup-test-data", requireFirebaseAuth, requireAdmin, async 
     return res.status(404).json({ error: "Not found" });
   }
   try {
-    const { trainerUid, clientUid } = req.body;
+    const { trainerUid, clientUid, trainerId } = req.body;
     const db = getFirestore();
     const auth = getAuth();
 
@@ -500,6 +500,16 @@ app.post("/api/dev/cleanup-test-data", requireFirebaseAuth, requireAdmin, async 
       if (!snap.empty) {
         trainerDocId = snap.docs[0].id;
         await snap.docs[0].ref.delete();
+      }
+    }
+    // Application-only trainer docs (e.g. from /api/trainers/provision) have no accountUid,
+    // so they can only be targeted by their Firestore doc id directly.
+    if (trainerId && !trainerDocId) {
+      const ref = db.collection("trainers").doc(trainerId);
+      const doc = await ref.get();
+      if (doc.exists) {
+        trainerDocId = doc.id;
+        await ref.delete();
       }
     }
 
@@ -546,6 +556,7 @@ app.post("/api/dev/cleanup-test-data", requireFirebaseAuth, requireAdmin, async 
     }
     if (clientUid) {
       try { await auth.deleteUser(clientUid); } catch (e) { /* already gone */ }
+      await db.collection("clientProgress").doc(clientUid).delete().catch(() => {});
     }
 
     res.json({ ok: true });

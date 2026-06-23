@@ -44,11 +44,13 @@ trainer_doc_id_by_email() {
   curl -s "$BASE_URL/api/trainers" | jq -r --arg email "$1" '.trainers[] | select(.email==$email) | .id'
 }
 
-# cleanup_test_data <admin_token> <trainer_uid> <client_uid>
+# cleanup_test_data <admin_token> <trainer_uid> <client_uid> [trainer_doc_id]
+# trainer_doc_id is for application-only trainer docs (e.g. from /api/trainers/provision)
+# that have no accountUid and so can't be found via trainer_uid.
 cleanup_test_data() {
   curl -s -X POST "$BASE_URL/api/dev/cleanup-test-data" \
     -H "Content-Type: application/json" -H "Authorization: Bearer $1" \
-    -d "{\"trainerUid\":\"$2\",\"clientUid\":\"$3\"}"
+    -d "{\"trainerUid\":\"$2\",\"clientUid\":\"$3\",\"trainerId\":\"${4:-}\"}"
 }
 
 iso_in_days() {
