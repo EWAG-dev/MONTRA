@@ -37,6 +37,20 @@ export async function createMatchRequest(input) {
     throw new Error("clientUid is required");
   }
 
+  // Idempotency: return the existing request if one already exists for this
+  // client→trainer pair with a non-declined status, rather than creating a
+  // duplicate. Allow a new request if the previous one was declined (client
+  // may want to re-apply after updating their profile).
+  const existing = await collection()
+    .where("trainerId", "==", trainerId)
+    .where("clientUid", "==", clientUid)
+    .get();
+
+  const active = existing.docs.find((doc) => doc.data().status !== "declined");
+  if (active) {
+    return { id: active.id, ...active.data() };
+  }
+
   const payload = {
     conversationId: conversationIdFor({ trainerId, clientUid }),
     trainerId,
