@@ -53,3 +53,5 @@ trainer-onboarding.html
 # Backend local artifacts not currently tracked in this repo
 backend/package-lock.json
 backend/src/__tests__/
+firebase-key.json
+*-firebase-adminsdk-*.json
