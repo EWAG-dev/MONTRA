@@ -14,15 +14,15 @@ struct DashboardView: View {
     @State private var mapButtonDidDrag = false
     @State private var showFloatingMap = false
     @AppStorage("dashboardProfileImageData") private var profileImageData: Data = Data()
-    @AppStorage("progress.selectedGoals") private var selectedGoalsStorage: String = "Build Strength"
-    @AppStorage("progress.currentWeight") private var currentWeight: String = ""
-    @AppStorage("progress.startWeight") private var startWeight: String = ""
-    @AppStorage("progress.goal.weightLoss") private var weightLossGoal: String = ""
-    @AppStorage("progress.goal.strengthWeeklySessions") private var strengthWeeklyTarget: String = "5"
-    @AppStorage("progress.goal.enduranceMinutes") private var enduranceMinutesTarget: String = "180"
-    @AppStorage("progress.goal.mobilitySessions") private var mobilitySessionsTarget: String = "3"
-    @AppStorage("progress.goal.performanceMonthlySessions") private var performanceMonthlyTarget: String = "12"
-    @AppStorage("progress.goal.consistencyPercent") private var consistencyPercentTarget: String = "90"
+    @State private var selectedGoalsStorage: String = "Build Strength"
+    @State private var currentWeight: String = ""
+    @State private var startWeight: String = ""
+    @State private var weightLossGoal: String = ""
+    @State private var strengthWeeklyTarget: String = "5"
+    @State private var enduranceMinutesTarget: String = "180"
+    @State private var mobilitySessionsTarget: String = "3"
+    @State private var performanceMonthlyTarget: String = "12"
+    @State private var consistencyPercentTarget: String = "90"
     @AppStorage("quiz.firstName") private var firstName: String = ""
     @AppStorage("onboarding.completed") private var onboardingCompleted: Bool = true
     @AppStorage("onboarding.rematchActive") private var rematchActive: Bool = false
@@ -401,6 +401,7 @@ struct DashboardView: View {
         }
         .task {
             await loadBookedSessions()
+            await loadProgress()
         }
         } // NavigationStack
     }
@@ -441,6 +442,22 @@ struct DashboardView: View {
               let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
               let sessions = try? await BookingAPI.loadMySessions(token: tokenResult.token) else { return }
         bookedSessions = sessions
+    }
+
+    private func loadProgress() async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
+              let remote = try? await ProgressAPI.load(token: tokenResult.token) else { return }
+
+        currentWeight = remote.currentWeight
+        startWeight = remote.startWeight
+        weightLossGoal = remote.weightLossGoal
+        strengthWeeklyTarget = remote.strengthWeeklyTarget
+        enduranceMinutesTarget = remote.enduranceMinutesTarget
+        mobilitySessionsTarget = remote.mobilitySessionsTarget
+        performanceMonthlyTarget = remote.performanceMonthlyTarget
+        consistencyPercentTarget = remote.consistencyPercentTarget
+        selectedGoalsStorage = remote.selectedGoals.isEmpty ? "Build Strength" : remote.selectedGoals.joined(separator: ",")
     }
 
     private var nextBookedDate: Date? {

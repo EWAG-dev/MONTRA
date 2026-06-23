@@ -31,6 +31,7 @@ struct WorkoutProgressView: View {
         let dinner: String
     }
 
+    @EnvironmentObject private var auth: AuthManager
     @State private var selectedTab = 0
     @State private var selectedPeriodKey: String = ""
     @State private var showAllAchievements = false
@@ -50,10 +51,10 @@ struct WorkoutProgressView: View {
 
     private let trainerProgress = TrainerProgressSnapshot.empty
 
-    // Shared AppStorage keys — same as DashboardView
-    @AppStorage("progress.currentWeight") private var currentWeightStr: String = ""
-    @AppStorage("progress.startWeight") private var startWeightStr: String = ""
-    @AppStorage("progress.goal.strengthWeeklySessions") private var strengthTargetStr: String = "5"
+    // Backend-persisted (ProgressAPI) — same source as DashboardView/ProgressProfileView
+    @State private var currentWeightStr: String = ""
+    @State private var startWeightStr: String = ""
+    @State private var strengthTargetStr: String = "5"
 
     // MARK: Computed stats
 
@@ -556,6 +557,19 @@ struct WorkoutProgressView: View {
                 selectedPeriodKey = currentPeriodKey
             }
         }
+        .task {
+            await loadProgress()
+        }
+    }
+
+    private func loadProgress() async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
+              let remote = try? await ProgressAPI.load(token: tokenResult.token) else { return }
+
+        currentWeightStr = remote.currentWeight
+        startWeightStr = remote.startWeight
+        strengthTargetStr = remote.strengthWeeklyTarget
     }
 
     // MARK: - Overview Content

@@ -3,18 +3,20 @@ import SwiftUI
 struct ProgressProfileView: View {
     let progress: TrainerProgressSnapshot
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var auth: AuthManager
 
-    @AppStorage("progress.currentWeight") private var currentWeight: String = ""
-    @AppStorage("progress.startWeight") private var startWeight: String = ""
-    @AppStorage("progress.goal.weightLoss") private var weightLossGoal: String = ""
-    @AppStorage("progress.goal.strengthWeeklySessions") private var strengthWeeklyTarget: String = "5"
-    @AppStorage("progress.goal.enduranceMinutes") private var enduranceMinutesTarget: String = "180"
-    @AppStorage("progress.goal.mobilitySessions") private var mobilitySessionsTarget: String = "3"
-    @AppStorage("progress.goal.performanceMonthlySessions") private var performanceMonthlyTarget: String = "12"
-    @AppStorage("progress.goal.consistencyPercent") private var consistencyPercentTarget: String = "90"
-    @AppStorage("progress.selectedGoals") private var selectedGoalsStorage: String = "Build Strength,Improve Endurance"
+    @State private var currentWeight: String = ""
+    @State private var startWeight: String = ""
+    @State private var weightLossGoal: String = ""
+    @State private var strengthWeeklyTarget: String = "5"
+    @State private var enduranceMinutesTarget: String = "180"
+    @State private var mobilitySessionsTarget: String = "3"
+    @State private var performanceMonthlyTarget: String = "12"
+    @State private var consistencyPercentTarget: String = "90"
 
     @State private var selectedGoals: Set<String> = []
+    @State private var isSaving = false
+    @State private var saveError: String?
 
     private let availableGoals: [String] = [
         "Build Strength",
@@ -101,10 +103,9 @@ struct ProgressProfileView: View {
                 }
 
                 Button {
-                    persistGoals()
-                    dismiss()
+                    Task { await persistGoals() }
                 } label: {
-                    Text("Save Goals")
+                    Text(isSaving ? "Saving…" : "Save Goals")
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
@@ -112,6 +113,7 @@ struct ProgressProfileView: View {
                         .background(Color.montraOrange)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
+                .disabled(isSaving)
                 .padding(.top, 8)
 
                 Spacer(minLength: 90)
@@ -125,7 +127,12 @@ struct ProgressProfileView: View {
         .toolbarBackground(Color.montraBackground, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
         .onAppear {
-            loadGoals()
+            Task { await loadGoals() }
+        }
+        .alert("Couldn't save", isPresented: Binding(get: { saveError != nil }, set: { if !$0 { saveError = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(saveError ?? "")
         }
     }
 
@@ -250,15 +257,23 @@ struct ProgressProfileView: View {
         }
     }
 
-    private func loadGoals() {
-        let tokens = selectedGoalsStorage
-            .split(separator: ",")
-            .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-        selectedGoals = Set(tokens)
+    private func loadGoals() async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
+              let remote = try? await ProgressAPI.load(token: tokenResult.token) else { return }
+
+        currentWeight = remote.currentWeight
+        startWeight = remote.startWeight
+        weightLossGoal = remote.weightLossGoal
+        strengthWeeklyTarget = remote.strengthWeeklyTarget
+        enduranceMinutesTarget = remote.enduranceMinutesTarget
+        mobilitySessionsTarget = remote.mobilitySessionsTarget
+        performanceMonthlyTarget = remote.performanceMonthlyTarget
+        consistencyPercentTarget = remote.consistencyPercentTarget
+        selectedGoals = Set(remote.selectedGoals)
     }
 
-    private func persistGoals() {
+    private func persistGoals() async {
         let includesWeightLoss = selectedGoals.contains(UserGoalType.weightLoss.rawValue)
         if includesWeightLoss,
            startWeight.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
@@ -266,9 +281,32 @@ struct ProgressProfileView: View {
             startWeight = currentWeight
         }
 
-        selectedGoalsStorage = availableGoals
-            .filter { selectedGoals.contains($0) }
-            .joined(separator: ",")
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false) else {
+            saveError = "You need to be signed in to save your goals."
+            return
+        }
+
+        isSaving = true
+        defer { isSaving = false }
+
+        do {
+            _ = try await ProgressAPI.save(
+                currentWeight: currentWeight,
+                startWeight: startWeight,
+                weightLossGoal: weightLossGoal,
+                selectedGoals: availableGoals.filter { selectedGoals.contains($0) },
+                strengthWeeklyTarget: strengthWeeklyTarget,
+                enduranceMinutesTarget: enduranceMinutesTarget,
+                mobilitySessionsTarget: mobilitySessionsTarget,
+                performanceMonthlyTarget: performanceMonthlyTarget,
+                consistencyPercentTarget: consistencyPercentTarget,
+                token: tokenResult.token
+            )
+            dismiss()
+        } catch {
+            saveError = error.localizedDescription
+        }
     }
 }
 

@@ -30,6 +30,7 @@
 		4E3FE48D21C671F3C6341B8B /* TrainerDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67D422E9C092DB5545BAE4B0 /* TrainerDashboardView.swift */; };
 		55E476AFE9AFB57DCE388A99 /* pre-applypatch.sample in Resources */ = {isa = PBXBuildFile; fileRef = EB1E01761DE55693AA80F5A3 /* pre-applypatch.sample */; };
 		57F0FEAD5B53D80C84619BA4 /* applypatch-msg.sample in Resources */ = {isa = PBXBuildFile; fileRef = 9EA1A73E308C0CEB0199D1E3 /* applypatch-msg.sample */; };
+		5838CC21C85899EDB9974297 /* ProgressAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFC499BDAAD49D0E28B63F35 /* ProgressAPI.swift */; };
 		6448CD38C3D6DEA656B130A2 /* pre-push.sample in Resources */ = {isa = PBXBuildFile; fileRef = 1F9892390DECEFF5BF39078C /* pre-push.sample */; };
 		65C287B71B95833E31482196 /* commit-msg.sample in Resources */ = {isa = PBXBuildFile; fileRef = BBE98A6B43E3A0B5749B0207 /* commit-msg.sample */; };
 		67E4B5630E736DE0E234F6D7 /* ChatModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CC67B1970619EB52F6B6AA0 /* ChatModels.swift */; };
@@ -170,6 +171,7 @@
 		DEFCCDB1E62F1810CE2D4649 /* 2cc2360025faeda89e4e767991bdcedcdda64b */ = {isa = PBXFileReference; path = 2cc2360025faeda89e4e767991bdcedcdda64b; sourceTree = "<group>"; };
 		DF505FED9848D89FD5BAEA36 /* 942c209350f31fafa072e2761223931993638b */ = {isa = PBXFileReference; path = 942c209350f31fafa072e2761223931993638b; sourceTree = "<group>"; };
 		DF7BEE4A70990A187C6BEEE2 /* prepare-commit-msg.sample */ = {isa = PBXFileReference; path = "prepare-commit-msg.sample"; sourceTree = "<group>"; };
+		DFC499BDAAD49D0E28B63F35 /* ProgressAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressAPI.swift; sourceTree = "<group>"; };
 		E0C397878607FCC241402A11 /* push-to-checkout.sample */ = {isa = PBXFileReference; path = "push-to-checkout.sample"; sourceTree = "<group>"; };
 		E46D8EFBF31AD9B88C19818C /* MONTRA_AND_WEBSITE_ARCHITECTURE_GUIDE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = MONTRA_AND_WEBSITE_ARCHITECTURE_GUIDE.md; sourceTree = "<group>"; };
 		EA0614817A5A8A9A8AD45A21 /* COMMIT_EDITMSG */ = {isa = PBXFileReference; path = COMMIT_EDITMSG; sourceTree = "<group>"; };
@@ -839,6 +841,7 @@
 				71F506439AA346F5E43B5C4C /* NotificationsView.swift */,
 				8C31E6B650BAA18062C8E862 /* OnboardingQuizView.swift */,
 				58248E8AFB62D6F27B3C82F4 /* ProfileMenuSheet.swift */,
+				DFC499BDAAD49D0E28B63F35 /* ProgressAPI.swift */,
 				CF31AFC30C8CE4F651820006 /* ProgressProfileView.swift */,
 				22FC335F43503AFBD39D9B67 /* ProgressView.swift */,
 				4EEE315C5993F668C5E4C689 /* SessionDetailView.swift */,
@@ -1054,6 +1057,7 @@
 				E81191F04DD6C64F6C42619D /* NotificationsView.swift in Sources */,
 				6F143A4FA58A2A01D6847DA4 /* OnboardingQuizView.swift in Sources */,
 				11B32CB05329DE0D5B193684 /* ProfileMenuSheet.swift in Sources */,
+				5838CC21C85899EDB9974297 /* ProgressAPI.swift in Sources */,
 				0CB25A3063729E0FCFA7307F /* ProgressProfileView.swift in Sources */,
 				A454CD533725A1DCDF1B5452 /* ProgressView.swift in Sources */,
 				FA9B9432855047FE5B58306F /* SessionDetailView.swift in Sources */,

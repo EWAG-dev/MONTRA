@@ -39,6 +39,7 @@ import {
   listClientSessions,
   listTrainerSessions,
 } from "./sessionStore.js";
+import { getClientProgress, saveClientProgress } from "./progressStore.js";
 
 const app = express();
 const port = Number(process.env.PORT || 8080);
@@ -962,6 +963,16 @@ app.post("/api/client/sessions/:id/cancel", requireFirebaseAuth, async (req, res
 
   const session = await cancelBookedSession(req.params.id);
   res.status(200).json({ session });
+});
+
+app.get("/api/client/progress", requireFirebaseAuth, async (req, res) => {
+  const progress = await getClientProgress(req.user.uid);
+  res.status(200).json({ progress });
+});
+
+app.post("/api/client/progress", requireFirebaseAuth, async (req, res) => {
+  const progress = await saveClientProgress(req.user.uid, req.body || {});
+  res.status(200).json({ progress });
 });
 
 app.get("/api/notifications/my", requireFirebaseAuth, async (req, res) => {
