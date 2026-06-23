@@ -20,15 +20,45 @@ struct OnboardingTrainer: Identifiable, Decodable {
 extension OnboardingTrainer {
     static let all: [OnboardingTrainer] = [] // backend is source of truth
 
+    // Maps quiz goal labels to related specialty keywords. Substring-based so trainers
+    // tagged with either canonical vocabulary ("Build Muscle") or more specific terms
+    // ("Strength & Conditioning") both surface for the same goal.
+    private static let goalKeywords: [String: [String]] = [
+        "Build Muscle":           ["build muscle", "strength", "muscle", "personal training"],
+        "Lose Weight":            ["lose weight", "weight loss", "weight", "fat loss"],
+        "Flexibility & Wellness": ["flexibility", "wellness", "mobility", "yoga", "pilates", "stretch"],
+        "Athletic Performance":   ["athletic performance", "performance", "sports", "conditioning", "strength"],
+        "Combat Sports":          ["combat sports", "boxing", "kickboxing", "combat"],
+        "General Fitness":        ["general fitness", "personal training", "fitness"],
+    ]
+
+    private static func goalMatches(trainer: OnboardingTrainer, goal: String) -> Bool {
+        guard !goal.isEmpty else { return true }
+        let specialtiesText = trainer.specialties.joined(separator: " ").lowercased()
+        let certText = trainer.certification.lowercased()
+        let keywords = goalKeywords[goal] ?? [goal.lowercased()]
+        return keywords.contains { kw in specialtiesText.contains(kw) || certText.contains(kw) }
+    }
+
+    // Location formatting drifts across surfaces ("Boston MA" vs "Boston, MA"), so
+    // compare by stripping non-alphanumeric chars rather than requiring exact equality.
+    private static func locationMatches(trainer: OnboardingTrainer, location: String) -> Bool {
+        guard !location.isEmpty else { return true }
+        if trainer.locations.isEmpty { return true }
+        let normalize: (String) -> String = { $0.lowercased().filter(\.isLetter) }
+        let target = normalize(location)
+        return trainer.locations.contains { normalize($0).contains(target) || target.contains(normalize($0)) }
+    }
+
     /// Filter a pool of trainers by quiz answers. Falls back to the full pool if nothing matches.
     static func filter(_ pool: [OnboardingTrainer], goal: String, location: String, genderPref: String) -> [OnboardingTrainer] {
         let matched = pool.filter { t in
-            let goalMatch     = t.specialties.contains(goal) || goal.isEmpty
-            let locationMatch = t.locations.contains(location) || location.isEmpty
+            let goalMatch     = goalMatches(trainer: t, goal: goal)
+            let locationMatch = locationMatches(trainer: t, location: location)
             let genderMatch: Bool = {
                 switch genderPref {
-                case "Male coach":   return t.gender == "Male"
-                case "Female coach": return t.gender == "Female"
+                case "Male coach":   return t.gender == "Male" || t.gender == "Any"
+                case "Female coach": return t.gender == "Female" || t.gender == "Any"
                 default:             return true
                 }
             }()
