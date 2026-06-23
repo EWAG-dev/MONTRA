@@ -79,13 +79,11 @@ struct SessionsView: View {
         parseHour(scheduleTimeRaw)
     }
 
-    // 14 days starting from Monday of the current week
+    // 14 days starting from today — past days are excluded so the calendar
+    // never presents slots the backend will reject as "in the past".
     private var calendarDays: [Date] {
         let today = cal.startOfDay(for: Date())
-        let weekday = cal.component(.weekday, from: today) // 1=Sun..7=Sat
-        let daysFromMonday = (weekday - 2 + 7) % 7
-        let monday = cal.date(byAdding: .day, value: -daysFromMonday, to: today)!
-        return (0..<14).compactMap { cal.date(byAdding: .day, value: $0, to: monday) }
+        return (0..<14).compactMap { cal.date(byAdding: .day, value: $0, to: today) }
     }
 
     private func slotsFor(_ date: Date) -> [BookingSlot] {
@@ -381,6 +379,11 @@ struct BookingSlot: Identifiable {
     let isScheduled: Bool
     var id: String { key }
 
+    var isPast: Bool {
+        let slotDate = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: date) ?? date
+        return slotDate <= Date()
+    }
+
     var timeLabel: String {
         let h = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour)
         return "\(h):00 \(hour >= 12 ? "PM" : "AM")"
@@ -482,7 +485,8 @@ struct TimeSlotButton: View {
             )
         }
         .buttonStyle(.plain)
-        .disabled(slot.isBooked)
+        .disabled(slot.isBooked || slot.isPast)
+        .opacity(slot.isPast ? 0.35 : 1)
     }
 
     private var labelColor: Color {
