@@ -69,6 +69,8 @@ function normalizeTrainerPayload(input, existingTrainer = null) {
   const introVideoUrl = normalizeString(input.introVideoUrl ?? existingTrainer?.introVideoUrl);
   const backgroundCheckConsent = Boolean(input.backgroundCheckConsent ?? existingTrainer?.backgroundCheckConsent ?? false);
   const policyAgreement = Boolean(input.policyAgreement ?? existingTrainer?.policyAgreement ?? false);
+  const education = normalizeString(input.education ?? existingTrainer?.education);
+  const references = normalizeList(input.references ?? existingTrainer?.references ?? []);
 
   if (!name) {
     throw new Error("Trainer name is required.");
@@ -109,6 +111,8 @@ function normalizeTrainerPayload(input, existingTrainer = null) {
     introVideoUrl,
     backgroundCheckConsent,
     policyAgreement,
+    education,
+    references,
   };
 }
 
@@ -141,6 +145,8 @@ function serializeTrainer(doc) {
     introVideoUrl: data.introVideoUrl || "",
     backgroundCheckConsent: data.backgroundCheckConsent === true,
     policyAgreement: data.policyAgreement === true,
+    education: data.education || "",
+    references: Array.isArray(data.references) ? data.references : [],
     orientationCompleted: data.orientationCompleted === true,
     orientationCompletedAt: data.orientationCompletedAt || null,
     createdAt: data.createdAt || null,

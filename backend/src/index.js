@@ -583,7 +583,20 @@ app.post("/api/dev/approve-trainer", async (req, res) => {
 
 app.post("/api/trainers/provision", async (req, res) => {
   try {
-    const { firstName, lastName, email, phone, specialties, certifications, coachingStyle, experienceYears } = req.body || {};
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      specialties,
+      certifications,
+      coachingStyle,
+      experienceYears,
+      education,
+      references,
+      backgroundCheckConsent,
+      policyAgreement,
+    } = req.body || {};
 
     if (!firstName || !lastName || !email) {
       res.status(400).json({ error: "firstName, lastName, and email are required" });
@@ -602,6 +615,10 @@ app.post("/api/trainers/provision", async (req, res) => {
       bio: String(coachingStyle || "").trim(),
       status: "pending",
       experienceYears: Number.isFinite(Number(experienceYears)) ? Number(experienceYears) : 0,
+      education: String(education || "").trim(),
+      references: Array.isArray(references) ? references : [],
+      backgroundCheckConsent: Boolean(backgroundCheckConsent),
+      policyAgreement: Boolean(policyAgreement),
     });
 
     // Best-effort confirmation so applicants know submission succeeded.

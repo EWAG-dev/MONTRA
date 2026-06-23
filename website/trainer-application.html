@@ -269,6 +269,23 @@
       const lastName  = document.getElementById('last-name').value.trim();
       const email     = document.getElementById('email').value.trim();
 
+      // The select sends a bucket string ("1-3", "10plus", etc.), but the backend stores
+      // experienceYears as a number (Number("1-3") is NaN, silently zeroing it out otherwise).
+      // Map to the bucket's lower bound, consistent with the iOS profile's "N+ Years Exp." pill.
+      const experienceYearsByBucket = {
+        'less-1': 0,
+        '1-3': 1,
+        '3-5': 3,
+        '5-10': 5,
+        '10plus': 10,
+      };
+      const experienceYears = experienceYearsByBucket[document.getElementById('experience-years').value] ?? 0;
+
+      const references = [
+        document.getElementById('ref1').value.trim(),
+        document.getElementById('ref2').value.trim(),
+      ].filter(Boolean);
+
       try {
         // 1. Provision trainer account on backend
         const provisionRes = await fetch(`${BACKEND_URL}/api/trainers/provision`, {
@@ -278,12 +295,15 @@
             firstName,
             lastName,
             email,
-            phone:           document.getElementById('phone').value.trim(),
-            experienceYears: document.getElementById('experience-years').value,
+            phone: document.getElementById('phone').value.trim(),
+            experienceYears,
             specialties,
             coachingStyle:   document.getElementById('coaching-style').value.trim(),
             certifications:  document.getElementById('certifications').value.trim(),
             education:       document.getElementById('education').value.trim(),
+            references,
+            backgroundCheckConsent: document.getElementById('background-check').checked,
+            policyAgreement:        document.getElementById('terms').checked,
           }),
         });
 
