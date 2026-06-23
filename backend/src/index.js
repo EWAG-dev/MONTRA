@@ -833,15 +833,8 @@ app.get("/api/trainers", async (req, res) => {
   res.status(200).json({ trainers });
 });
 
-app.get("/api/trainers/:id", async (req, res) => {
-  const trainer = await getTrainer(req.params.id);
-  if (!trainer) {
-    res.status(404).json({ error: "Trainer not found" });
-    return;
-  }
-  res.status(200).json({ trainer });
-});
-
+// Must be registered before /api/trainers/:id — otherwise Express matches "match" as an :id
+// value and this route is unreachable (always falls through to "Trainer not found").
 app.get("/api/trainers/match", async (req, res) => {
   const filters = {
     goal: String(req.query.goal || "").trim(),
@@ -854,6 +847,15 @@ app.get("/api/trainers/match", async (req, res) => {
   };
   const trainers = await matchTrainers(filters);
   res.status(200).json({ trainers, filters });
+});
+
+app.get("/api/trainers/:id", async (req, res) => {
+  const trainer = await getTrainer(req.params.id);
+  if (!trainer) {
+    res.status(404).json({ error: "Trainer not found" });
+    return;
+  }
+  res.status(200).json({ trainer });
 });
 
 app.post("/api/client/match", requireFirebaseAuth, async (req, res) => {
