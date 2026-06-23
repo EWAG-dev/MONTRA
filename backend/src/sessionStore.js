@@ -28,6 +28,10 @@ export async function createBookedSession(input) {
     throw new Error("A valid startTime is required");
   }
 
+  if (Date.parse(startTime) <= Date.now()) {
+    throw new Error("Session must be scheduled in the future");
+  }
+
   const conflict = await collection()
     .where("trainerId", "==", trainerId)
     .where("startTime", "==", startTime)
