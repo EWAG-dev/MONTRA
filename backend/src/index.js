@@ -67,6 +67,7 @@ import {
   deleteReviewsForClient,
 } from "./reviewStore.js";
 import { getTrainerInsights } from "./insightStore.js";
+import { getTrainerPackages } from "./packageStore.js";
 
 // Safety net: Express 4 doesn't forward errors from async route handlers, so a
 // single rejecting request would otherwise become an unhandled rejection and crash
@@ -1125,6 +1126,23 @@ app.get("/api/trainers/:id/insights", async (req, res) => {
   } catch (err) {
     console.error("insights route failed:", err.message);
     res.status(500).json({ error: "Could not load insights" });
+  }
+});
+
+// Public: a coach's session packages (5/10/20/40), frequency options, and à-la-carte
+// add-ons with derived pricing. Powers the interactive "Choose Your Session Package"
+// builder on the coach profile. See packageStore.js.
+app.get("/api/trainers/:id/packages", async (req, res) => {
+  try {
+    const packages = await getTrainerPackages(req.params.id);
+    if (!packages) {
+      res.status(404).json({ error: "Trainer not found" });
+      return;
+    }
+    res.status(200).json(packages);
+  } catch (err) {
+    console.error("packages route failed:", err.message);
+    res.status(500).json({ error: "Could not load packages" });
   }
 });
 

@@ -24,6 +24,14 @@
     nav.dark-nav .hover\:bg-gray-50:hover { background-color: #1f2937 !important; color: #ffffff; }
     .fit-track { background:#f1f1f1; border-radius:9999px; height:6px; overflow:hidden; }
     .fit-fill { background:linear-gradient(90deg,#16a34a,#22c55e); height:100%; border-radius:9999px; }
+    /* Session-package slider */
+    .pkg-track { position:relative; height:14px; border-radius:9999px; background:linear-gradient(90deg,#2563eb,#7c3aed,#E85D04); box-shadow: inset 0 1px 3px rgba(0,0,0,.15); }
+    .pkg-knob { position:absolute; top:50%; width:30px; height:30px; border-radius:9999px; background:#fff; border:4px solid #E85D04; box-shadow:0 3px 10px rgba(0,0,0,.18); transform:translate(-50%,-50%); transition:left .35s cubic-bezier(.34,1.3,.5,1); cursor:pointer; }
+    .pkg-stop { position:absolute; top:50%; width:9px; height:9px; border-radius:9999px; background:rgba(255,255,255,.85); transform:translate(-50%,-50%); pointer-events:none; }
+    .pkg-tick { position:absolute; transform:translateX(-50%); text-align:center; cursor:pointer; user-select:none; top:0; }
+    .pkg-tick .n { font-size:22px; font-weight:900; line-height:1; transition:color .2s, transform .2s; }
+    .pkg-tick .l { font-size:10px; font-weight:700; letter-spacing:.08em; color:#9ca3af; margin-top:3px; }
+    .pkg-tick[data-active="true"] .n { transform:scale(1.12); }
   </style>
 </head>
 <body class="bg-white text-gray-900 antialiased">
@@ -165,6 +173,83 @@
         <div class="border border-gray-200 rounded-2xl p-6">
           <h2 class="font-black text-lg mb-3">Why MONTRA Recommends <span id="rec-name"></span></h2>
           <p id="rec-text" class="text-sm text-gray-600 leading-relaxed"></p>
+        </div>
+
+        <!-- CHOOSE YOUR SESSION PACKAGE -->
+        <div id="packages-section" class="hidden border border-gray-200 rounded-2xl p-6 sm:p-7">
+          <div class="flex items-start justify-between gap-3 mb-1">
+            <h2 class="font-black text-lg">Choose Your Session Package</h2>
+            <span class="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-brand bg-orange-50 border border-orange-100 rounded-full px-2.5 py-1 whitespace-nowrap">Interactive</span>
+          </div>
+          <p class="text-sm text-gray-500 mb-7">Build a plan around your goals — see exactly how long it lasts based on how often you train.</p>
+
+          <!-- Slider -->
+          <div class="px-2">
+            <div id="pkg-ticks" class="relative h-12 mb-1"></div>
+            <div id="pkg-track" class="pkg-track">
+              <div id="pkg-knob" class="pkg-knob"></div>
+            </div>
+          </div>
+
+          <!-- Selected package detail -->
+          <div class="mt-7 bg-gray-50 border border-gray-100 rounded-2xl p-5 sm:p-6 grid sm:grid-cols-[auto_1fr_auto] gap-5 sm:gap-7 items-center">
+            <div>
+              <div class="flex items-baseline gap-2">
+                <span id="pkg-num" class="text-4xl font-black text-brand">—</span>
+                <span class="text-sm font-bold text-gray-900 leading-tight">Session<br>Package</span>
+              </div>
+              <span id="pkg-badge" class="hidden mt-2 inline-block text-[10px] font-black tracking-wide text-white bg-brand rounded px-2 py-1"></span>
+              <p id="pkg-blurb" class="text-xs text-gray-500 mt-2 max-w-[12rem]"></p>
+            </div>
+            <ul id="pkg-features" class="space-y-1.5 sm:border-l sm:border-gray-200 sm:pl-7"></ul>
+            <div class="text-left sm:text-right sm:border-l sm:border-gray-200 sm:pl-7">
+              <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Starting at</p>
+              <p id="pkg-total" class="text-3xl font-black text-brand leading-tight">—</p>
+              <p id="pkg-per" class="text-xs text-gray-500"></p>
+            </div>
+          </div>
+
+          <!-- Frequency + estimated duration -->
+          <div class="mt-4 bg-white border border-gray-200 rounded-2xl p-5 grid sm:grid-cols-2 gap-5">
+            <div class="flex items-start gap-3">
+              <span class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              </span>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-gray-900">Session Frequency</p>
+                <p class="text-xs text-gray-500 mb-2">Choose how often you'd like to train.</p>
+                <select id="pkg-frequency" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm font-semibold outline-none focus:border-brand bg-white"></select>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 sm:border-l sm:border-gray-100 sm:pl-5">
+              <span class="w-9 h-9 rounded-xl bg-orange-50 text-brand flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7v5l3 2"/></svg>
+              </span>
+              <div>
+                <p class="text-xs font-bold uppercase tracking-widest text-gray-400">Estimated Duration</p>
+                <p id="pkg-duration" class="text-2xl font-black text-gray-900 leading-tight">—</p>
+                <p id="pkg-duration-note" class="text-[11px] text-gray-400"></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Guarantee + CTA -->
+          <div class="flex items-center gap-2.5 mt-4 bg-orange-50 border border-orange-100 rounded-xl px-4 py-3">
+            <svg class="w-5 h-5 text-brand flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.4 9.4-8 11-4.6-1.6-8-6-8-11V5l8-3z"/></svg>
+            <p class="text-xs font-semibold text-gray-700">All session packages are protected by the <span class="text-brand">MONTRA Match Guarantee™</span>.</p>
+          </div>
+          <a id="pkg-cta" href="quiz.html" class="mt-4 block w-full bg-brand hover:bg-orange-700 text-white py-3.5 rounded-xl text-sm font-bold text-center transition-colors">Book Intro Session →</a>
+          <p id="pkg-derived-note" class="hidden text-center text-[11px] text-gray-400 mt-2">Indicative pricing — your coach confirms the final rate once you're matched.</p>
+        </div>
+
+        <!-- À LA CARTE -->
+        <div id="addons-section" class="hidden border border-gray-200 rounded-2xl p-6">
+          <div class="flex items-center gap-2 mb-1">
+            <h2 class="font-black text-lg">À La Carte Sessions</h2>
+            <span class="text-[11px] font-bold text-green-600 bg-green-50 border border-green-100 rounded-full px-2.5 py-0.5">Add on or stand alone</span>
+          </div>
+          <p class="text-sm text-gray-500 mb-5">Flexible options to support your goals on your terms.</p>
+          <div id="addons-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3"></div>
         </div>
 
         <!-- SPECIALTIES / SERVING / AVAILABILITY -->
@@ -714,6 +799,114 @@
       show('clients-card');
     }
 
+    // ---- Interactive "Choose Your Session Package" ----
+    let pkgData = null;
+    let pkgSelectedIndex = 0;
+    let pkgFreq = 2;
+
+    function money(n) { return '$' + Number(n).toLocaleString('en-US'); }
+    function addonIcon(key) { return ({ dumbbell: '🏋️', clipboard: '📋', run: '🏃', calendar: '📅', dots: '⋯' }[key] || '•'); }
+
+    function pkgPct(i) { return pkgData.packages.length > 1 ? (i / (pkgData.packages.length - 1)) * 100 : 0; }
+
+    function updateDuration() {
+      const p = pkgData.packages[pkgSelectedIndex];
+      const weeks = Math.max(1, Math.ceil(p.sessions / pkgFreq));
+      document.getElementById('pkg-duration').textContent = `${weeks} ${weeks === 1 ? 'week' : 'weeks'}`;
+      const label = (pkgData.frequencies.find((f) => f.perWeek === pkgFreq) || {}).label || `${pkgFreq} per week`;
+      document.getElementById('pkg-duration-note').textContent = `Based on ${label.toLowerCase()}`;
+    }
+
+    function updatePackage() {
+      const p = pkgData.packages[pkgSelectedIndex];
+      document.getElementById('pkg-knob').style.left = pkgPct(pkgSelectedIndex) + '%';
+      document.querySelectorAll('.pkg-tick').forEach((t) => {
+        const active = Number(t.dataset.i) === pkgSelectedIndex;
+        t.setAttribute('data-active', String(active));
+        t.querySelector('.n').style.color = active ? '#E85D04' : '#9ca3af';
+      });
+      document.getElementById('pkg-num').textContent = p.sessions;
+      const badge = document.getElementById('pkg-badge');
+      if (p.badge) { badge.textContent = p.badge; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); }
+      document.getElementById('pkg-blurb').textContent = p.blurb || '';
+      document.getElementById('pkg-features').innerHTML = (p.features || []).map((f) => `
+        <li class="flex items-center gap-2 text-sm text-gray-700">
+          <svg class="w-4 h-4 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.5-1.5z"/></svg>
+          ${escapeHtml(f)}
+        </li>`).join('');
+      document.getElementById('pkg-total').textContent = money(p.total);
+      document.getElementById('pkg-per').textContent = `(${money(p.perSession)} / session)`;
+      updateDuration();
+    }
+
+    async function renderPackages(id) {
+      try {
+        const res = await fetch(`${MONTRA_API_BASE}/api/trainers/${encodeURIComponent(id)}/packages`, { headers: { Accept: 'application/json' } });
+        if (!res.ok) return;
+        pkgData = await res.json();
+      } catch (_) { return; }
+      if (!pkgData || !Array.isArray(pkgData.packages) || !pkgData.packages.length) return;
+
+      const n = pkgData.packages.length;
+      const recIdx = pkgData.packages.findIndex((p) => p.recommended);
+      pkgSelectedIndex = recIdx >= 0 ? recIdx : Math.min(2, n - 1);
+
+      // Ticks (clickable session counts) + interior stops on the track
+      document.getElementById('pkg-ticks').innerHTML = pkgData.packages.map((p, i) => `
+        <div class="pkg-tick" data-i="${i}" style="left:${pkgPct(i)}%">
+          <div class="n" style="color:#9ca3af">${p.sessions}</div>
+          <div class="l">SESSIONS</div>
+        </div>`).join('');
+      const track = document.getElementById('pkg-track');
+      track.querySelectorAll('.pkg-stop').forEach((e) => e.remove());
+      pkgData.packages.forEach((p, i) => {
+        if (i === 0 || i === n - 1) return;
+        const s = document.createElement('div');
+        s.className = 'pkg-stop'; s.style.left = pkgPct(i) + '%';
+        track.appendChild(s);
+      });
+
+      // Frequency dropdown (default 2/week when offered)
+      const freqSel = document.getElementById('pkg-frequency');
+      freqSel.innerHTML = pkgData.frequencies.map((f) => `<option value="${f.perWeek}">${f.label}</option>`).join('');
+      pkgFreq = pkgData.frequencies.some((f) => f.perWeek === 2) ? 2 : pkgData.frequencies[0].perWeek;
+      freqSel.value = String(pkgFreq);
+
+      // Interactions: tick click, track click/drag, frequency change
+      document.querySelectorAll('.pkg-tick').forEach((t) =>
+        t.addEventListener('click', () => { pkgSelectedIndex = Number(t.dataset.i); updatePackage(); }));
+      const posToIndex = (clientX) => {
+        const r = track.getBoundingClientRect();
+        const ratio = Math.min(1, Math.max(0, (clientX - r.left) / r.width));
+        return Math.round(ratio * (n - 1));
+      };
+      let dragging = false;
+      track.addEventListener('pointerdown', (e) => { dragging = true; pkgSelectedIndex = posToIndex(e.clientX); updatePackage(); try { track.setPointerCapture(e.pointerId); } catch (_) {} });
+      track.addEventListener('pointermove', (e) => { if (!dragging) return; const i = posToIndex(e.clientX); if (i !== pkgSelectedIndex) { pkgSelectedIndex = i; updatePackage(); } });
+      track.addEventListener('pointerup', () => { dragging = false; });
+      freqSel.addEventListener('change', () => { pkgFreq = Number(freqSel.value); updateDuration(); });
+
+      if (pkgData.derived) document.getElementById('pkg-derived-note').classList.remove('hidden');
+
+      // À la carte add-ons
+      document.getElementById('addons-grid').innerHTML = (pkgData.addOns || []).map((a) => {
+        const price = a.price != null
+          ? `<p class="text-lg font-black text-gray-900">${money(a.price)}<span class="text-[11px] font-medium text-gray-400">/${escapeHtml(a.unit)}</span></p>`
+          : `<p class="text-sm font-bold text-gray-700">Pricing varies</p>`;
+        return `
+          <div class="border border-gray-200 rounded-xl p-4 flex flex-col">
+            <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center mb-2 text-base">${addonIcon(a.icon)}</div>
+            <p class="text-sm font-bold text-gray-900 leading-tight">${escapeHtml(a.title)}</p>
+            <p class="text-[11px] text-gray-500 mt-1 mb-3 flex-1">${escapeHtml(a.desc)}</p>
+            ${price}
+          </div>`;
+      }).join('');
+
+      updatePackage();
+      show('packages-section');
+      if ((pkgData.addOns || []).length) show('addons-section');
+    }
+
     async function loadCoachProfile() {
       const id = new URLSearchParams(window.location.search).get('id');
       if (!id) { hide('loading-state'); show('not-found-state'); return; }
@@ -725,6 +918,7 @@
         renderProfile(trainer);
         renderReviews(id);
         renderInsights(id);
+        renderPackages(id);
       } catch (error) {
         hide('loading-state'); show('not-found-state');
       }

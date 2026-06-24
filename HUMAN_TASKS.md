@@ -146,6 +146,22 @@ derived today:
   Featured testimonials are deliberately NOT synthesized — they only show once real
   reviews exist.
 
+### Choose Your Session Package builder ⬜ (built; pricing derived until Storefront)
+The coach profile has an interactive **Choose Your Session Package** section: a gradient
+slider (5/10/20/40 sessions), a selected-package card (features + total + per-session
+price), a **Session Frequency** dropdown, and a **live Estimated Duration** that
+recomputes as `ceil(sessions ÷ sessions-per-week)` (e.g. 20 sessions @ 2/wk = 10 weeks).
+A compact À-La-Carte add-ons row sits below it. **Nothing is hardcoded** — it all comes
+from `GET /api/trainers/:id/packages` (`packageStore.js`).
+- **Real when available:** if a coach ever has a `sessionRate`/`sessionPriceMax`, the
+  builder prices off it. The volume-discount tiers, frequency→duration math, and feature
+  lists are real product logic.
+- **Derived until then:** with no per-coach rate yet (Storefront below), the single-
+  session base is a deterministic per-coach figure (~$90–$130, nudged by experience) and
+  packages discount off it (5%/7%/12%/18%). Response is flagged `derived: true`, and the
+  UI shows an "indicative pricing — coach confirms final rate" note. Replace the base-rate
+  derivation in `packageStore.js` with the real Storefront price to make it fully real.
+
 ### MONTRA Match™ — follow-ups
 All three original follow-ups (real reviews, budget step, trust-stack gating) are now
 shipped — see the sections above. Budget Fit becomes a true signal once Storefront
