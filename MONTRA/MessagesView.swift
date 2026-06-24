@@ -71,31 +71,45 @@ struct CoachChatSheet: View {
                 if selectedTarget == .coach {
                     liveCoachChatSection
                 } else {
-                    HStack(spacing: 12) {
-                        targetAvatar
-
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(headerTitle)
-                                .font(.system(size: 17, weight: .bold))
-                                .foregroundColor(.montraTextPrimary)
-
-                            Text(headerSubtitle)
-                                .font(.system(size: 13))
-                                .foregroundColor(.montraTextSecondary)
-
-                            Text("Coming soon")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundColor(.montraTextSecondary)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 3)
-                                .background(Color.white.opacity(0.08))
-                                .clipShape(Capsule())
+                    VStack(alignment: .leading, spacing: 14) {
+                        HStack(spacing: 12) {
+                            targetAvatar
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(headerTitle)
+                                    .font(.system(size: 17, weight: .bold))
+                                    .foregroundColor(.montraTextPrimary)
+                                Text(headerSubtitle)
+                                    .font(.system(size: 13))
+                                    .foregroundColor(.montraTextSecondary)
+                            }
+                            Spacer()
                         }
 
-                        Spacer()
+                        Divider().background(Color.montraDivider)
+
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Contact us directly:")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundColor(.montraTextSecondary)
+
+                            Link(destination: URL(string: "mailto:hello@eliteinhomefitness.com")!) {
+                                HStack(spacing: 10) {
+                                    Image(systemName: "envelope.fill")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.montraOrange)
+                                    Text("hello@eliteinhomefitness.com")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(.montraOrange)
+                                }
+                            }
+
+                            Text("In-app messaging with the MONTRA team is coming in a future update.")
+                                .font(.system(size: 12))
+                                .foregroundColor(.montraTextSecondary)
+                        }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(14)
+                    .padding(16)
                     .montraFrostedCard(radius: 12)
                 }
             }
@@ -353,9 +367,9 @@ struct CoachChatSheet: View {
         case .coach:
             return "Training questions, schedule changes, and workout feedback."
         case .montraTeam:
-            return "Insights, accountability, and personalized support — coming soon."
+            return "Insights, accountability, and personalized support."
         case .support:
-            return "Technical help and issue reporting — coming soon."
+            return "Technical help and issue reporting."
         }
     }
 

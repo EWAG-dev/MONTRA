@@ -49,7 +49,32 @@ struct WorkoutProgressView: View {
     @State private var mealSuggestionNote = "Suggestions generated from your current profile."
     private let tabs = ["Overview", "Workouts", "Nutrition", "Body Stats"]
 
-    private let trainerProgress = TrainerProgressSnapshot.empty
+    // Real sessions from the backend — power the Overview chart and Workouts tab.
+    // TrainerSessionRecord is repurposed here for client-side display: completed = past
+    // non-cancelled session, durationMin from the real booking, calories = 0 (no schema yet).
+    @State private var bookedSessions: [BookedSession] = []
+    @State private var isLoadingSessions = false
+
+    private var trainerProgress: TrainerProgressSnapshot {
+        let now = Date()
+        let records: [TrainerSessionRecord] = bookedSessions.compactMap { session in
+            guard let date = session.startDate else { return nil }
+            // Past non-cancelled sessions count as "completed" for chart/stats purposes
+            let completed = date < now && session.status != "cancelled"
+            return TrainerSessionRecord(
+                id: session.id.hashValue,
+                date: date,
+                durationMin: session.durationMin > 0 ? session.durationMin : 60,
+                calories: 0,
+                completed: completed
+            )
+        }
+        return TrainerProgressSnapshot(
+            membershipStart: records.map(\.date).min() ?? now,
+            weeklyGoalSessions: Int(strengthTargetStr) ?? 5,
+            sessions: records
+        )
+    }
 
     // Backend-persisted (ProgressAPI) — same source as DashboardView/ProgressProfileView
     @State private var currentWeightStr: String = ""
@@ -535,7 +560,7 @@ struct WorkoutProgressView: View {
                 case 2:
                     nutritionTabContent
                 default:
-                    comingSoonContent
+                    bodyStatsContent
                 }
 
                 Spacer(minLength: 80)
@@ -559,6 +584,7 @@ struct WorkoutProgressView: View {
         }
         .task {
             await loadProgress()
+            await loadSessions()
         }
     }
 
@@ -570,6 +596,13 @@ struct WorkoutProgressView: View {
         currentWeightStr = remote.currentWeight
         startWeightStr = remote.startWeight
         strengthTargetStr = remote.strengthWeeklyTarget
+    }
+
+    private func loadSessions() async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
+              let sessions = try? await BookingAPI.loadMySessions(token: tokenResult.token) else { return }
+        bookedSessions = sessions
     }
 
     // MARK: - Overview Content
@@ -663,15 +696,72 @@ struct WorkoutProgressView: View {
         return "\(monthName) \(day)"
     }
 
-    private var comingSoonContent: some View {
-        VStack {
-            Spacer(minLength: 60)
-            Text("Coming Soon")
-                .font(.system(size: 16, weight: .medium))
+    // MARK: - Body Stats Tab
+    // Shows backend-persisted weight and goal data from ProgressAPI.
+    // Weight-over-time history logging requires a new backend field (array of dated entries)
+    // — see HUMAN_TASKS.md. Current implementation shows the last recorded values.
+    private var bodyStatsContent: some View {
+        VStack(alignment: .leading, spacing: 16) {
+
+            VStack(alignment: .leading, spacing: 14) {
+                Text("WEIGHT")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(.montraTextPrimary)
+                    .kerning(0.8)
+
+                HStack(spacing: 12) {
+                    bodyStatCell(label: "Current", value: currentWeightStr.isEmpty ? "—" : "\(currentWeightStr) lbs")
+                    bodyStatCell(label: "Starting", value: startWeightStr.isEmpty ? "—" : "\(startWeightStr) lbs")
+                    if let current = Double(currentWeightStr), let start = Double(startWeightStr), start != current {
+                        let delta = start - current
+                        let sign = delta > 0 ? "-" : "+"
+                        bodyStatCell(label: "Change", value: String(format: "\(sign)%.1f lbs", abs(delta)))
+                    }
+                }
+            }
+            .padding(18)
+            .montraCard(radius: 16)
+
+            VStack(alignment: .leading, spacing: 14) {
+                Text("SESSIONS")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(.montraTextPrimary)
+                    .kerning(0.8)
+
+                let completed = trainerProgress.sessions.filter(\.completed)
+                HStack(spacing: 12) {
+                    bodyStatCell(label: "Total Sessions", value: "\(completed.count)")
+                    bodyStatCell(label: "Total Time", value: "\(trainerProgress.totalMembershipMinutes) min")
+                    bodyStatCell(label: "This Week", value: "\(trainerProgress.completedSessionsThisWeek)")
+                }
+            }
+            .padding(18)
+            .montraCard(radius: 16)
+
+            Text("Weight history logging — tracking changes over time — is coming in a future update.")
+                .font(.system(size: 12))
                 .foregroundColor(.montraTextSecondary)
-            Spacer(minLength: 60)
+                .padding(.horizontal, 4)
+
+            Spacer(minLength: 40)
         }
-        .frame(maxWidth: .infinity)
+    }
+
+    private func bodyStatCell(label: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundColor(.montraTextSecondary)
+            Text(value)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(.montraTextPrimary)
+                .minimumScaleFactor(0.7)
+                .lineLimit(1)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(Color.montraBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
     private var workoutsTabContent: some View {

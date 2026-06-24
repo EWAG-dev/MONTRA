@@ -72,3 +72,41 @@ Hit the **Resend free-tier daily limit (100 emails/day)** during E2E test runs. 
 
 - [ ] Archive via Product → Archive in Xcode once push notifications are wired
 - [ ] Upload to TestFlight for real-device push notification testing (simulator cannot receive push)
+
+---
+
+## Future Features (require design + backend schema decisions before code)
+
+### Trainer Storefront & Pricing ⬜
+The Storefront tab currently shows "coming soon." Fully building this requires:
+- Stripe Connect integration for trainer payouts (or a similar payment processor)
+- New backend schema: trainer `sessionPriceMin` / `sessionPriceMax`, `packagesOffered`, `stripeAccountId`
+- New backend routes: `POST /api/trainers/my-storefront`, Stripe webhook handlers
+- iOS: actual Stripe SDK or WKWebView for Stripe Connect onboarding
+- Website: pricing displayed per-trainer on coach-profile.html (currently shows no pricing because no schema exists)
+
+### Trainer Programs ⬜
+The Programs tab is a stub. Requires:
+- New backend schema: program templates (title, description, weeks, workouts[])
+- New Firestore collection: `trainerPrograms` + `clientPrograms` (assigned)
+- iOS program builder UI + client program view
+
+### MONTRA Team / Support In-App Chat ⬜
+MessagesView has MONTRA Team and Support tabs that currently show a mailto: link.
+To wire real in-app support chat:
+- Decide whether EHF will use a real support Firebase account or a service like Intercom
+- If real account: add a backend-known `MONTRA_TEAM_TRAINER_ID` env var, create a special conversation thread type that routes to the admin account
+- Update `GET /api/conversations/my-threads` to include this thread for all clients
+
+### Weight History Tracking ⬜
+Body Stats tab shows current/start weight (single values). Full history requires:
+- New Firestore field in `clientProgress`: `weightLog: [{date: ISO, weight: number}]`
+- Backend endpoints: `POST /api/client/progress/weight-entry`, `GET /api/client/progress/weight-history`
+- iOS: line chart of weight over time (similar to existing session chart in ProgressView)
+
+### Session Completion Marking ⬜
+Workouts tab derives "completed" sessions from past booked sessions (date < now, not cancelled).
+Full completion tracking (with actual calories, post-workout notes) requires:
+- New `status: "completed"` on `bookedSessions` documents
+- New backend route: `POST /api/client/sessions/:id/complete` (or trainer-side)
+- iOS: "Mark Complete" button on past sessions in TrainerSessionsView + SessionsView
