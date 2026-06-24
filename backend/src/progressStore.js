@@ -61,16 +61,14 @@ export async function addWeightEntry(clientUid, { weight, date }) {
   const entry = { date: when, weight: weightNum };
   const log = sortWeightLog([...existing, entry]);
 
+  // Once a client is logging measurements, the log is authoritative for the
+  // Body Stats summary: startWeight = earliest entry, currentWeight = latest.
   const payload = {
     weightLog: log,
     currentWeight: String(log[log.length - 1].weight),
+    startWeight: String(log[0].weight),
     updatedAt: new Date().toISOString(),
   };
-  // Seed startWeight from the earliest measurement if it isn't set yet.
-  const currentStart = doc.exists ? normalizeString(doc.data().startWeight) : "";
-  if (!currentStart) {
-    payload.startWeight = String(log[0].weight);
-  }
 
   await ref.set(payload, { merge: true });
   return { clientUid, ...payload };
