@@ -206,31 +206,8 @@
       </div>
 
       <!-- SIDEBAR -->
-      <aside class="lg:col-span-1 space-y-6">
-
-        <!-- MEET YOUR COACH (intro video) -->
-        <div class="border border-gray-200 rounded-2xl p-4 shadow-sm">
-          <div class="flex items-center gap-2 mb-3">
-            <svg class="w-4 h-4 text-brand" fill="currentColor" viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>
-            <span class="text-xs font-bold uppercase tracking-wider text-gray-500">Meet Your Coach</span>
-          </div>
-          <a id="meet-video" href="#" class="group relative block w-full aspect-video rounded-xl overflow-hidden bg-gray-200 pointer-events-none">
-            <div id="meet-video-thumb" class="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-              <span id="meet-video-initials" class="text-gray-400 font-black text-3xl"></span>
-            </div>
-            <div class="absolute inset-0 flex items-center justify-center">
-              <span class="w-14 h-14 rounded-full bg-white/95 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-                <svg class="w-6 h-6 text-brand ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-              </span>
-            </div>
-            <span class="absolute bottom-2 left-2 text-white text-[11px] font-bold bg-black/60 rounded px-1.5 py-0.5">0:30</span>
-          </a>
-          <p id="meet-quote" class="hidden text-sm text-gray-600 italic mt-3 leading-relaxed"></p>
-          <p id="meet-placeholder-note" class="hidden text-[11px] text-gray-400 mt-2">Intro video coming soon — your coach records a 15–30s hello.</p>
-        </div>
-
-        <!-- YOUR MONTRA MATCH -->
-        <div class="border border-gray-200 rounded-2xl p-6 shadow-sm">
+      <aside class="lg:col-span-1">
+        <div class="sticky top-20 border border-gray-200 rounded-2xl p-6 shadow-sm">
           <p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Your MONTRA Match™</p>
           <div class="flex items-end gap-2 mb-1">
             <span id="side-match-pct" class="text-4xl font-black text-green-600">—</span>
@@ -261,32 +238,6 @@
           <a id="side-availability" href="#availability-section" class="block w-full border border-gray-300 hover:bg-gray-50 text-gray-700 py-2.5 rounded-xl text-sm font-bold text-center transition-colors mb-2">View Availability</a>
           <a id="side-message" href="quiz.html" class="block w-full border border-gray-300 hover:bg-gray-50 text-gray-700 py-2.5 rounded-xl text-sm font-bold text-center transition-colors">Message <span id="side-message-name">Coach</span></a>
           <p class="text-center text-[11px] text-gray-400 mt-3">⏱️ Typically replies within 1 hour. Booking & messaging happen in the MONTRA app once you're matched.</p>
-        </div>
-
-        <!-- MONTRA INSIGHTS -->
-        <div id="insights-card" class="hidden border border-gray-200 rounded-2xl p-6 shadow-sm">
-          <div class="flex items-center gap-2 mb-4">
-            <span class="text-base">🤖</span>
-            <h3 class="font-black text-base">MONTRA Insights™</h3>
-          </div>
-          <div id="insights-list" class="space-y-2.5"></div>
-          <div id="insights-callouts" class="space-y-3 mt-4"></div>
-        </div>
-
-        <!-- WHAT CLIENTS ARE SAYING -->
-        <div id="clients-card" class="hidden border border-gray-200 rounded-2xl p-6 shadow-sm">
-          <h3 class="font-black text-base mb-3">What Clients Are Saying</h3>
-          <div class="flex items-center gap-2 mb-1">
-            <span id="clients-rating" class="text-2xl font-black">—</span>
-            <span id="clients-stars" class="text-yellow-400 text-lg leading-none">★★★★★</span>
-            <span id="clients-count" class="text-xs text-gray-400"></span>
-          </div>
-          <div id="clients-featured" class="hidden mt-3"></div>
-          <div id="clients-happy" class="hidden items-center gap-2 mt-3 pt-3 border-t border-gray-100"></div>
-          <div id="clients-results" class="hidden mt-4 pt-4 border-t border-gray-100">
-            <p class="text-xs font-bold text-gray-700 mb-2.5">Top Client Results</p>
-            <div id="results-list" class="space-y-2"></div>
-          </div>
         </div>
       </aside>
 
@@ -466,36 +417,6 @@
         `With ${exp}a proven, verified track record in ${specialty.toLowerCase()}, ${first} helps clients get stronger, stay consistent, and build lasting results.`;
     }
 
-    // Sidebar "Meet Your Coach" video card. Uses the coach's real intro video when
-    // present; otherwise shows the play placeholder + "coming soon" note. The quote
-    // is the coach's real bio, never fabricated.
-    function renderMeetVideo(trainer) {
-      const first = (trainer.name || 'your coach').split(' ')[0];
-      const initials = trainer.initials || (trainer.name || '?').slice(0, 2).toUpperCase();
-      const thumb = document.getElementById('meet-video-thumb');
-      if (trainer.photoDataUrl) {
-        thumb.innerHTML = `<img src="${trainer.photoDataUrl}" alt="${escapeHtml(trainer.name || 'Coach')}" class="w-full h-full object-cover"/>`;
-      } else {
-        document.getElementById('meet-video-initials').textContent = initials;
-      }
-
-      const link = document.getElementById('meet-video');
-      if (trainer.introVideoUrl) {
-        link.href = trainer.introVideoUrl;
-        link.target = '_blank';
-        link.rel = 'noopener';
-        link.classList.remove('pointer-events-none');
-      } else {
-        document.getElementById('meet-placeholder-note').classList.remove('hidden');
-      }
-
-      if (trainer.bio) {
-        const q = document.getElementById('meet-quote');
-        q.textContent = `“${trainer.bio}”`;
-        q.classList.remove('hidden');
-      }
-    }
-
     function renderProfile(trainer) {
       document.title = `${trainer.name || 'Coach'} | Elite Home Fitness`;
       const first = (trainer.name || 'this coach').split(' ')[0] || 'this coach';
@@ -523,8 +444,17 @@
       } else {
         document.getElementById('coach-initials').textContent = initials;
       }
-      // Intro video now lives in the sidebar "Meet Your Coach" card.
-      renderMeetVideo(trainer);
+      // Intro video overlay
+      if (trainer.introVideoUrl) {
+        mediaEl.href = trainer.introVideoUrl;
+        mediaEl.target = '_blank';
+        mediaEl.rel = 'noopener';
+        mediaEl.classList.remove('pointer-events-none');
+        showFlex('intro-play');
+        const label = document.getElementById('intro-label');
+        label.textContent = `▶ Watch ${first}'s Intro`;
+        label.classList.remove('hidden');
+      }
 
       // Identity
       document.getElementById('coach-name').textContent = trainer.name || 'Coach';
@@ -641,79 +571,6 @@
       } catch (_) { /* aggregate stays as-is */ }
     }
 
-    const checkIcon = `<span class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0"><svg class="w-3 h-3 text-green-600" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.5-1.5z"/></svg></span>`;
-
-    // Pulls derived "MONTRA Insights" + client-proof signals from the backend and
-    // renders the two sidebar cards. Nothing is hardcoded here — every value comes
-    // from GET /api/trainers/:id/insights (real where possible, derived otherwise).
-    async function renderInsights(id) {
-      let data;
-      try {
-        const res = await fetch(`${MONTRA_API_BASE}/api/trainers/${encodeURIComponent(id)}/insights`, { headers: { Accept: 'application/json' } });
-        if (!res.ok) return;
-        data = await res.json();
-      } catch (_) { return; }
-
-      // --- MONTRA Insights card ---
-      const on = (data.insights || []).filter((it) => it.on);
-      if (on.length) {
-        document.getElementById('insights-list').innerHTML = on.map((it) => `
-          <div class="flex items-center gap-2.5">
-            ${checkIcon}
-            <span class="text-sm text-gray-700">${escapeHtml(it.label)}</span>
-          </div>`).join('');
-
-        const callouts = [];
-        if (data.responsiveness?.pct) {
-          callouts.push(`
-            <div class="bg-gray-50 rounded-xl px-3 py-2.5 flex items-start gap-2.5">
-              <span class="text-base leading-none mt-0.5">⏱️</span>
-              <div><p class="text-xs font-bold text-gray-800">Responds within 1 hour</p>
-              <p class="text-[11px] text-gray-500">${data.responsiveness.pct}% of clients get a response within ${data.responsiveness.withinMinutes} minutes.</p></div>
-            </div>`);
-        }
-        if (data.demand?.highDemand && data.demand.introThisWeek > 0) {
-          const n = data.demand.introThisWeek;
-          callouts.push(`
-            <div class="bg-orange-50 rounded-xl px-3 py-2.5 flex items-start gap-2.5">
-              <span class="text-base leading-none mt-0.5">🔥</span>
-              <div><p class="text-xs font-bold text-gray-800">In High Demand</p>
-              <p class="text-[11px] text-gray-500">${n} intro ${n === 1 ? 'session' : 'sessions'} booked this week. Limited availability.</p></div>
-            </div>`);
-        }
-        document.getElementById('insights-callouts').innerHTML = callouts.join('');
-        show('insights-card');
-      }
-
-      // --- What Clients Are Saying card ---
-      const proof = data.proof || {};
-      document.getElementById('clients-rating').textContent = Number(proof.rating ?? 4.9).toFixed(1);
-      const rc = Number(proof.reviewCount || 0);
-      document.getElementById('clients-count').textContent = `(${rc} ${rc === 1 ? 'review' : 'reviews'})`;
-
-      if (proof.featuredReview && proof.featuredReview.text) {
-        const fr = proof.featuredReview;
-        document.getElementById('clients-featured').innerHTML = `
-          <p class="text-sm text-gray-700 italic leading-relaxed">“${escapeHtml(fr.text)}”</p>
-          <p class="text-xs font-bold text-gray-900 mt-2">— ${escapeHtml(fr.author || 'Verified Client')}</p>`;
-        show('clients-featured');
-      }
-      if (Number(proof.happyClients) > 0) {
-        const hc = document.getElementById('clients-happy');
-        hc.innerHTML = `${checkIcon}<span class="text-xs font-semibold text-gray-600">${proof.happyClients} happy ${proof.happyClients === 1 ? 'client' : 'clients'}</span>`;
-        hc.classList.remove('hidden'); hc.classList.add('flex');
-      }
-      if (Array.isArray(proof.topResults) && proof.topResults.length) {
-        document.getElementById('results-list').innerHTML = proof.topResults.map((r) => `
-          <div class="flex items-center gap-2.5">
-            <span class="w-5 h-5 rounded-md bg-green-50 flex items-center justify-center flex-shrink-0 text-green-600 text-[11px]">📈</span>
-            <span class="text-xs text-gray-600">${escapeHtml(r.label)}</span>
-          </div>`).join('');
-        show('clients-results');
-      }
-      show('clients-card');
-    }
-
     async function loadCoachProfile() {
       const id = new URLSearchParams(window.location.search).get('id');
       if (!id) { hide('loading-state'); show('not-found-state'); return; }
@@ -724,7 +581,6 @@
         if (!trainer || trainer.status !== 'approved' || trainer.isActive === false) throw new Error('Not available');
         renderProfile(trainer);
         renderReviews(id);
-        renderInsights(id);
       } catch (error) {
         hide('loading-state'); show('not-found-state');
       }

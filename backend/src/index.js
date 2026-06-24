@@ -66,7 +66,6 @@ import {
   listTrainerReviews,
   deleteReviewsForClient,
 } from "./reviewStore.js";
-import { getTrainerInsights } from "./insightStore.js";
 
 const app = express();
 const port = Number(process.env.PORT || 8080);
@@ -1101,18 +1100,6 @@ app.get("/api/trainers/:id/reviews", async (req, res) => {
       reviewCount: trainer.reviewCount ?? reviews.length,
     },
   });
-});
-
-// Public: derived "MONTRA Insights" + client-proof signals for a coach. Real where
-// the data model supports it (demand, background-verified, featured review), with
-// deterministic, swap-for-real placeholders elsewhere (see insightStore.js).
-app.get("/api/trainers/:id/insights", async (req, res) => {
-  const insights = await getTrainerInsights(req.params.id);
-  if (!insights) {
-    res.status(404).json({ error: "Trainer not found" });
-    return;
-  }
-  res.status(200).json(insights);
 });
 
 app.post("/api/client/match", requireFirebaseAuth, async (req, res) => {

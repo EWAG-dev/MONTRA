@@ -117,34 +117,13 @@ every approved coach — each is gated on a real, admin-confirmed per-trainer fl
   body, 404 unknown trainer. This is the **only** path that can turn a badge on.
 - Website: `coach-profile.html` `renderTrustStack` gates each badge on its flag and
   hides the whole "A Coach You Can Trust" card when there's nothing real to show.
-- **Admin UI**: `website/admin.html` (`/admin.html`, noindex, not linked) — Firebase
-  admin sign-in, lists every coach with three toggles that call the verification route
-  and save immediately. Full instructions in `ADMIN_GUIDE.md`.
 - E2E: `trust_verification_e2e_test.sh` (defaults false, self-set-via-apply ignored,
   non-admin 403, empty-body 400, admin sets exactly the flags given, flags survive a
   later profile edit).
 
-**HUMAN ACTION:** an admin must turn each badge on at `/admin.html` once the real check
-clears (or wire a vetting vendor to call `POST /api/admin/trainers/:id/verification`).
-Until then the badges stay off — correct, not a bug.
-
-### Coach profile insights / client-proof cards ⬜ (built; some values are derived placeholders)
-The coach profile now has a sidebar "Meet Your Coach" video card, a **MONTRA Insights™**
-card, and a **What Clients Are Saying** card. **Nothing is hardcoded in the page** — it
-all comes from `GET /api/trainers/:id/insights` (`insightStore.js`). What's real vs.
-derived today:
-- **Real now:** "accepting new clients" (status/active), "background verified & certified"
-  (the admin flags above), demand / "In High Demand" (counts actual bookings in the last
-  7 days), the featured review + "happy clients" count + rating (real reviews only — no
-  fabricated names), and the intro-video card (real `introVideoUrl`, else a placeholder).
-- **Derived placeholders** (deterministic per coach, each flagged `derived: true` in the
-  API response so they're easy to find and swap): availability window, "Top X% match",
-  "highly aligned with your schedule", responsiveness %, and the **Top Client Results**
-  stats (e.g. "18 lbs average weight loss", "95% goal achievement"). These are believable
-  but **not measured** — before leaning on them in marketing/legal terms, replace the
-  derivations in `insightStore.js` with real tracked outcomes (and consider a disclosure).
-  Featured testimonials are deliberately NOT synthesized — they only show once real
-  reviews exist.
+**HUMAN ACTION:** wire the real vetting workflow (whatever ID/background-check vendor
+EHF uses) to call `POST /api/admin/trainers/:id/verification` when a check clears —
+until an admin sets these, the badges stay off (which is correct, not a bug).
 
 ### MONTRA Match™ — follow-ups
 All three original follow-ups (real reviews, budget step, trust-stack gating) are now

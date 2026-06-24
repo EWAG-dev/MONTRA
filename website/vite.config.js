@@ -17,7 +17,6 @@ module.exports = defineConfig({
         trainerOnboarding: path.resolve(__dirname, 'trainer-onboarding.html'),
         trainerApplication: path.resolve(__dirname, 'trainer-application.html'),
         about: path.resolve(__dirname, 'about.html'),
-        admin: path.resolve(__dirname, 'admin.html'),
         // coaches.html removed — orphaned page never linked anywhere; firebase.json
         // redirects /coaches.html → / (find-a-coach = index.html is canonical)
       },
