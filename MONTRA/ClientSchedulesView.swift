@@ -4,6 +4,7 @@ import SwiftUI
 
 struct ClientSchedulesView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var auth: AuthManager
 
     // Storage format: "<clientKey>:Monday,Wednesday|9:00 AM;<clientKey2>:Tuesday,Thursday|10:00 AM"
     @AppStorage("trainerClientSchedules") private var schedulesRaw: String = ""
@@ -15,8 +16,8 @@ struct ClientSchedulesView: View {
     @State private var draftDays: [String: Set<String>] = [:]
     @State private var draftTime: [String: String] = [:]
     @State private var savedClients: Set<String> = []
-
-    private let clients: [(key: String, name: String)] = []
+    @State private var clients: [(key: String, name: String)] = []
+    @State private var isLoadingClients = false
 
     private let allDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     private let allDaysFull = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -74,8 +75,66 @@ struct ClientSchedulesView: View {
                         .foregroundColor(.montraOrange)
                 }
             }
+            .overlay {
+                if isLoadingClients {
+                    ProgressView().tint(.montraOrange)
+                } else if clients.isEmpty {
+                    VStack(spacing: 8) {
+                        Image(systemName: "person.2")
+                            .font(.system(size: 32, weight: .light))
+                            .foregroundColor(.montraTextSecondary)
+                        Text("No active clients yet")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(.montraTextPrimary)
+                        Text("Accepted client requests will appear here.")
+                            .font(.system(size: 13))
+                            .foregroundColor(.montraTextSecondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(24)
+                }
+            }
         }
-        .onAppear { loadSchedules() }
+        .onAppear {
+            loadSchedules()
+            Task { await loadClients() }
+        }
+    }
+
+    private func loadClients() async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
+              let url = MontraAPIConfig.url(for: "/api/trainers/my-matches") else { return }
+
+        isLoadingClients = true
+        defer { isLoadingClients = false }
+
+        struct MatchRequest: Decodable {
+            let id: String
+            let clientUid: String
+            let status: String
+            struct Profile: Decodable { let firstName: String }
+            let clientProfile: Profile
+            let clientEmail: String
+        }
+        struct Response: Decodable { let matches: [MatchRequest] }
+
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(tokenResult.token)", forHTTPHeaderField: "Authorization")
+        guard let (data, response) = try? await URLSession.shared.data(for: request),
+              let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode),
+              let payload = try? JSONDecoder().decode(Response.self, from: data) else { return }
+
+        clients = payload.matches
+            .filter { $0.status == "accepted" }
+            .map { match in
+                let name = match.clientProfile.firstName.isEmpty ? match.clientEmail : match.clientProfile.firstName
+                return (key: match.clientUid, name: name)
+            }
+            .reduce(into: [(key: String, name: String)]()) { result, item in
+                // Deduplicate by clientUid — keep first (most recent accepted match)
+                if !result.contains(where: { $0.key == item.key }) { result.append(item) }
+            }
     }
 
     // MARK: - Persistence

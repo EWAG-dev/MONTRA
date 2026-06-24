@@ -79,20 +79,20 @@
     <div class="max-w-6xl mx-auto px-6 lg:px-8">
       <div class="grid grid-cols-2 md:grid-cols-4 divide-x divide-[#262626]">
         <div class="py-10 px-0 md:pr-10">
-          <p class="text-4xl font-black text-brand tracking-tight mb-1">12,000+</p>
-          <p class="text-xs font-semibold uppercase tracking-widest text-gray-500">Lives Changed</p>
+          <p class="text-4xl font-black text-brand tracking-tight mb-1">Est. 2016</p>
+          <p class="text-xs font-semibold uppercase tracking-widest text-gray-500">In Business</p>
         </div>
         <div class="py-10 px-6 md:px-10">
-          <p class="text-4xl font-black text-brand tracking-tight mb-1">100+</p>
-          <p class="text-xs font-semibold uppercase tracking-widest text-gray-500">Elite Trainers</p>
-        </div>
-        <div class="py-10 px-6 md:px-10">
-          <p class="text-4xl font-black text-brand tracking-tight mb-1">$18,000+</p>
-          <p class="text-xs font-semibold uppercase tracking-widest text-gray-500">Donated to Charity</p>
+          <p id="trainer-count-stat" class="text-4xl font-black text-brand tracking-tight mb-1">—</p>
+          <p class="text-xs font-semibold uppercase tracking-widest text-gray-500">Active Coaches</p>
         </div>
         <div class="py-10 px-6 md:px-10">
           <p class="text-4xl font-black text-brand tracking-tight mb-1">5 States</p>
           <p class="text-xs font-semibold uppercase tracking-widest text-gray-500">MA · RI · NJ · CT · NY</p>
+        </div>
+        <div class="py-10 px-6 md:px-10">
+          <p class="text-4xl font-black text-brand tracking-tight mb-1">100%</p>
+          <p class="text-xs font-semibold uppercase tracking-widest text-gray-500">In-Home Training</p>
         </div>
       </div>
     </div>
@@ -204,6 +204,17 @@
       </div>
     </div>
   </footer>
-
+  <script>
+    fetch('https://montra-production.up.railway.app/api/trainers', { headers: { Accept: 'application/json' } })
+      .then(r => r.json())
+      .then(data => {
+        const count = Array.isArray(data.trainers)
+          ? data.trainers.filter(t => t.status === 'approved' && t.isActive !== false).length
+          : 0;
+        const el = document.getElementById('trainer-count-stat');
+        if (el && count > 0) el.textContent = count;
+      })
+      .catch(() => {});
+  </script>
 </body>
 </html>
