@@ -428,6 +428,22 @@ export async function updateTrainer(id, input) {
   return getTrainer(id);
 }
 
+// Writes just the review aggregate fields, bypassing full-profile validation so
+// a coach's rating can update even if their profile predates required fields.
+export async function setTrainerRating(id, { rating, reviewCount }) {
+  const existing = await getTrainer(id);
+  if (!existing) return null;
+  await trainersCollection().doc(id).set(
+    {
+      rating: Number.isFinite(Number(rating)) ? Number(rating) : existing.rating,
+      reviewCount: Number.isFinite(Number(reviewCount)) ? Number(reviewCount) : existing.reviewCount,
+      updatedAt: new Date().toISOString(),
+    },
+    { merge: true }
+  );
+  return getTrainer(id);
+}
+
 export async function deleteTrainer(id) {
   const existing = await getTrainer(id);
   if (!existing) {

@@ -1,5 +1,5 @@
 import { getFirestore } from "./firebase.js";
-import { getTrainer, updateTrainer } from "./trainerStore.js";
+import { getTrainer, setTrainerRating } from "./trainerStore.js";
 
 const COLLECTION_NAME = "reviews";
 const MAX_TEXT_LENGTH = 1000;
@@ -61,7 +61,7 @@ export async function recomputeTrainerRating(trainerId) {
   if (!all.length) return;
   const sum = all.reduce((acc, r) => acc + r.rating, 0);
   const rating = Math.round((sum / all.length) * 10) / 10;
-  await updateTrainer(id, { rating, reviewCount: all.length });
+  await setTrainerRating(id, { rating, reviewCount: all.length });
 }
 
 /**
