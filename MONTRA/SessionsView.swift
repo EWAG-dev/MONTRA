@@ -22,6 +22,10 @@ struct SessionsView: View {
     @State private var impactSession: BookedSession? = nil
     @State private var impactCredit: ImpactCredit? = nil
 
+    // Reviewing a completed session.
+    @State private var reviewingSession: BookedSession? = nil
+    @State private var reviewedSessionIds: Set<String> = []
+
     @AppStorage("client.schedule.days")      private var scheduleDaysRaw: String = ""
     @AppStorage("client.schedule.time")      private var scheduleTimeRaw: String = ""
     @AppStorage("trainer.availableDays")     private var trainerDaysRaw: String = ""
@@ -111,6 +115,13 @@ struct SessionsView: View {
             }
             .sorted { $0.1 < $1.1 }
             .map { $0.0 }
+    }
+
+    /// Completed sessions the client can review, most recent first.
+    private var completedSessions: [BookedSession] {
+        bookedSessions
+            .filter { $0.status == "completed" }
+            .sorted { ($0.completedAt ?? $0.startTime) > ($1.completedAt ?? $1.startTime) }
     }
 
     var body: some View {
@@ -253,6 +264,22 @@ struct SessionsView: View {
                             }
                         }
                     }
+
+                    // ── Completed sessions (reviewable) ────────────────
+                    if !completedSessions.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            SectionHeader(title: "PAST SESSIONS")
+                            ForEach(completedSessions.prefix(8)) { session in
+                                CompletedSessionRow(
+                                    session: session,
+                                    trainerName: trainerDisplayName,
+                                    reviewed: reviewedSessionIds.contains(session.id)
+                                ) {
+                                    reviewingSession = session
+                                }
+                            }
+                        }
+                    }
                     } // requestedTrainerId else-branch
 
                     Spacer(minLength: 90)
@@ -293,6 +320,12 @@ struct SessionsView: View {
         .fullScreenCover(item: $impactCredit) { credit in
             ImpactFlowView(session: impactSession, credit: credit)
                 .environmentObject(auth)
+        }
+        .sheet(item: $reviewingSession) { session in
+            ReviewSheet(session: session, trainerName: trainerDisplayName) { sessionId in
+                reviewedSessionIds.insert(sessionId)
+            }
+            .environmentObject(auth)
         }
     }
 
@@ -592,6 +625,176 @@ struct BookedSessionRow: View {
     }
     private var timeLabel: String {
         let f = DateFormatter(); f.dateFormat = "h:mm a"; return f.string(from: date)
+    }
+}
+
+// MARK: - Completed Session Row (reviewable)
+
+struct CompletedSessionRow: View {
+    let session: BookedSession
+    let trainerName: String
+    let reviewed: Bool
+    let onReview: () -> Void
+
+    private var date: Date { session.startDate ?? Date() }
+
+    var body: some View {
+        HStack(spacing: 14) {
+            VStack(spacing: 2) {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.green)
+                Text(dayNum)
+                    .font(.system(size: 18, weight: .black))
+                    .foregroundColor(.montraTextPrimary)
+            }
+            .frame(width: 46, height: 52)
+            .background(Color.green.opacity(0.1))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay(RoundedRectangle(cornerRadius: 10)
+                .stroke(Color.green.opacity(0.3), lineWidth: 1))
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Completed Session")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.montraTextPrimary)
+                Label(trainerName, systemImage: "person.fill")
+                    .font(.system(size: 12))
+                    .foregroundColor(.montraTextSecondary)
+            }
+
+            Spacer()
+
+            if reviewed {
+                Label("Reviewed", systemImage: "checkmark.seal.fill")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.green)
+            } else {
+                Button(action: onReview) {
+                    Text("Leave a Review")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(Color.montraOrange)
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(12)
+        .background(Color.white.opacity(0.04))
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14)
+            .stroke(Color.white.opacity(0.07), lineWidth: 0.8))
+    }
+
+    private var dayNum: String {
+        let f = DateFormatter(); f.dateFormat = "d"; return f.string(from: date)
+    }
+}
+
+// MARK: - Review Sheet
+
+struct ReviewSheet: View {
+    let session: BookedSession
+    let trainerName: String
+    let onReviewed: (String) -> Void
+
+    @EnvironmentObject private var auth: AuthManager
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var rating: Int = 5
+    @State private var text: String = ""
+    @State private var isSubmitting = false
+    @State private var errorMessage: String? = nil
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 22) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("How was your session with \(trainerName)?")
+                            .font(.system(size: 20, weight: .black))
+                            .foregroundColor(.montraTextPrimary)
+                        Text("Your review is verified — it only appears because you completed a real session.")
+                            .font(.system(size: 13))
+                            .foregroundColor(.montraTextSecondary)
+                    }
+
+                    // Star rating
+                    HStack(spacing: 10) {
+                        ForEach(1...5, id: \.self) { star in
+                            Image(systemName: star <= rating ? "star.fill" : "star")
+                                .font(.system(size: 30))
+                                .foregroundColor(star <= rating ? .montraOrange : .montraTextSecondary.opacity(0.4))
+                                .onTapGesture { rating = star }
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Share a few words (optional)")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.montraTextSecondary)
+                        TextEditor(text: $text)
+                            .frame(minHeight: 120)
+                            .padding(8)
+                            .background(Color.white.opacity(0.04))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .overlay(RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white.opacity(0.08), lineWidth: 1))
+                            .foregroundColor(.montraTextPrimary)
+                    }
+
+                    if let errorMessage {
+                        Text(errorMessage)
+                            .font(.system(size: 13))
+                            .foregroundColor(.red)
+                    }
+
+                    Button(action: { Task { await submit() } }) {
+                        HStack {
+                            if isSubmitting { ProgressView().tint(.white) }
+                            Text(isSubmitting ? "Submitting…" : "Submit Review")
+                                .font(.system(size: 15, weight: .bold))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.montraOrange)
+                        .foregroundColor(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                    }
+                    .disabled(isSubmitting)
+                }
+                .padding(20)
+            }
+            .background(Color.montraBackground)
+            .navigationTitle("Rate Your Coach")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close") { dismiss() }
+                }
+            }
+        }
+    }
+
+    private func submit() async {
+        guard let user = auth.user else { return }
+        isSubmitting = true
+        errorMessage = nil
+        do {
+            let token = try await user.getIDTokenResult(forcingRefresh: false).token
+            _ = try await BookingAPI.submitReview(sessionId: session.id, rating: rating, text: text, token: token)
+            onReviewed(session.id)
+            dismiss()
+        } catch let ChatError.server(message) {
+            errorMessage = message
+        } catch {
+            errorMessage = "Couldn't submit your review. Please try again."
+        }
+        isSubmitting = false
     }
 }
 

@@ -143,7 +143,7 @@ enum BookingAPI {
         return try JSONDecoder().decode(SessionResponse.self, from: data).session
     }
 
-    private static func validate(response: URLResponse, data: Data) throws {
+    static func validate(response: URLResponse, data: Data) throws {
         guard let http = response as? HTTPURLResponse else { return }
         guard (200...299).contains(http.statusCode) else {
             if let payload = try? JSONDecoder().decode(ChatAPI.APIError.self, from: data) {
@@ -151,6 +151,36 @@ enum BookingAPI {
             }
             throw ChatError.server("Request failed with status \(http.statusCode)")
         }
+    }
+
+    /// A verified review a client leaves after completing a session.
+    struct Review: Identifiable, Decodable, Hashable {
+        let id: String
+        let trainerId: String
+        let rating: Int
+        let text: String
+    }
+
+    private struct ReviewResponse: Decodable { let review: Review }
+
+    /// Submits a verified review for a completed session. The backend enforces
+    /// that the session is the caller's and is completed (one review per session).
+    static func submitReview(sessionId: String, rating: Int, text: String, token: String) async throws -> Review {
+        guard let url = MontraAPIConfig.url(for: "/api/client/reviews") else {
+            throw ChatError.invalidURL
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.httpBody = try JSONSerialization.data(withJSONObject: [
+            "sessionId": sessionId,
+            "rating": rating,
+            "text": text.trimmingCharacters(in: .whitespacesAndNewlines),
+        ])
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try validate(response: response, data: data)
+        return try JSONDecoder().decode(ReviewResponse.self, from: data).review
     }
 
     /// Maps a backend session to the trainer-side display model used by
