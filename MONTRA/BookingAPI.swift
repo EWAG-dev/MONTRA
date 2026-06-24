@@ -12,9 +12,25 @@ struct BookedSession: Identifiable, Decodable, Hashable {
     let status: String
     let createdAt: String
     let updatedAt: String
+    let completedAt: String?
+    let completionNotes: String?
 
     var startDate: Date? {
         ISO8601DateFormatter().date(from: startTime)
+    }
+
+    /// True once the session's scheduled start time has passed.
+    var hasStarted: Bool {
+        guard let startDate else { return false }
+        return startDate <= Date()
+    }
+
+    var isCompleted: Bool { status == "completed" }
+    var isCancelled: Bool { status == "cancelled" }
+
+    /// A started, non-cancelled, not-yet-completed session can be marked complete.
+    var canMarkComplete: Bool {
+        hasStarted && !isCancelled && !isCompleted
     }
 }
 
@@ -99,6 +115,32 @@ enum BookingAPI {
         return try JSONDecoder().decode(SessionResponse.self, from: data).session
     }
 
+    static func completeTrainerSession(id: String, notes: String? = nil, token: String) async throws -> BookedSession {
+        try await completeSession(path: "/api/trainers/sessions/\(id)/complete", notes: notes, token: token)
+    }
+
+    static func completeClientSession(id: String, notes: String? = nil, token: String) async throws -> BookedSession {
+        try await completeSession(path: "/api/client/sessions/\(id)/complete", notes: notes, token: token)
+    }
+
+    private static func completeSession(path: String, notes: String?, token: String) async throws -> BookedSession {
+        guard let url = MontraAPIConfig.url(for: path) else {
+            throw ChatError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        let trimmedNotes = notes?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !trimmedNotes.isEmpty {
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try JSONSerialization.data(withJSONObject: ["notes": trimmedNotes])
+        }
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try validate(response: response, data: data)
+        return try JSONDecoder().decode(SessionResponse.self, from: data).session
+    }
+
     private static func validate(response: URLResponse, data: Data) throws {
         guard let http = response as? HTTPURLResponse else { return }
         guard (200...299).contains(http.statusCode) else {
@@ -120,7 +162,7 @@ enum BookingAPI {
             clientName: session.clientName.isEmpty ? "Client" : session.clientName,
             time: "\(dayFormatter.string(from: date)) \(timeFormatter.string(from: date))",
             type: "Training Session",
-            status: .scheduled,
+            status: session.isCompleted ? .completed : .scheduled,
             durationMin: session.durationMin
         )
     }

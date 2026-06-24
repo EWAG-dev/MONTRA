@@ -164,6 +164,22 @@ struct TrainerSessionRow: View {
     let session: TrainerClientSession
     var showsDuration: Bool = false
     var onCancel: (() -> Void)? = nil
+    var onComplete: (() -> Void)? = nil
+
+    private var statusLabel: String {
+        switch session.status {
+        case .confirmed: return "Confirmed"
+        case .scheduled: return "Scheduled"
+        case .completed: return "Completed"
+        }
+    }
+
+    private var statusColor: Color {
+        switch session.status {
+        case .confirmed, .completed: return .green
+        case .scheduled: return .montraTextSecondary
+        }
+    }
 
     var body: some View {
         HStack(spacing: 14) {
@@ -184,17 +200,36 @@ struct TrainerSessionRow: View {
 
             Spacer()
 
-            VStack(alignment: .trailing, spacing: 4) {
+            VStack(alignment: .trailing, spacing: 6) {
                 Text(session.time)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.montraTextPrimary)
-                Text(session.status == .confirmed ? "Confirmed" : "Scheduled")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(session.status == .confirmed ? .green : .montraTextSecondary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background((session.status == .confirmed ? Color.green : Color.white).opacity(0.12))
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                HStack(spacing: 4) {
+                    if session.status == .completed {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 10, weight: .bold))
+                    }
+                    Text(statusLabel)
+                        .font(.system(size: 11, weight: .semibold))
+                }
+                .foregroundColor(statusColor)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(statusColor.opacity(0.14))
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                if let onComplete {
+                    Button(action: onComplete) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "checkmark.circle")
+                                .font(.system(size: 12, weight: .semibold))
+                            Text("Mark Complete")
+                                .font(.system(size: 12, weight: .semibold))
+                        }
+                        .foregroundColor(.montraOrange)
+                    }
+                    .buttonStyle(.plain)
+                }
 
                 if let onCancel {
                     Button(action: onCancel) {
@@ -245,7 +280,7 @@ struct TrainerClientSession: Identifiable {
     let durationMin: Int
 }
 
-enum TrainerSessionStatus { case confirmed, scheduled }
+enum TrainerSessionStatus { case confirmed, scheduled, completed }
 
 #Preview {
     TrainerDashboardView(selectedTab: .constant(.dashboard))

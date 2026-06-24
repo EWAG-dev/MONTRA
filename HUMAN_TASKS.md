@@ -104,9 +104,15 @@ Body Stats tab shows current/start weight (single values). Full history requires
 - Backend endpoints: `POST /api/client/progress/weight-entry`, `GET /api/client/progress/weight-history`
 - iOS: line chart of weight over time (similar to existing session chart in ProgressView)
 
-### Session Completion Marking ⬜
-Workouts tab derives "completed" sessions from past booked sessions (date < now, not cancelled).
-Full completion tracking (with actual calories, post-workout notes) requires:
-- New `status: "completed"` on `bookedSessions` documents
-- New backend route: `POST /api/client/sessions/:id/complete` (or trainer-side)
-- iOS: "Mark Complete" button on past sessions in TrainerSessionsView + SessionsView
+### Session Completion Marking ✅ (shipped)
+Implemented end-to-end:
+- `status: "completed"` + `completedAt` + optional `completionNotes` on `bookedSessions`
+- `POST /api/trainers/sessions/:id/complete` and `POST /api/client/sessions/:id/complete`
+  (guards: 403 not-your-session, 409 if cancelled or not yet started); both push the other party
+- iOS: "Mark Complete" button on started sessions in TrainerSessionsView (Past tab now
+  surfaces completed sessions with a green Completed badge)
+- E2E: `complete_session_e2e_test.sh`
+
+Remaining optional enhancement (not blocking): capture per-session calories / structured
+post-workout notes beyond the freeform `completionNotes` field, and surface a completion
+flow on the client SessionsView too.

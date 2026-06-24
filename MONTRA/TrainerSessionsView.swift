@@ -9,6 +9,7 @@ struct TrainerSessionsView: View {
     @State private var bookedSessions: [BookedSession] = []
     @State private var hasLoaded = false
     @State private var cancelError: String?
+    @State private var actionError: String?
 
     enum SessionFilter: String, CaseIterable {
         case upcoming = "Upcoming"
@@ -35,20 +36,32 @@ struct TrainerSessionsView: View {
         }
     }
 
+    private func complete(_ session: BookedSession) async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false) else { return }
+        do {
+            _ = try await BookingAPI.completeTrainerSession(id: session.id, token: tokenResult.token)
+            await loadSessions()
+        } catch {
+            actionError = error.localizedDescription
+        }
+    }
+
     private var allSessions: [(BookedSession, TrainerClientSession)] {
         let now = Date()
         let cal = Calendar.current
         return bookedSessions
-            .filter { $0.status == "scheduled" }
+            // Upcoming/Today show scheduled only; Past also surfaces completed sessions.
+            .filter { selectedFilter == .past ? $0.status != "cancelled" : $0.status == "scheduled" }
             .compactMap { session -> (BookedSession, Date)? in
                 guard let date = session.startDate else { return nil }
                 return (session, date)
             }
-            .filter { _, date in
+            .filter { session, date in
                 switch selectedFilter {
                 case .upcoming: return date >= now
                 case .today: return cal.isDateInToday(date)
-                case .past: return date < now
+                case .past: return date < now || session.isCompleted
                 }
             }
             .sorted { $0.1 < $1.1 }
@@ -124,7 +137,14 @@ struct TrainerSessionsView: View {
                                 TrainerSessionRow(
                                     session: displaySession,
                                     showsDuration: true,
-                                    onCancel: { Task { await cancel(bookedSession) } }
+                                    // Upcoming sessions can be cancelled; started (not-yet-completed)
+                                    // sessions can be marked complete; completed ones show neither.
+                                    onCancel: bookedSession.canMarkComplete || bookedSession.isCompleted
+                                        ? nil
+                                        : { Task { await cancel(bookedSession) } },
+                                    onComplete: bookedSession.canMarkComplete
+                                        ? { Task { await complete(bookedSession) } }
+                                        : nil
                                 )
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 10)
@@ -152,6 +172,11 @@ struct TrainerSessionsView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(cancelError ?? "")
+        }
+        .alert("Couldn't update session", isPresented: Binding(get: { actionError != nil }, set: { if !$0 { actionError = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(actionError ?? "")
         }
         .task {
             await loadSessions()
