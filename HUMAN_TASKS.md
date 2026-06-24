@@ -77,18 +77,36 @@ Hit the **Resend free-tier daily limit (100 emails/day)** during E2E test runs. 
 
 ## Future Features (require design + backend schema decisions before code)
 
+### Verified Reviews ✅ (shipped)
+Real client reviews, anchored to completed sessions so nothing is fabricated.
+- Backend: `reviewStore.js` (`reviews` collection). `POST /api/client/reviews`
+  (auth; guards: 404 no session, 403 not-your-session, 409 not-completed / already
+  reviewed, 400 rating out of 1–5; one review per session) and public
+  `GET /api/trainers/:id/reviews` (returns `reviews[]` + `summary{rating,reviewCount}`).
+  Creating a review **recomputes the trainer's `rating`/`reviewCount`** from actual
+  visible reviews (replaces the seeded 4.9/0 default with real data). Reviews are
+  cleaned up in the dev reset path and re-aggregated.
+- Website: `coach-profile.html` "What Clients Say" now renders real review cards
+  (avatar initial, name, Verified badge, stars, relative date, body) from the public
+  endpoint; falls back to the aggregate-only note when a coach has none yet.
+- iOS: client SessionsView surfaces a "PAST SESSIONS" section for completed sessions
+  with a "Leave a Review" button → `ReviewSheet` (star rating + optional text) →
+  `BookingAPI.submitReview`. Rows flip to "Reviewed ✓" after submit.
+- E2E: `reviews_e2e_test.sh` covers uncompleted-409, out-of-range-400, cross-client-403,
+  create-201, duplicate-409, public listing, and aggregate recompute.
+
+### Budget Fit ✅ (shipped, real once coach pricing exists)
+Get Matched now has a budget step (step 7: Under $60 / $60–90 / $90–120 / $120+ /
+Flexible), saved into `localStorage['montra:prefs'].budget`. `montra-match.js`
+`budgetFit(trainer, prefs)` compares the client's ceiling to the coach's per-session
+price when the data model has one (`sessionRate`/`sessionPriceMax`/…). **Coaches have
+no price field yet** (see Storefront below), so today it still falls back to a seeded
+baseline — but the moment Storefront pricing lands, Budget Fit becomes a true signal
+with no further match-engine changes.
+
 ### MONTRA Match™ — follow-ups ⬜
 The match scoring + coach-profile redesign shipped (`assets/js/montra-match.js`,
-`coach-profile.html`, badges on index/quiz). Three things still need real data:
-- **Reviews**: profile shows the aggregate rating + a "Verified Reviews" badge but
-  **no individual testimonials** — we deliberately did not fabricate named quotes.
-  To show review cards (as in the client mockup) we need a backend reviews source:
-  `reviews: [{ clientName, rating, text, verifiedSessionId, createdAt }]` on the
-  trainer (or a `/api/trainers/:id/reviews` route), written when a client completes
-  a session. Until then the "What Clients Say" block stays aggregate-only.
-- **Budget Fit**: Get Matched has no budget question, so the "Budget Fit" factor is
-  a stable illustrative score. Add a budget step to the quiz (and a coach price
-  range — see Storefront below) to make it a real signal.
+`coach-profile.html`, badges on index/quiz). Remaining:
 - **Trust stack claim**: ID Verified / Background Checked / MONTRA Certified™ render
   for *every approved* coach as platform-standard vetting. Confirm the approval flow
   actually performs ID + background checks; if not, gate those rows behind real

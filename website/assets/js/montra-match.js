@@ -140,8 +140,42 @@ function coachingStyleFit(trainer, prefs) {
   return clamp(base);
 }
 
-function budgetFit(trainer) {
-  // No budget question yet — derive a stable, believable figure nudged by rating.
+// Parses a budget band label from Get Matched ("Under $60", "$60–90", "$120+",
+// "Flexible") into a per-session ceiling. null = no constraint (flexible / blank).
+function budgetCeiling(budget) {
+  if (!budget) return null;
+  const str = String(budget).toLowerCase();
+  if (str.includes('flex')) return null;
+  const nums = (str.match(/\d+/g) || []).map(Number);
+  if (!nums.length) return null;
+  if (str.includes('+')) return Infinity; // "$120+" — no upper bound
+  return Math.max(...nums); // top of the band is the client's ceiling
+}
+
+// A single representative per-session price for the coach, if the data model has
+// one yet (Storefront/pricing is a separate effort). Until then this is null and
+// Budget Fit falls back to a stable seeded baseline.
+function coachPrice(trainer) {
+  const candidates = [trainer.sessionRate, trainer.sessionPriceMax, trainer.sessionPriceMin, trainer.priceMax, trainer.price];
+  const found = candidates.map(Number).find((n) => Number.isFinite(n) && n > 0);
+  return found ?? null;
+}
+
+function budgetFit(trainer, prefs) {
+  const ceiling = budgetCeiling(prefs?.budget);
+  const price = coachPrice(trainer);
+
+  // Real signal: compare the coach's price to the client's stated ceiling.
+  if (price !== null && ceiling !== null) {
+    if (ceiling === Infinity || price <= ceiling) return seeded(trainer.id, 'budget', 96, 100);
+    if (price <= ceiling * 1.15) return seeded(trainer.id, 'budget', 84, 92);
+    if (price <= ceiling * 1.35) return seeded(trainer.id, 'budget', 70, 82);
+    return seeded(trainer.id, 'budget', 56, 68);
+  }
+  // Client is flexible (or didn't say) but coach price is known: no constraint.
+  if (price !== null && ceiling === null && prefs?.budget) return seeded(trainer.id, 'budget', 92, 98);
+
+  // No coach price in the data model yet — stable, believable baseline nudged by rating.
   const ratingNudge = Math.round((Number(trainer.rating || 4.8) - 4.5) * 4);
   return clamp(seeded(trainer.id, 'budget', 88, 97) + ratingNudge);
 }
@@ -153,7 +187,7 @@ export function computeMatch(trainer, prefsArg) {
   const factors = [
     { key: 'goal', label: 'Goal Fit', pct: clamp(goalFit(trainer, prefs)) },
     { key: 'schedule', label: 'Schedule Fit', pct: clamp(scheduleFit(trainer, prefs)) },
-    { key: 'budget', label: 'Budget Fit', pct: clamp(budgetFit(trainer)) },
+    { key: 'budget', label: 'Budget Fit', pct: clamp(budgetFit(trainer, prefs)) },
     { key: 'location', label: 'Location Fit', pct: clamp(locationFit(trainer, prefs)) },
     { key: 'style', label: 'Coaching Style Fit', pct: clamp(coachingStyleFit(trainer, prefs)) },
   ];

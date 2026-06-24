@@ -60,6 +60,11 @@ import {
   getCommunityImpact,
   deleteCreditsForClient,
 } from "./impactStore.js";
+import {
+  createReview,
+  listTrainerReviews,
+  deleteReviewsForClient,
+} from "./reviewStore.js";
 
 const app = express();
 const port = Number(process.env.PORT || 8080);
@@ -592,8 +597,9 @@ app.post("/api/dev/cleanup-test-data", requireFirebaseAuth, requireAdmin, async 
     });
 
     const creditsDeletion = clientUid ? deleteCreditsForClient(clientUid) : Promise.resolve();
+    const reviewsDeletion = clientUid ? deleteReviewsForClient(clientUid) : Promise.resolve();
 
-    await Promise.all([matchesDeletion, sessionsDeletion, conversationsDeletion, programsDeletion, creditsDeletion]);
+    await Promise.all([matchesDeletion, sessionsDeletion, conversationsDeletion, programsDeletion, creditsDeletion, reviewsDeletion]);
 
     if (trainerUid) {
       try { await auth.deleteUser(trainerUid); } catch (e) { /* already gone */ }
@@ -1077,6 +1083,24 @@ app.get("/api/trainers/:id", async (req, res) => {
   res.status(200).json({ trainer });
 });
 
+// Public: real client reviews for a coach, newest first. Powers the
+// "What Clients Say" block on coach-profile.html.
+app.get("/api/trainers/:id/reviews", async (req, res) => {
+  const trainer = await getTrainer(req.params.id);
+  if (!trainer) {
+    res.status(404).json({ error: "Trainer not found" });
+    return;
+  }
+  const reviews = await listTrainerReviews(req.params.id, { limit: 50 });
+  res.status(200).json({
+    reviews,
+    summary: {
+      rating: trainer.rating ?? null,
+      reviewCount: trainer.reviewCount ?? reviews.length,
+    },
+  });
+});
+
 app.post("/api/client/match", requireFirebaseAuth, async (req, res) => {
   const filters = {
     goal: String(req.body.goal || "").trim(),
@@ -1319,6 +1343,52 @@ app.post("/api/client/sessions/:id/complete", requireFirebaseAuth, async (req, r
   }
 
   res.status(200).json({ session });
+});
+
+// A client leaves a verified review for a coach they trained with. The review
+// is anchored to a completed session, so every review on the platform is real.
+app.post("/api/client/reviews", requireFirebaseAuth, async (req, res) => {
+  const sessionId = String(req.body?.sessionId || "").trim();
+  const session = await getBookedSession(sessionId);
+  if (!session) {
+    res.status(404).json({ error: "Session not found" });
+    return;
+  }
+
+  if (session.clientUid !== req.user.uid) {
+    res.status(403).json({ error: "Not your session" });
+    return;
+  }
+
+  if (session.status !== "completed") {
+    res.status(409).json({ error: "You can review a coach after the session is completed" });
+    return;
+  }
+
+  try {
+    const review = await createReview({
+      trainerId: session.trainerId,
+      sessionId: session.id,
+      clientUid: req.user.uid,
+      clientName: session.clientName,
+      rating: req.body?.rating,
+      text: req.body?.text,
+    });
+
+    const reviewedTrainer = await getTrainer(session.trainerId);
+    if (reviewedTrainer?.accountUid) {
+      sendPushToUid(reviewedTrainer.accountUid, {
+        title: "New Review",
+        body: `${session.clientName || "A client"} left you a ${review.rating}★ review.`,
+        data: { category: "review", trainerId: session.trainerId },
+      }).catch(() => {});
+    }
+
+    res.status(201).json({ review });
+  } catch (err) {
+    const status = err.code === "duplicate" ? 409 : err.code === "not_found" ? 404 : 400;
+    res.status(status).json({ error: err.message || "Could not save review" });
+  }
 });
 
 app.get("/api/client/progress", requireFirebaseAuth, async (req, res) => {
