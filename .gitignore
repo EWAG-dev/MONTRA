@@ -55,3 +55,10 @@ backend/package-lock.json
 backend/src/__tests__/
 firebase-key.json
 *-firebase-adminsdk-*.json
+
+# Sensitive credentials — never commit
+*.p8
+apns_key.p8
+
+# Firebase CLI deploy cache
+.firebase/
