@@ -80,6 +80,11 @@ struct WorkoutProgressView: View {
     @State private var currentWeightStr: String = ""
     @State private var startWeightStr: String = ""
     @State private var strengthTargetStr: String = "5"
+    @State private var weightLog: [WeightEntry] = []
+    @State private var showLogWeightSheet = false
+    @State private var newWeightText = ""
+    @State private var weightError: String?
+    @State private var isSavingWeight = false
 
     // MARK: Computed stats
 
@@ -596,6 +601,39 @@ struct WorkoutProgressView: View {
         currentWeightStr = remote.currentWeight
         startWeightStr = remote.startWeight
         strengthTargetStr = remote.strengthWeeklyTarget
+
+        if let log = try? await ProgressAPI.loadWeightHistory(token: tokenResult.token) {
+            weightLog = log
+        }
+    }
+
+    private func logWeight() async {
+        let trimmed = newWeightText.trimmingCharacters(in: .whitespaces)
+        guard let weight = Double(trimmed), weight > 0 else {
+            weightError = "Enter a valid weight."
+            return
+        }
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false) else { return }
+
+        isSavingWeight = true
+        defer { isSavingWeight = false }
+        do {
+            let log = try await ProgressAPI.logWeight(weight, token: tokenResult.token)
+            weightLog = log
+            // Keep the Body Stats summary in sync (backend derives these from the log).
+            currentWeightStr = log.last.map { formatWeight($0.weight) } ?? currentWeightStr
+            startWeightStr = log.first.map { formatWeight($0.weight) } ?? startWeightStr
+            newWeightText = ""
+            weightError = nil
+            showLogWeightSheet = false
+        } catch {
+            weightError = error.localizedDescription
+        }
+    }
+
+    private func formatWeight(_ value: Double) -> String {
+        value == value.rounded() ? String(Int(value)) : String(format: "%.1f", value)
     }
 
     private func loadSessions() async {
@@ -697,9 +735,8 @@ struct WorkoutProgressView: View {
     }
 
     // MARK: - Body Stats Tab
-    // Shows backend-persisted weight and goal data from ProgressAPI.
-    // Weight-over-time history logging requires a new backend field (array of dated entries)
-    // — see HUMAN_TASKS.md. Current implementation shows the last recorded values.
+    // Shows backend-persisted weight and goal data from ProgressAPI, plus a weight-over-time
+    // chart backed by the clientProgress weightLog (logged via the "Log Weight" button).
     private var bodyStatsContent: some View {
         VStack(alignment: .leading, spacing: 16) {
 
@@ -738,13 +775,110 @@ struct WorkoutProgressView: View {
             .padding(18)
             .montraCard(radius: 16)
 
-            Text("Weight history logging — tracking changes over time — is coming in a future update.")
-                .font(.system(size: 12))
-                .foregroundColor(.montraTextSecondary)
-                .padding(.horizontal, 4)
+            VStack(alignment: .leading, spacing: 14) {
+                HStack {
+                    Text("WEIGHT HISTORY")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.montraTextPrimary)
+                        .kerning(0.8)
+                    Spacer()
+                    Button {
+                        newWeightText = currentWeightStr
+                        weightError = nil
+                        showLogWeightSheet = true
+                    } label: {
+                        HStack(spacing: 5) {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 13, weight: .semibold))
+                            Text("Log Weight")
+                                .font(.system(size: 13, weight: .semibold))
+                        }
+                        .foregroundColor(.montraOrange)
+                    }
+                }
+
+                if weightLog.count >= 2 {
+                    WeightLineChart(entries: weightLog)
+                        .frame(height: 180)
+                } else if weightLog.count == 1 {
+                    Text("One measurement logged (\(formatWeight(weightLog[0].weight)) lbs). Log another to see your trend.")
+                        .font(.system(size: 13))
+                        .foregroundColor(.montraTextSecondary)
+                } else {
+                    Text("No weight entries yet. Tap “Log Weight” to start tracking your progress over time.")
+                        .font(.system(size: 13))
+                        .foregroundColor(.montraTextSecondary)
+                }
+            }
+            .padding(18)
+            .montraCard(radius: 16)
 
             Spacer(minLength: 40)
         }
+        .sheet(isPresented: $showLogWeightSheet) {
+            logWeightSheet
+        }
+    }
+
+    private var logWeightSheet: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 18) {
+                Text("Enter your current weight in pounds. We’ll add it to your history and update your Body Stats.")
+                    .font(.system(size: 13))
+                    .foregroundColor(.montraTextSecondary)
+
+                HStack(spacing: 10) {
+                    TextField("e.g. 182.5", text: $newWeightText)
+                        .keyboardType(.decimalPad)
+                        .font(.system(size: 18, weight: .semibold))
+                        .padding(14)
+                        .background(Color.montraBackground)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    Text("lbs")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundColor(.montraTextSecondary)
+                }
+
+                if let weightError {
+                    Text(weightError)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.red)
+                }
+
+                Button {
+                    Task { await logWeight() }
+                } label: {
+                    HStack {
+                        Spacer()
+                        if isSavingWeight {
+                            ProgressView().tint(.black)
+                        } else {
+                            Text("Save Weight")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(.black)
+                        }
+                        Spacer()
+                    }
+                    .padding(.vertical, 14)
+                    .background(Color.montraOrange)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .disabled(isSavingWeight)
+
+                Spacer()
+            }
+            .padding(20)
+            .background(Color.montraBackground.ignoresSafeArea())
+            .navigationTitle("Log Weight")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { showLogWeightSheet = false }
+                        .foregroundColor(.montraTextSecondary)
+                }
+            }
+        }
+        .presentationDetents([.height(320)])
     }
 
     private func bodyStatCell(label: String, value: String) -> some View {
@@ -1095,6 +1229,77 @@ struct ProgressLineChart: View {
         }
         .chartYScale(domain: 0...yMax)
         .chartXScale(domain: 1...xMax)
+    }
+}
+
+// MARK: - Weight History Chart
+
+struct WeightLineChart: View {
+    let entries: [WeightEntry]
+
+    private var points: [(date: Date, weight: Double)] {
+        entries.compactMap { entry in
+            entry.parsedDate.map { (date: $0, weight: entry.weight) }
+        }
+    }
+
+    private var yDomain: ClosedRange<Double> {
+        let weights = points.map(\.weight)
+        guard let lo = weights.min(), let hi = weights.max() else { return 0...1 }
+        // Pad the range by ~5% (min 2 lbs) so the line isn't flush against the edges.
+        let pad = max((hi - lo) * 0.05, 2)
+        return (lo - pad)...(hi + pad)
+    }
+
+    var body: some View {
+        Chart {
+            ForEach(points, id: \.date) { point in
+                AreaMark(
+                    x: .value("Date", point.date),
+                    y: .value("Weight", point.weight)
+                )
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [Color(hex: "#FF6A00").opacity(0.30), Color(hex: "#FF6A00").opacity(0.0)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .interpolationMethod(.monotone)
+
+                LineMark(
+                    x: .value("Date", point.date),
+                    y: .value("Weight", point.weight)
+                )
+                .foregroundStyle(Color(hex: "#FF6A00"))
+                .lineStyle(StrokeStyle(lineWidth: 2))
+                .interpolationMethod(.monotone)
+
+                PointMark(
+                    x: .value("Date", point.date),
+                    y: .value("Weight", point.weight)
+                )
+                .foregroundStyle(Color(hex: "#FF6A00"))
+                .symbolSize(28)
+            }
+        }
+        .chartYScale(domain: yDomain)
+        .chartXAxis {
+            AxisMarks(values: .automatic(desiredCount: 4)) { _ in
+                AxisValueLabel(format: .dateTime.month(.abbreviated).day())
+                    .font(.system(size: 10))
+                    .foregroundStyle(Color(hex: "#8E8E93"))
+                AxisGridLine().foregroundStyle(Color.clear)
+            }
+        }
+        .chartYAxis {
+            AxisMarks(position: .leading) { _ in
+                AxisValueLabel()
+                    .font(.caption)
+                    .foregroundStyle(Color(hex: "#8E8E93"))
+                AxisGridLine().foregroundStyle(Color.white.opacity(0.07))
+            }
+        }
     }
 }
 

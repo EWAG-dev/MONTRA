@@ -98,11 +98,15 @@ To wire real in-app support chat:
 - If real account: add a backend-known `MONTRA_TEAM_TRAINER_ID` env var, create a special conversation thread type that routes to the admin account
 - Update `GET /api/conversations/my-threads` to include this thread for all clients
 
-### Weight History Tracking ⬜
-Body Stats tab shows current/start weight (single values). Full history requires:
-- New Firestore field in `clientProgress`: `weightLog: [{date: ISO, weight: number}]`
-- Backend endpoints: `POST /api/client/progress/weight-entry`, `GET /api/client/progress/weight-history`
-- iOS: line chart of weight over time (similar to existing session chart in ProgressView)
+### Weight History Tracking ✅ (shipped)
+Implemented end-to-end:
+- `weightLog: [{date: ISO, weight: number}]` on `clientProgress`; startWeight/currentWeight
+  derived from the log (earliest/latest)
+- `GET /api/client/progress/weight-history`, `POST /api/client/progress/weight-entry`
+  (400 on invalid weight; dateless entries default to now)
+- iOS: "Log Weight" button + entry sheet in the Body Stats tab, WeightLineChart plotting
+  weight over time (y-axis auto-scaled to the data range)
+- E2E: `weight_history_e2e_test.sh`
 
 ### Session Completion Marking ✅ (shipped)
 Implemented end-to-end:

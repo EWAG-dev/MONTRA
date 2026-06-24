@@ -13,9 +13,54 @@ struct ClientProgress: Decodable, Hashable {
     let consistencyPercentTarget: String
 }
 
+struct WeightEntry: Decodable, Hashable, Identifiable {
+    let date: String
+    let weight: Double
+
+    var id: String { date }
+    var parsedDate: Date? { ISO8601DateFormatter().date(from: date) }
+}
+
 enum ProgressAPI {
     struct ProgressResponse: Decodable {
         let progress: ClientProgress
+    }
+
+    struct WeightHistoryResponse: Decodable {
+        let weightLog: [WeightEntry]
+    }
+
+    static func loadWeightHistory(token: String) async throws -> [WeightEntry] {
+        guard let url = MontraAPIConfig.url(for: "/api/client/progress/weight-history") else {
+            throw ChatError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try validate(response: response, data: data)
+        return try JSONDecoder().decode(WeightHistoryResponse.self, from: data).weightLog
+    }
+
+    @discardableResult
+    static func logWeight(_ weight: Double, date: Date? = nil, token: String) async throws -> [WeightEntry] {
+        guard let url = MontraAPIConfig.url(for: "/api/client/progress/weight-entry") else {
+            throw ChatError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        var body: [String: Any] = ["weight": weight]
+        if let date {
+            body["date"] = ISO8601DateFormatter().string(from: date)
+        }
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try validate(response: response, data: data)
+        return try JSONDecoder().decode(WeightHistoryResponse.self, from: data).weightLog
     }
 
     static func load(token: String) async throws -> ClientProgress {
