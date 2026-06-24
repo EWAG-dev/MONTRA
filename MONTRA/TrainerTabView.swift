@@ -36,6 +36,15 @@ struct TrainerTabView: View {
             TrainerTabBar(selectedTab: $selectedTab)
         }
         .ignoresSafeArea(edges: .bottom)
+        .onReceive(NotificationCenter.default.publisher(for: .montraPushTapped)) { note in
+            let category = note.userInfo?["category"] as? String ?? ""
+            switch category {
+            case "request": selectedTab = .inbox
+            case "message": selectedTab = .inbox
+            case "session": selectedTab = .sessions
+            default:        selectedTab = .dashboard
+            }
+        }
     }
 }
 

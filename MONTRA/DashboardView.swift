@@ -25,7 +25,6 @@ struct DashboardView: View {
     @State private var consistencyPercentTarget: String = "90"
     @AppStorage("quiz.firstName") private var firstName: String = ""
     @AppStorage("onboarding.completed") private var onboardingCompleted: Bool = true
-    @AppStorage("onboarding.rematchActive") private var rematchActive: Bool = false
     @AppStorage("quiz.requestedTrainer") private var requestedTrainerId: String = ""
     @AppStorage("quiz.requestedTrainerName") private var requestedTrainerName: String = ""
 
@@ -125,7 +124,6 @@ struct DashboardView: View {
                     Button {
                         requestedTrainerId = ""
                         requestedTrainerName = ""
-                        rematchActive = true
                         onboardingCompleted = false
                     } label: {
                         Text("Rematch")

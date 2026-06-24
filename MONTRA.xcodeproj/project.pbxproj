@@ -50,6 +50,7 @@
 		C9EEAE61062BDAF481CC63C9 /* MONTRA_AND_WEBSITE_ARCHITECTURE_GUIDE.md in Resources */ = {isa = PBXBuildFile; fileRef = E46D8EFBF31AD9B88C19818C /* MONTRA_AND_WEBSITE_ARCHITECTURE_GUIDE.md */; };
 		DF9B4E6EB22956E2AF54909C /* sendemail-validate.sample in Resources */ = {isa = PBXBuildFile; fileRef = 9BE4995166375C721EF753A4 /* sendemail-validate.sample */; };
 		E01365D9DA74131BB7E653FC /* BookingAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 524ED06C69FDA48EFBC34169 /* BookingAPI.swift */; };
+		E239D9139198325DF1471065 /* PushNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C64F7A5CE5A64B30BF464B3 /* PushNotificationManager.swift */; };
 		E81191F04DD6C64F6C42619D /* NotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F506439AA346F5E43B5C4C /* NotificationsView.swift */; };
 		ED0F611749CCC6B20EFEBBEC /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67A4AFFCD3600FC75FB826A8 /* Theme.swift */; };
 		EE451267036BB5E07BBF1E1D /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 0CA30C01512DEA2A9B503157 /* FirebaseAuth */; };
@@ -90,6 +91,7 @@
 		49C1747AB14811CAFAC6BD65 /* TrainerInboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainerInboxView.swift; sourceTree = "<group>"; };
 		49F76DDDF85C481759AF2377 /* update.sample */ = {isa = PBXFileReference; path = update.sample; sourceTree = "<group>"; };
 		4AACB3380CA4C0DD2FC3E065 /* e060040e356f17878e39bbde9e4e3da5400806 */ = {isa = PBXFileReference; path = e060040e356f17878e39bbde9e4e3da5400806; sourceTree = "<group>"; };
+		4C64F7A5CE5A64B30BF464B3 /* PushNotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationManager.swift; sourceTree = "<group>"; };
 		4CB2F152A8928645AD9B22D9 /* TrainerAgreementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainerAgreementView.swift; sourceTree = "<group>"; };
 		4CBC903BB6A14299AF9D0B1A /* config */ = {isa = PBXFileReference; path = config; sourceTree = "<group>"; };
 		4E6ED4E5A6ED60D6A4B66992 /* 77a94d879e5ea5ba68857ed8fce036cbc5b1f3 */ = {isa = PBXFileReference; path = 77a94d879e5ea5ba68857ed8fce036cbc5b1f3; sourceTree = "<group>"; };
@@ -844,6 +846,7 @@
 				DFC499BDAAD49D0E28B63F35 /* ProgressAPI.swift */,
 				CF31AFC30C8CE4F651820006 /* ProgressProfileView.swift */,
 				22FC335F43503AFBD39D9B67 /* ProgressView.swift */,
+				4C64F7A5CE5A64B30BF464B3 /* PushNotificationManager.swift */,
 				4EEE315C5993F668C5E4C689 /* SessionDetailView.swift */,
 				9D5593F7A430E689CBF764A2 /* SessionsView.swift */,
 				5742AE69821EC195A7939EDF /* SharedComponents.swift */,
@@ -1060,6 +1063,7 @@
 				5838CC21C85899EDB9974297 /* ProgressAPI.swift in Sources */,
 				0CB25A3063729E0FCFA7307F /* ProgressProfileView.swift in Sources */,
 				A454CD533725A1DCDF1B5452 /* ProgressView.swift in Sources */,
+				E239D9139198325DF1471065 /* PushNotificationManager.swift in Sources */,
 				FA9B9432855047FE5B58306F /* SessionDetailView.swift in Sources */,
 				270A8621D6698C7795B1DB6D /* SessionsView.swift in Sources */,
 				3E8C0FBDBE7966A671DB7309 /* SharedComponents.swift in Sources */,

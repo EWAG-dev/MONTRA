@@ -56,3 +56,10 @@ export function getFirestore() {
   }
   return admin.firestore();
 }
+
+export function getMessaging() {
+  if (!initialized) {
+    initFirebaseAdmin();
+  }
+  return admin.messaging();
+}

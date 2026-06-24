@@ -612,6 +612,7 @@ private struct PersonalInfoField: View {
 
 struct NotificationPrefsSheet: View {
     @Environment(\.dismiss) private var dismiss
+    // These keys are also read by PushNotificationManager to gate per-category pushes
     @AppStorage("notif.sessionReminders") private var sessionReminders = true
     @AppStorage("notif.messages")         private var messages         = true
     @AppStorage("notif.progressUpdates")  private var progressUpdates  = true

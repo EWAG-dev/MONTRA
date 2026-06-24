@@ -150,6 +150,16 @@ final class AuthManager: ObservableObject {
             UserDefaults.standard.removeObject(forKey: key)
         }
         userDisplayName = ""
+
+        // Fire-and-forget: remove the device token so pushes stop after sign-out.
+        if let user = Auth.auth().currentUser {
+            Task {
+                if let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false) {
+                    await PushNotificationManager.shared.deleteToken(authToken: tokenResult.token)
+                }
+            }
+        }
+
         try? Auth.auth().signOut()
      }
 

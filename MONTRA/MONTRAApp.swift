@@ -92,6 +92,12 @@ struct RootView: View {
             guard auth.userRole == .trainer, !trainerOrientationCompleted else { return }
             await syncOrientationStatusFromBackend()
         }
+        .task(id: auth.user?.uid) {
+            if auth.user != nil {
+                // Request APNs permission when the user signs in.
+                PushNotificationManager.shared.requestPermissionAndRegister()
+            }
+        }
     }
 
     @MainActor

@@ -40,6 +40,7 @@ import {
   listTrainerSessions,
 } from "./sessionStore.js";
 import { getClientProgress, saveClientProgress } from "./progressStore.js";
+import { saveDeviceToken, deleteDeviceToken, sendPushToUid } from "./pushStore.js";
 
 const app = express();
 const port = Number(process.env.PORT || 8080);
@@ -375,6 +376,23 @@ app.get("/api/me", requireFirebaseAuth, (req, res) => {
     role: req.user.role || "client",
     isAdmin: hasAdminAccess(req.user),
   });
+});
+
+// Register or refresh the FCM device token for the authenticated user.
+// Called by the iOS app whenever FirebaseMessaging delivers a new token.
+app.post("/api/me/device-token", requireFirebaseAuth, async (req, res) => {
+  const token = String(req.body?.token || "").trim();
+  if (!token) {
+    return res.status(400).json({ error: "token is required" });
+  }
+  await saveDeviceToken(req.user.uid, token);
+  res.status(200).json({ ok: true });
+});
+
+// Remove the device token on sign-out so the user stops receiving pushes.
+app.delete("/api/me/device-token", requireFirebaseAuth, async (req, res) => {
+  await deleteDeviceToken(req.user.uid);
+  res.status(200).json({ ok: true });
 });
 
 app.post("/api/trainers/apply", requireFirebaseAuth, async (req, res) => {
@@ -741,6 +759,14 @@ app.post("/api/trainers/sessions/:id/cancel", requireFirebaseAuth, async (req, r
   }
 
   const session = await cancelBookedSession(req.params.id);
+
+  // Push to the client
+  sendPushToUid(session.clientUid, {
+    title: "Session Cancelled",
+    body: `${trainer.name} cancelled your upcoming session.`,
+    data: { category: "session", sessionId: session.id },
+  }).catch(() => {});
+
   res.status(200).json({ session });
 });
 
@@ -777,6 +803,13 @@ app.post("/api/trainers/matches/:requestId/accept", requireFirebaseAuth, async (
       clientRequestAcceptedEmailHtml(clientName, trainer.name)
     ).catch((error) => console.error("Failed to send client acceptance email:", error.message));
   }
+
+  // Push to client
+  sendPushToUid(request.clientUid, {
+    title: "Coach Accepted Your Request",
+    body: `${trainer.name} accepted your request. Open the app to start chatting.`,
+    data: { category: "request", requestId: request.id },
+  }).catch(() => {});
 
   res.status(200).json({ request });
 });
@@ -909,13 +942,23 @@ app.post("/api/client/requests", requireFirebaseAuth, async (req, res) => {
       clientProfile: req.body.clientProfile || {},
     });
 
+    const clientFirstName = String(req.body?.clientProfile?.firstName || "").trim();
+
     if (trainer.email) {
-      const clientFirstName = String(req.body?.clientProfile?.firstName || "").trim();
       sendEmail(
         trainer.email,
         "New client request on MONTRA",
         trainerClientRequestEmailHtml(trainer.name, clientFirstName)
       ).catch((e) => console.error("Failed to send trainer client-request email:", e.message));
+    }
+
+    // Push to trainer if they have a device registered
+    if (trainer.accountUid) {
+      sendPushToUid(trainer.accountUid, {
+        title: "New Client Request",
+        body: `${clientFirstName || "A new client"} wants you as their coach.`,
+        data: { category: "request", requestId: request.id },
+      }).catch(() => {});
     }
 
     res.status(201).json({ request });
@@ -968,6 +1011,18 @@ app.post("/api/client/sessions", requireFirebaseAuth, async (req, res) => {
       ).catch((e) => console.error("Failed to send session-booked email:", e.message));
     }
 
+    // Push to trainer
+    if (trainer.accountUid) {
+      const dateLabel = new Date(startTime).toLocaleString("en-US", {
+        weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+      });
+      sendPushToUid(trainer.accountUid, {
+        title: "New Session Booked",
+        body: `${session.clientName || "A client"} booked a session for ${dateLabel}.`,
+        data: { category: "session", sessionId: session.id },
+      }).catch(() => {});
+    }
+
     res.status(201).json({ session });
   } catch (error) {
     res.status(400).json({ error: error.message || "Unable to book session" });
@@ -992,6 +1047,17 @@ app.post("/api/client/sessions/:id/cancel", requireFirebaseAuth, async (req, res
   }
 
   const session = await cancelBookedSession(req.params.id);
+
+  // Push to the trainer
+  const cancelledTrainer = await getTrainerByAccountUid(session.trainerId);
+  if (cancelledTrainer?.accountUid) {
+    sendPushToUid(cancelledTrainer.accountUid, {
+      title: "Session Cancelled",
+      body: `${session.clientName || "Your client"} cancelled their session.`,
+      data: { category: "session", sessionId: session.id },
+    }).catch(() => {});
+  }
+
   res.status(200).json({ session });
 });
 
@@ -1173,6 +1239,16 @@ app.post("/api/conversations/:conversationId/messages", requireFirebaseAuth, asy
         "New MONTRA message",
         chatMessageEmailHtml(senderName, message.text)
       ).catch((error) => console.error("Failed to send chat notification email:", error.message));
+    }
+
+    // Push to the recipient
+    const recipientUid = senderRole === "trainer" ? conversation.clientUid : trainer?.accountUid;
+    if (recipientUid) {
+      sendPushToUid(recipientUid, {
+        title: `Message from ${senderName}`,
+        body: message.text.length > 100 ? message.text.slice(0, 97) + "…" : message.text,
+        data: { category: "message", conversationId: conversation.id },
+      }).catch(() => {});
     }
 
     res.status(201).json({ message });

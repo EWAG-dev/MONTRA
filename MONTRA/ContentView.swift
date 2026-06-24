@@ -39,6 +39,15 @@ struct ContentView: View {
 
         }
         .ignoresSafeArea(edges: .bottom)
+        .onReceive(NotificationCenter.default.publisher(for: .montraPushTapped)) { note in
+            let category = note.userInfo?["category"] as? String ?? ""
+            switch category {
+            case "message":  selectedTab = .messages
+            case "session":  selectedTab = .sessions
+            case "request":  selectedTab = .messages
+            default:         selectedTab = .dashboard
+            }
+        }
     }
 }
 
