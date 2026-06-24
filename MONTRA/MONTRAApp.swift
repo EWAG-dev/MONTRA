@@ -4,6 +4,7 @@ import FirebaseCore
 @main
 struct MONTRAApp: App {
 
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var auth = AuthManager()
     @AppStorage("app.appearanceMode") private var appearanceMode: String = "dark"
 

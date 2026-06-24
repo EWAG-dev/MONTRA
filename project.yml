@@ -15,9 +15,8 @@ targets:
       - path: MONTRA
         excludes:
           - .git/**
-    resources:
-      - MONTRA/Assets.xcassets
-      - MONTRA/GoogleService-Info.plist
+    # Removed the malformed resources array. XcodeGen will automatically include 
+    # your Assets and Plist because they live inside the "MONTRA" source path.
     info:
       path: MONTRA/Info.plist
       properties:
@@ -35,9 +34,16 @@ targets:
         UIRequiresFullScreen: true
         ITSAppUsesNonExemptEncryption: false
         MONTRA_API_BASE_URL: https://montra-production.up.railway.app
+        UIBackgroundModes: [remote-notification]
+    entitlements:
+      path: MONTRA/MONTRA.entitlements
+      properties:
+        com.apple.developer.aps-environment: development
     dependencies:
       - package: firebase-ios-sdk
         product: FirebaseAuth
+      - package: firebase-ios-sdk
+        product: FirebaseMessaging
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.elitehomefitness.montra

@@ -1,20 +1,16 @@
 import SwiftUI
 import UserNotifications
 import FirebaseAuth
+import FirebaseMessaging
 
 // MARK: - PushNotificationManager
 //
-// Handles APNs permission request, FCM token upload to the backend, and
-// incoming notification routing. FirebaseMessaging is not imported here
-// because it requires the FirebaseMessaging SPM package to be added in
-// Xcode first — see HUMAN_TASKS.md for the steps. Once the package is
-// added, uncomment the FirebaseMessaging lines below.
-//
-// NOTE: The app polls /api/notifications/my every 8 seconds while open,
-// so in-app alerts work without push. Push notifications add background
-// delivery for users who aren't actively in the app.
+// Handles APNs permission, FCM token lifecycle, and notification routing.
+// The backend stores device tokens via POST /api/me/device-token and uses them
+// to push on: new client request, trainer accepted, new message, session booked,
+// session cancelled — gated by the user's per-category toggle preferences here.
 
-class PushNotificationManager: NSObject, ObservableObject, UNUserNotificationCenterDelegate {
+class PushNotificationManager: NSObject, ObservableObject, UNUserNotificationCenterDelegate, MessagingDelegate {
 
     static let shared = PushNotificationManager()
 
@@ -26,9 +22,10 @@ class PushNotificationManager: NSObject, ObservableObject, UNUserNotificationCen
     private override init() {
         super.init()
         UNUserNotificationCenter.current().delegate = self
+        Messaging.messaging().delegate = self
     }
 
-    // Call once from MONTRAApp.init() or after the user signs in.
+    // Call once after the user signs in.
     func requestPermissionAndRegister() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, _ in
             guard granted else { return }
@@ -38,18 +35,23 @@ class PushNotificationManager: NSObject, ObservableObject, UNUserNotificationCen
         }
     }
 
-    // Called by AppDelegate.didRegisterForRemoteNotificationsWithDeviceToken.
-    // Pass the raw APNs token here; FirebaseMessaging will exchange it for an
-    // FCM token once the package is installed (see HUMAN_TASKS.md).
+    // AppDelegate receives the raw APNs token and hands it here.
+    // FirebaseMessaging exchanges it for an FCM token asynchronously.
     func didReceiveAPNSToken(_ deviceToken: Data) {
-        // TODO (after FirebaseMessaging package is added):
-        //   import FirebaseMessaging
-        //   Messaging.messaging().apnsToken = deviceToken
-        //   Messaging.messaging().token { token, _ in
-        //       guard let token else { return }
-        //       Task { await PushNotificationManager.shared.uploadToken(token) }
-        //   }
-        _ = deviceToken // silence unused warning until FirebaseMessaging is linked
+        Messaging.messaging().apnsToken = deviceToken
+    }
+
+    // MARK: - MessagingDelegate
+
+    // Called whenever FirebaseMessaging gets a new FCM token (first launch,
+    // reinstall, token refresh). Upload it to the backend immediately.
+    func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
+        guard let fcmToken else { return }
+        Task {
+            guard let user = Auth.auth().currentUser,
+                  let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false) else { return }
+            await uploadToken(fcmToken, authToken: tokenResult.token)
+        }
     }
 
     // Upload the FCM token to the backend so it can target this device.
@@ -74,15 +76,13 @@ class PushNotificationManager: NSObject, ObservableObject, UNUserNotificationCen
 
     // MARK: - UNUserNotificationCenterDelegate
 
-    // Show notification banner even when the app is in the foreground.
+    // Show banner even when the app is in the foreground, gated by user prefs.
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
         let category = notification.request.content.userInfo["category"] as? String ?? ""
-
-        // Respect user's per-category toggle preferences
         var shouldShow = true
         switch category {
         case "session":  shouldShow = sessionReminders
@@ -91,11 +91,10 @@ class PushNotificationManager: NSObject, ObservableObject, UNUserNotificationCen
         case "promo":    shouldShow = promotions
         default:         shouldShow = true
         }
-
         completionHandler(shouldShow ? [.banner, .sound, .badge] : [])
     }
 
-    // Handle tap on a notification (app was in background / not running).
+    // Deep-link when the user taps a push notification.
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
@@ -103,9 +102,6 @@ class PushNotificationManager: NSObject, ObservableObject, UNUserNotificationCen
     ) {
         let userInfo = response.notification.request.content.userInfo
         let category = userInfo["category"] as? String ?? ""
-
-        // Post an internal notification so the app can deep-link.
-        // Views observe NotificationCenter to react (e.g., open the inbox tab).
         NotificationCenter.default.post(
             name: .montraPushTapped,
             object: nil,

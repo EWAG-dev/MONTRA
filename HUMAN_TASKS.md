@@ -1,5 +1,7 @@
 # Human Tasks
 
+> **Status legend:** ✅ Done · ⬜ Pending
+
 Tasks that require manual action in Xcode, Apple Developer Portal, Firebase Console, or Railway dashboard. Code is ready; these are the remaining setup steps.
 
 ---
@@ -13,37 +15,26 @@ The full push notification pipeline is implemented:
 
 **What a human must do before push notifications fire:**
 
-### 1. Apple Developer Portal
-- [ ] Enable **Push Notifications** capability for the app identifier `com.elitehomefitness.montra` at developer.apple.com → Certificates, Identifiers & Profiles → Identifiers
-- [ ] Create an **APNs Auth Key** (`.p8` file) under Keys if one doesn't exist — note the Key ID and download the file
+### 1. Apple Developer Portal ✅
+- [x] Enable **Push Notifications** capability for `com.elitehomefitness.montra`
+- [x] Create an **APNs Auth Key** (`.p8` file)
 
-### 2. Firebase Console
-- [ ] Go to Firebase Console → Project Settings → Cloud Messaging
-- [ ] Under "Apple app configuration" upload the APNs Auth Key (`.p8`), Key ID, and Team ID
-- [ ] Verify `com.elitehomefitness.montra` is listed as the iOS bundle ID
+### 2. Firebase Console ✅
+- [x] Upload APNs Auth Key (`.p8`), Key ID, and Team ID
+- [x] `com.elitehomefitness.montra` listed as the iOS bundle ID
 
-### 3. Xcode — Capabilities
-- [ ] Open `MONTRA.xcodeproj` in Xcode
-- [ ] Select the MONTRA target → Signing & Capabilities
-- [ ] Click **+ Capability** → add **Push Notifications**
-- [ ] Click **+ Capability** → add **Background Modes**, then check **Remote notifications**
+### 3. Xcode — Capabilities ✅
+- [x] Push Notifications capability added
+- [x] Background Modes → Remote notifications checked
 
-### 4. Xcode — FirebaseMessaging Package
-- [ ] File → Add Package Dependencies → search `https://github.com/firebase/firebase-ios-sdk`
-- [ ] Select **FirebaseMessaging** (FirebaseAnalytics is optional)
-- [ ] Add to the MONTRA target
-- [ ] Re-run `xcodegen generate` is NOT needed — SPM packages are managed directly in Xcode
+### 4. Xcode — FirebaseMessaging Package ✅
+- [x] FirebaseMessaging SPM package added to MONTRA target
 
-### 5. project.yml (so xcodegen doesn't lose the capability)
-- [ ] After adding Push Notifications and Background Modes in Xcode, open `project.yml` and add under the MONTRA target settings:
-  ```yaml
-  entitlements:
-    com.apple.developer.aps-environment: development  # change to 'production' for release
-  ```
-  and under `info` → `properties`:
-  ```yaml
-  UIBackgroundModes: [remote-notification]
-  ```
+### 5. project.yml ✅
+- [x] `UIBackgroundModes: [remote-notification]` and `aps-environment: development` added
+
+### 6. Switch to production entitlement before App Store release ⬜
+- [ ] Change `project.yml` → `com.apple.developer.aps-environment: development` → `production`, then `xcodegen generate` before archiving for TestFlight/App Store
 
 ---
 
@@ -56,7 +47,24 @@ The full push notification pipeline is implemented:
 
 ## Resend Email (Transactional)
 
-- [ ] Daily email quota was hit during E2E testing (2026-06-23). Upgrade the Resend plan or wait for quota reset. No code change needed.
+### Rate-limit trigger — exact record (2026-06-23)
+Hit the **Resend free-tier daily limit (100 emails/day)** during E2E test runs. Here is exactly what sent emails:
+
+| Action that sends email | Emails sent per E2E run |
+|---|---|
+| `POST /api/trainers/provision` (auto-approved) | 2 — application-received + approval-with-password-link |
+| `POST /api/admin/trainers/:id/approve` | 1 — approval-with-password-link |
+| `POST /api/client/requests` (trainer has email) | 1 — "new client request" to trainer |
+| `POST /api/trainers/matches/:id/accept` (client has email) | 1 — "your coach accepted" to client |
+| `POST /api/client/sessions` (trainer has email) | 1 — "new session booked" to trainer |
+| `POST /api/conversations/:id/messages` (recipient has email) | 1 per message |
+| `POST /api/admin/test-email` | 1 — test email to admin |
+
+**How we hit the limit:** we ran all 15 E2E scripts in sequence on the same day. Each script that creates a trainer via the provision endpoint (admin_review, website_trainer_form, past_booking, trainer_apply) sends 2 emails. Combined with chat/booking/accept scripts, a single full suite run sends ~25–35 emails. Running the full suite 3–4 times in one day exhausts the 100-email free quota.
+
+**Fix:** upgrade Resend to a paid plan for production volume. No code change needed — all sends already use `.catch(console.error)` so quota errors don't break the request flow, they just log silently.
+
+- [ ] Upgrade Resend plan at resend.com when transactional email volume grows
 
 ---
 

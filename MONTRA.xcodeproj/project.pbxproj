@@ -50,10 +50,12 @@
 		C9EEAE61062BDAF481CC63C9 /* MONTRA_AND_WEBSITE_ARCHITECTURE_GUIDE.md in Resources */ = {isa = PBXBuildFile; fileRef = E46D8EFBF31AD9B88C19818C /* MONTRA_AND_WEBSITE_ARCHITECTURE_GUIDE.md */; };
 		DF9B4E6EB22956E2AF54909C /* sendemail-validate.sample in Resources */ = {isa = PBXBuildFile; fileRef = 9BE4995166375C721EF753A4 /* sendemail-validate.sample */; };
 		E01365D9DA74131BB7E653FC /* BookingAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 524ED06C69FDA48EFBC34169 /* BookingAPI.swift */; };
+		E0F07D4671B3E4F48A57722A /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = E84CC16AD8615D0E9C50AEDE /* FirebaseMessaging */; };
 		E239D9139198325DF1471065 /* PushNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C64F7A5CE5A64B30BF464B3 /* PushNotificationManager.swift */; };
 		E81191F04DD6C64F6C42619D /* NotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F506439AA346F5E43B5C4C /* NotificationsView.swift */; };
 		ED0F611749CCC6B20EFEBBEC /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67A4AFFCD3600FC75FB826A8 /* Theme.swift */; };
 		EE451267036BB5E07BBF1E1D /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 0CA30C01512DEA2A9B503157 /* FirebaseAuth */; };
+		F4D71A41C0E8305A58041191 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB4BCFC481DE89C4708F65F5 /* AppDelegate.swift */; };
 		FA9B9432855047FE5B58306F /* SessionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EEE315C5993F668C5E4C689 /* SessionDetailView.swift */; };
 		FF1CD4AF86EBC6FBB65A9B6A /* TrainerSessionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52B3013F697BAF84CD5EAC4F /* TrainerSessionsView.swift */; };
 /* End PBXBuildFile section */
@@ -115,6 +117,7 @@
 		6CE961CD047FDE66F2DF35D4 /* MessagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesView.swift; sourceTree = "<group>"; };
 		71F506439AA346F5E43B5C4C /* NotificationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsView.swift; sourceTree = "<group>"; };
 		7207DE700695109AF51DAE01 /* 73293080ea9d879be6a574601d2ac4d9f7d216 */ = {isa = PBXFileReference; path = 73293080ea9d879be6a574601d2ac4d9f7d216; sourceTree = "<group>"; };
+		7216945B5067A4188710141F /* MONTRA.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MONTRA.entitlements; sourceTree = "<group>"; };
 		7263A1F052529F6AD815E5DA /* 8d4e7176ba889861833bc78e10940c4871b9af */ = {isa = PBXFileReference; path = 8d4e7176ba889861833bc78e10940c4871b9af; sourceTree = "<group>"; };
 		7948F993CCAF78116A6583CC /* 635a829336f78c95cc2377aa3e164af3a69740 */ = {isa = PBXFileReference; path = 635a829336f78c95cc2377aa3e164af3a69740; sourceTree = "<group>"; };
 		7B652E37676DD5F1A24811EA /* 02ca15e487a5ade8360366f1b42cac767db120 */ = {isa = PBXFileReference; path = 02ca15e487a5ade8360366f1b42cac767db120; sourceTree = "<group>"; };
@@ -145,6 +148,7 @@
 		A404A95932A4910A6B556E20 /* 28b0758cbc6252d1be69a40527930c5d25da40 */ = {isa = PBXFileReference; path = 28b0758cbc6252d1be69a40527930c5d25da40; sourceTree = "<group>"; };
 		A657E543342D0963215C4867 /* d0b86821f1e12b1f02425fbd3a1afcedcbde5a */ = {isa = PBXFileReference; path = d0b86821f1e12b1f02425fbd3a1afcedcbde5a; sourceTree = "<group>"; };
 		A66F2E5114339E2E0616F322 /* 9978ee4d99ca0709e0e7878de56dfe6183d882 */ = {isa = PBXFileReference; path = 9978ee4d99ca0709e0e7878de56dfe6183d882; sourceTree = "<group>"; };
+		AB4BCFC481DE89C4708F65F5 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		AD8EC497BCAAF7E212907258 /* d7bf4c30cbc4787f1377df4793b91d620a83a6 */ = {isa = PBXFileReference; path = d7bf4c30cbc4787f1377df4793b91d620a83a6; sourceTree = "<group>"; };
 		AEBA4C64AE1FC20AC56EC3F8 /* 5f6b2aeb0b7d9bb51a8945ac440f0b7c17e4d5 */ = {isa = PBXFileReference; path = 5f6b2aeb0b7d9bb51a8945ac440f0b7c17e4d5; sourceTree = "<group>"; };
 		AF6F4F1FD0E9C2288528F26A /* 32ab2212b5b4cdece16bdc129bf373d001f246 */ = {isa = PBXFileReference; path = 32ab2212b5b4cdece16bdc129bf373d001f246; sourceTree = "<group>"; };
@@ -196,6 +200,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				EE451267036BB5E07BBF1E1D /* FirebaseAuth in Frameworks */,
+				E0F07D4671B3E4F48A57722A /* FirebaseMessaging in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -824,6 +829,7 @@
 		D9B28CE0CCDEFD0AFB1C5DB5 /* MONTRA */ = {
 			isa = PBXGroup;
 			children = (
+				AB4BCFC481DE89C4708F65F5 /* AppDelegate.swift */,
 				1AB31CA4DEDFE8B135674FAA /* Assets.xcassets */,
 				F1AD8584BC907F0E9AAA1BBA /* AuthManager.swift */,
 				524ED06C69FDA48EFBC34169 /* BookingAPI.swift */,
@@ -838,6 +844,7 @@
 				862A677FF5122F8C56A8F460 /* LoginView.swift */,
 				6CE961CD047FDE66F2DF35D4 /* MessagesView.swift */,
 				E46D8EFBF31AD9B88C19818C /* MONTRA_AND_WEBSITE_ARCHITECTURE_GUIDE.md */,
+				7216945B5067A4188710141F /* MONTRA.entitlements */,
 				EC384F94972FB8ABF7F4047A /* MONTRAApp.swift */,
 				B5136A81B3A141BC939C5F89 /* MontraCompactTopBar.swift */,
 				71F506439AA346F5E43B5C4C /* NotificationsView.swift */,
@@ -971,6 +978,7 @@
 			name = MONTRA;
 			packageProductDependencies = (
 				0CA30C01512DEA2A9B503157 /* FirebaseAuth */,
+				E84CC16AD8615D0E9C50AEDE /* FirebaseMessaging */,
 			);
 			productName = MONTRA;
 			productReference = FC14FA3CEE2D2EC1C1FE7336 /* MONTRA.app */;
@@ -1046,6 +1054,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F4D71A41C0E8305A58041191 /* AppDelegate.swift in Sources */,
 				8A4A0DF89D00297F68849F65 /* AuthManager.swift in Sources */,
 				E01365D9DA74131BB7E653FC /* BookingAPI.swift in Sources */,
 				67E4B5630E736DE0E234F6D7 /* ChatModels.swift in Sources */,
@@ -1211,6 +1220,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGNING_ALLOWED = YES;
 				CODE_SIGNING_REQUIRED = YES;
+				CODE_SIGN_ENTITLEMENTS = MONTRA/MONTRA.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = X29HP9D526;
@@ -1237,6 +1247,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGNING_ALLOWED = YES;
 				CODE_SIGNING_REQUIRED = YES;
+				CODE_SIGN_ENTITLEMENTS = MONTRA/MONTRA.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = X29HP9D526;
@@ -1292,6 +1303,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = F8B82E658239FF74FFF3AF72 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseAuth;
+		};
+		E84CC16AD8615D0E9C50AEDE /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F8B82E658239FF74FFF3AF72 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
