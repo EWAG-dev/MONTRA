@@ -69,6 +69,13 @@ function normalizeTrainerPayload(input, existingTrainer = null) {
   const introVideoUrl = normalizeString(input.introVideoUrl ?? existingTrainer?.introVideoUrl);
   const backgroundCheckConsent = Boolean(input.backgroundCheckConsent ?? existingTrainer?.backgroundCheckConsent ?? false);
   const policyAgreement = Boolean(input.policyAgreement ?? existingTrainer?.policyAgreement ?? false);
+  // Real, admin-confirmed vetting outcomes (distinct from the applicant's consent
+  // above). Deliberately ignore `input` here so a trainer can't self-claim these
+  // via apply/provision — they're only settable through setTrainerVerification
+  // (admin-gated). We carry the existing value forward on any other profile edit.
+  const idVerified = Boolean(existingTrainer?.idVerified ?? false);
+  const backgroundCheckCleared = Boolean(existingTrainer?.backgroundCheckCleared ?? false);
+  const montraCertified = Boolean(existingTrainer?.montraCertified ?? false);
   const education = normalizeString(input.education ?? existingTrainer?.education);
   const references = normalizeList(input.references ?? existingTrainer?.references ?? []);
 
@@ -111,6 +118,9 @@ function normalizeTrainerPayload(input, existingTrainer = null) {
     introVideoUrl,
     backgroundCheckConsent,
     policyAgreement,
+    idVerified,
+    backgroundCheckCleared,
+    montraCertified,
     education,
     references,
   };
@@ -145,6 +155,9 @@ function serializeTrainer(doc) {
     introVideoUrl: data.introVideoUrl || "",
     backgroundCheckConsent: data.backgroundCheckConsent === true,
     policyAgreement: data.policyAgreement === true,
+    idVerified: data.idVerified === true,
+    backgroundCheckCleared: data.backgroundCheckCleared === true,
+    montraCertified: data.montraCertified === true,
     education: data.education || "",
     references: Array.isArray(data.references) ? data.references : [],
     orientationCompleted: data.orientationCompleted === true,
@@ -441,6 +454,22 @@ export async function setTrainerRating(id, { rating, reviewCount }) {
     },
     { merge: true }
   );
+  return getTrainer(id);
+}
+
+// Sets admin-confirmed vetting flags via a direct merge write (no full-profile
+// re-validation). Only the boolean flags passed in are touched.
+const VERIFICATION_FIELDS = ["idVerified", "backgroundCheckCleared", "montraCertified"];
+export async function setTrainerVerification(id, flags) {
+  const existing = await getTrainer(id);
+  if (!existing) return null;
+  const updates = {};
+  for (const key of VERIFICATION_FIELDS) {
+    if (typeof flags?.[key] === "boolean") updates[key] = flags[key];
+  }
+  if (Object.keys(updates).length === 0) return existing;
+  updates.updatedAt = new Date().toISOString();
+  await trainersCollection().doc(id).set(updates, { merge: true });
   return getTrainer(id);
 }
 

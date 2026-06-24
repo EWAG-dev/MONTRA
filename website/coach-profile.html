@@ -156,7 +156,7 @@
         </div>
 
         <!-- A COACH YOU CAN TRUST -->
-        <div class="border border-gray-200 rounded-2xl p-6">
+        <div id="trust-section" class="border border-gray-200 rounded-2xl p-6">
           <h2 class="font-black text-lg mb-4">A Coach You Can Trust</h2>
           <div id="trust-stack" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
         </div>
@@ -352,17 +352,23 @@
 
     // ---- Trust stack ----
     function renderTrustStack(trainer) {
-      const items = [
-        { label: 'ID Verified', on: true },
-        { label: 'Background Checked', on: true },
-        { label: 'MONTRA Certified™', on: true },
-      ];
+      // Each badge is gated on a real, admin-confirmed field — we never claim a
+      // check that wasn't actually recorded for this specific coach.
+      const items = [];
+      if (trainer.idVerified) items.push({ label: 'ID Verified', on: true });
+      if (trainer.backgroundCheckCleared) items.push({ label: 'Background Checked', on: true });
+      if (trainer.montraCertified) items.push({ label: 'MONTRA Certified™', on: true });
       if (trainer.hasInsurance) items.push({ label: 'Insurance Verified', on: true });
       if (trainer.cprCertification) items.push({ label: 'CPR / AED Certified', on: true });
       if (trainer.certification) items.push({ label: escapeHtml(trainer.certification), on: true });
       const reviewCount = Number(trainer.reviewCount || 0);
       if (reviewCount > 0) items.push({ label: `${reviewCount} Verified Sessions`, on: true });
       items.push({ label: 'Verified Reviews', on: true });
+
+      // Hide the whole "A Coach You Can Trust" section if nothing real to show
+      // beyond the always-on Verified Reviews line.
+      const trustSection = document.getElementById('trust-section');
+      if (trustSection) trustSection.classList.toggle('hidden', items.length <= 1);
 
       document.getElementById('trust-stack').innerHTML = items.map((it) => `
         <div class="flex items-center gap-2">

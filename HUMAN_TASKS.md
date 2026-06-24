@@ -104,13 +104,31 @@ no price field yet** (see Storefront below), so today it still falls back to a s
 baseline — but the moment Storefront pricing lands, Budget Fit becomes a true signal
 with no further match-engine changes.
 
-### MONTRA Match™ — follow-ups ⬜
-The match scoring + coach-profile redesign shipped (`assets/js/montra-match.js`,
-`coach-profile.html`, badges on index/quiz). Remaining:
-- **Trust stack claim**: ID Verified / Background Checked / MONTRA Certified™ render
-  for *every approved* coach as platform-standard vetting. Confirm the approval flow
-  actually performs ID + background checks; if not, gate those rows behind real
-  per-trainer fields (like Insurance/CPR already are) to avoid overclaiming.
+### Trust-stack verification gating ✅ (shipped)
+The ID Verified / Background Checked / MONTRA Certified™ badges no longer render for
+every approved coach — each is gated on a real, admin-confirmed per-trainer flag.
+- Backend schema: `idVerified`, `backgroundCheckCleared`, `montraCertified` booleans
+  on the trainer (default false). These are distinct from the existing
+  `backgroundCheckConsent` (the applicant's consent, not a completed check) and are
+  **deliberately ignored from apply/provision input** — `normalizeTrainerPayload`
+  only carries them forward from the existing doc, so a trainer cannot self-claim them.
+- Admin route: `POST /api/admin/trainers/:id/verification` (requireAdmin) sets any of
+  the three booleans via a direct merge write (`setTrainerVerification`); 400 on empty
+  body, 404 unknown trainer. This is the **only** path that can turn a badge on.
+- Website: `coach-profile.html` `renderTrustStack` gates each badge on its flag and
+  hides the whole "A Coach You Can Trust" card when there's nothing real to show.
+- E2E: `trust_verification_e2e_test.sh` (defaults false, self-set-via-apply ignored,
+  non-admin 403, empty-body 400, admin sets exactly the flags given, flags survive a
+  later profile edit).
+
+**HUMAN ACTION:** wire the real vetting workflow (whatever ID/background-check vendor
+EHF uses) to call `POST /api/admin/trainers/:id/verification` when a check clears —
+until an admin sets these, the badges stay off (which is correct, not a bug).
+
+### MONTRA Match™ — follow-ups
+All three original follow-ups (real reviews, budget step, trust-stack gating) are now
+shipped — see the sections above. Budget Fit becomes a true signal once Storefront
+pricing exists (below).
 
 ### Trainer Storefront & Pricing ⬜
 The Storefront tab currently shows "coming soon." Fully building this requires:

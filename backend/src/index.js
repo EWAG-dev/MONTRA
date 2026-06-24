@@ -16,6 +16,7 @@ import {
   rejectTrainer,
   upsertTrainerForAccount,
   updateTrainer,
+  setTrainerVerification,
 } from "./trainerStore.js";
 import {
   createMatchRequest,
@@ -1624,6 +1625,27 @@ app.post("/api/admin/trainers/:id/approve", requireFirebaseAuth, requireAdmin, a
 
   await finalizeTrainerApproval(trainer, "admin-approve-trainer");
 
+  res.status(200).json({ trainer });
+});
+
+// Records admin-confirmed vetting outcomes. These — not approval alone — gate the
+// "ID Verified" / "Background Checked" / "MONTRA Certified™" trust badges so the
+// platform never claims a check it didn't actually perform.
+app.post("/api/admin/trainers/:id/verification", requireFirebaseAuth, requireAdmin, async (req, res) => {
+  const allowed = ["idVerified", "backgroundCheckCleared", "montraCertified"];
+  const flags = {};
+  for (const key of allowed) {
+    if (typeof req.body?.[key] === "boolean") flags[key] = req.body[key];
+  }
+  if (Object.keys(flags).length === 0) {
+    res.status(400).json({ error: `Provide at least one boolean flag: ${allowed.join(", ")}` });
+    return;
+  }
+  const trainer = await setTrainerVerification(req.params.id, flags);
+  if (!trainer) {
+    res.status(404).json({ error: "Trainer not found" });
+    return;
+  }
   res.status(200).json({ trainer });
 });
 
