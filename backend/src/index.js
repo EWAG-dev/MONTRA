@@ -41,6 +41,16 @@ import {
   listTrainerSessions,
 } from "./sessionStore.js";
 import { getClientProgress, saveClientProgress, addWeightEntry, getWeightHistory } from "./progressStore.js";
+import {
+  createProgram,
+  listTrainerPrograms,
+  getProgram,
+  updateProgram,
+  deleteProgram,
+  assignProgram,
+  listClientPrograms,
+  deleteProgramsForTrainerOrClient,
+} from "./programStore.js";
 import { saveDeviceToken, deleteDeviceToken, sendPushToUid } from "./pushStore.js";
 
 const app = express();
@@ -568,7 +578,12 @@ app.post("/api/dev/cleanup-test-data", requireFirebaseAuth, requireAdmin, async 
       );
     })();
 
-    await Promise.all([matchesDeletion, sessionsDeletion, conversationsDeletion]);
+    const programsDeletion = deleteProgramsForTrainerOrClient({
+      trainerId: trainerDocId,
+      clientUid,
+    });
+
+    await Promise.all([matchesDeletion, sessionsDeletion, conversationsDeletion, programsDeletion]);
 
     if (trainerUid) {
       try { await auth.deleteUser(trainerUid); } catch (e) { /* already gone */ }
@@ -725,6 +740,114 @@ app.get("/api/trainers/my-matches", requireFirebaseAuth, async (req, res) => {
 
   const matches = await listTrainerMatches(trainer.id);
   res.status(200).json({ trainer, matches });
+});
+
+// MARK: Trainer programs (templates) + assignment
+
+app.get("/api/trainers/programs", requireFirebaseAuth, async (req, res) => {
+  const trainer = await getTrainerByAccountUid(req.user.uid);
+  if (!trainer) {
+    res.status(404).json({ error: "Trainer profile not found" });
+    return;
+  }
+  const programs = await listTrainerPrograms(trainer.id);
+  res.status(200).json({ programs });
+});
+
+app.post("/api/trainers/programs", requireFirebaseAuth, async (req, res) => {
+  const trainer = await getTrainerByAccountUid(req.user.uid);
+  if (!trainer) {
+    res.status(404).json({ error: "Trainer profile not found" });
+    return;
+  }
+  try {
+    const program = await createProgram(trainer.id, req.body || {});
+    res.status(201).json({ program });
+  } catch (error) {
+    res.status(400).json({ error: error.message || "Unable to create program" });
+  }
+});
+
+app.put("/api/trainers/programs/:id", requireFirebaseAuth, async (req, res) => {
+  const trainer = await getTrainerByAccountUid(req.user.uid);
+  const existing = await getProgram(req.params.id);
+  if (!existing) {
+    res.status(404).json({ error: "Program not found" });
+    return;
+  }
+  if (!trainer || existing.trainerId !== trainer.id) {
+    res.status(403).json({ error: "Not your program" });
+    return;
+  }
+  try {
+    const program = await updateProgram(req.params.id, req.body || {});
+    res.status(200).json({ program });
+  } catch (error) {
+    res.status(400).json({ error: error.message || "Unable to update program" });
+  }
+});
+
+app.delete("/api/trainers/programs/:id", requireFirebaseAuth, async (req, res) => {
+  const trainer = await getTrainerByAccountUid(req.user.uid);
+  const existing = await getProgram(req.params.id);
+  if (!existing) {
+    res.status(404).json({ error: "Program not found" });
+    return;
+  }
+  if (!trainer || existing.trainerId !== trainer.id) {
+    res.status(403).json({ error: "Not your program" });
+    return;
+  }
+  await deleteProgram(req.params.id);
+  res.status(200).json({ ok: true });
+});
+
+app.post("/api/trainers/programs/:id/assign", requireFirebaseAuth, async (req, res) => {
+  const trainer = await getTrainerByAccountUid(req.user.uid);
+  const program = await getProgram(req.params.id);
+  if (!program) {
+    res.status(404).json({ error: "Program not found" });
+    return;
+  }
+  if (!trainer || program.trainerId !== trainer.id) {
+    res.status(403).json({ error: "Not your program" });
+    return;
+  }
+
+  const clientUid = String(req.body?.clientUid || "").trim();
+  if (!clientUid) {
+    res.status(400).json({ error: "clientUid is required" });
+    return;
+  }
+
+  // Trainer may only assign to a client they have an accepted match with.
+  const matches = await listTrainerMatches(trainer.id);
+  const match = matches.find((m) => m.clientUid === clientUid && m.status === "accepted");
+  if (!match) {
+    res.status(403).json({ error: "No accepted match with this client" });
+    return;
+  }
+
+  const assignment = await assignProgram({
+    program,
+    trainerName: trainer.name,
+    clientUid,
+    clientName: match.clientProfile?.firstName || match.clientName || "",
+  });
+
+  // Notify the client their coach assigned a program.
+  sendPushToUid(clientUid, {
+    title: "New Program Assigned",
+    body: `${trainer.name} assigned you a new program: ${program.title}.`,
+    data: { category: "program", programId: assignment.id },
+  }).catch(() => {});
+
+  res.status(201).json({ assignment });
+});
+
+app.get("/api/client/programs", requireFirebaseAuth, async (req, res) => {
+  const programs = await listClientPrograms(req.user.uid);
+  res.status(200).json({ programs });
 });
 
 app.get("/api/trainers/my-sessions", requireFirebaseAuth, async (req, res) => {
