@@ -142,11 +142,19 @@
   <section id="all-coaches" class="max-w-7xl mx-auto px-6 lg:px-8 py-12">
     <div class="flex gap-8">
 
-      <!-- Sidebar -->
-      <aside class="w-60 flex-shrink-0">
+      <!-- Filter backdrop (mobile only) -->
+      <div id="filter-backdrop" class="fixed inset-0 bg-black/40 z-40 opacity-0 pointer-events-none transition-opacity duration-300 lg:hidden"></div>
+
+      <!-- Sidebar (static on desktop, slide-over drawer on mobile) -->
+      <aside id="filter-sidebar" class="fixed inset-y-0 left-0 z-50 w-[86%] max-w-xs bg-white p-6 overflow-y-auto shadow-2xl -translate-x-full transition-transform duration-300 ease-out lg:static lg:z-auto lg:w-60 lg:max-w-none lg:p-0 lg:shadow-none lg:overflow-visible lg:translate-x-0 lg:transition-none flex-shrink-0">
         <div class="flex items-center justify-between mb-5">
           <span class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Filters</span>
-          <button id="clear-filters" class="text-xs text-brand hover:underline">Clear all</button>
+          <div class="flex items-center gap-4">
+            <button id="clear-filters" class="text-xs text-brand hover:underline">Clear all</button>
+            <button id="close-filters" type="button" aria-label="Close filters" class="lg:hidden -mr-1 text-gray-400 hover:text-gray-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
         </div>
 
         <!-- Service -->
@@ -301,13 +309,21 @@
           </div>
           <a href="pricing.html" class="text-xs text-brand hover:underline mt-2 inline-block">View all tiers →</a>
         </div>
+
+        <!-- Apply (mobile only) -->
+        <button id="apply-filters" type="button" class="lg:hidden mt-8 w-full bg-brand hover:bg-orange-700 text-white font-bold py-3 rounded-xl transition-colors">Show results</button>
       </aside>
 
       <!-- Coach Grid -->
       <div class="flex-1">
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-6 gap-3">
           <h2 class="text-xl font-bold">Top Rated Coaches</h2>
-          <a href="/#all-coaches" class="text-brand text-sm font-semibold hover:underline">View all coaches →</a>
+          <button id="open-filters" type="button" class="lg:hidden inline-flex items-center gap-2 border border-gray-200 rounded-lg px-3.5 py-2 text-sm font-semibold text-gray-700 hover:border-brand hover:text-brand transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18M6 12h12M10 20h4"/></svg>
+            Filters
+            <span id="filter-count" class="hidden ml-0.5 bg-brand text-white text-[11px] font-bold rounded-full min-w-[1.25rem] h-5 px-1 items-center justify-center"></span>
+          </button>
+          <a href="/#all-coaches" class="hidden lg:inline text-brand text-sm font-semibold hover:underline">View all coaches →</a>
         </div>
 
         <div id="coach-grid" class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -657,6 +673,55 @@
       }
 
       grid.innerHTML = filtered.map(renderTrainerCard).join('');
+      updateFilterCount();
+    }
+
+    // Count of non-default filters, shown as a badge on the mobile Filters button.
+    function activeFilterCount() {
+      let count = 0;
+      document.querySelectorAll('input[data-filter-service]:not([data-filter-service="all"])').forEach((i) => { if (i.checked) count++; });
+      document.querySelectorAll('input[data-filter-availability]').forEach((i) => { if (i.checked && i.dataset.filterAvailability !== 'Anytime') count++; });
+      const gender = (document.querySelector('input[name="gender"]:checked') || {}).value;
+      if (gender && gender !== 'No Preference') count++;
+      if (Number((document.getElementById('price-range') || {}).value || 250) < 250) count++;
+      return count;
+    }
+
+    function updateFilterCount() {
+      const badge = document.getElementById('filter-count');
+      if (!badge) return;
+      const count = activeFilterCount();
+      if (count > 0) {
+        badge.textContent = String(count);
+        badge.classList.remove('hidden');
+        badge.classList.add('inline-flex');
+      } else {
+        badge.classList.add('hidden');
+        badge.classList.remove('inline-flex');
+      }
+    }
+
+    function wireFilterDrawer() {
+      const sidebar = document.getElementById('filter-sidebar');
+      const backdrop = document.getElementById('filter-backdrop');
+      if (!sidebar || !backdrop) return;
+
+      const open = () => {
+        sidebar.classList.remove('-translate-x-full');
+        backdrop.classList.remove('opacity-0', 'pointer-events-none');
+        document.body.style.overflow = 'hidden';
+      };
+      const close = () => {
+        sidebar.classList.add('-translate-x-full');
+        backdrop.classList.add('opacity-0', 'pointer-events-none');
+        document.body.style.overflow = '';
+      };
+
+      document.getElementById('open-filters')?.addEventListener('click', open);
+      document.getElementById('close-filters')?.addEventListener('click', close);
+      document.getElementById('apply-filters')?.addEventListener('click', close);
+      backdrop.addEventListener('click', close);
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
     }
 
     function wireFilters() {
@@ -867,6 +932,8 @@
     }
 
     wireFilters();
+    wireFilterDrawer();
+    updateFilterCount();
     loadTrainers();
   </script>
 </body>
