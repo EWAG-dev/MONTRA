@@ -25,9 +25,55 @@ const DEFAULTS = {
 export async function getClientProgress(clientUid) {
   const doc = await collection().doc(clientUid).get();
   if (!doc.exists) {
-    return { clientUid, ...DEFAULTS };
+    return { clientUid, ...DEFAULTS, weightLog: [] };
   }
-  return { clientUid, ...DEFAULTS, ...doc.data() };
+  const data = doc.data();
+  return { clientUid, ...DEFAULTS, weightLog: [], ...data };
+}
+
+function sortWeightLog(log) {
+  return [...log].sort((a, b) => String(a.date).localeCompare(String(b.date)));
+}
+
+export async function getWeightHistory(clientUid) {
+  const doc = await collection().doc(clientUid).get();
+  const log = doc.exists && Array.isArray(doc.data().weightLog) ? doc.data().weightLog : [];
+  return sortWeightLog(log);
+}
+
+// Appends a weight measurement, keeps the log sorted by date, and syncs the
+// derived currentWeight (latest) / startWeight (first) used by Body Stats.
+export async function addWeightEntry(clientUid, { weight, date }) {
+  const weightNum = Number(weight);
+  if (!Number.isFinite(weightNum) || weightNum <= 0) {
+    throw new Error("A valid positive weight is required");
+  }
+
+  const when = normalizeString(date) || new Date().toISOString();
+  if (Number.isNaN(Date.parse(when))) {
+    throw new Error("A valid date is required");
+  }
+
+  const ref = collection().doc(clientUid);
+  const doc = await ref.get();
+  const existing = doc.exists && Array.isArray(doc.data().weightLog) ? doc.data().weightLog : [];
+
+  const entry = { date: when, weight: weightNum };
+  const log = sortWeightLog([...existing, entry]);
+
+  const payload = {
+    weightLog: log,
+    currentWeight: String(log[log.length - 1].weight),
+    updatedAt: new Date().toISOString(),
+  };
+  // Seed startWeight from the earliest measurement if it isn't set yet.
+  const currentStart = doc.exists ? normalizeString(doc.data().startWeight) : "";
+  if (!currentStart) {
+    payload.startWeight = String(log[0].weight);
+  }
+
+  await ref.set(payload, { merge: true });
+  return { clientUid, ...payload };
 }
 
 export async function saveClientProgress(clientUid, input) {

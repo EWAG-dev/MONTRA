@@ -40,7 +40,7 @@ import {
   listClientSessions,
   listTrainerSessions,
 } from "./sessionStore.js";
-import { getClientProgress, saveClientProgress } from "./progressStore.js";
+import { getClientProgress, saveClientProgress, addWeightEntry, getWeightHistory } from "./progressStore.js";
 import { saveDeviceToken, deleteDeviceToken, sendPushToUid } from "./pushStore.js";
 
 const app = express();
@@ -1143,6 +1143,23 @@ app.get("/api/client/progress", requireFirebaseAuth, async (req, res) => {
 app.post("/api/client/progress", requireFirebaseAuth, async (req, res) => {
   const progress = await saveClientProgress(req.user.uid, req.body || {});
   res.status(200).json({ progress });
+});
+
+app.get("/api/client/progress/weight-history", requireFirebaseAuth, async (req, res) => {
+  const weightLog = await getWeightHistory(req.user.uid);
+  res.status(200).json({ weightLog });
+});
+
+app.post("/api/client/progress/weight-entry", requireFirebaseAuth, async (req, res) => {
+  try {
+    const result = await addWeightEntry(req.user.uid, {
+      weight: req.body?.weight,
+      date: req.body?.date,
+    });
+    res.status(201).json({ progress: result, weightLog: result.weightLog });
+  } catch (error) {
+    res.status(400).json({ error: error.message || "Unable to record weight" });
+  }
 });
 
 app.get("/api/notifications/my", requireFirebaseAuth, async (req, res) => {
