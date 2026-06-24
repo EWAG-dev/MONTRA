@@ -306,6 +306,8 @@ struct DashboardView: View {
                 .padding(18)
                 .montraCard(radius: 16)
 
+                impactCard
+
                 Spacer(minLength: 90)
             }
             .padding(.horizontal, 20)
@@ -397,9 +399,17 @@ struct DashboardView: View {
         .sheet(isPresented: $showProfileSheet) {
             ProfileMenuSheet(isClient: true)
         }
+        .sheet(isPresented: $showImpactSummary) {
+            ImpactSummaryView()
+        }
+        .fullScreenCover(item: $directingCredit, onDismiss: { Task { await loadImpactCredits() } }) { credit in
+            ImpactFlowView(session: nil, credit: credit, startAtDirect: true)
+                .environmentObject(auth)
+        }
         .task {
             await loadBookedSessions()
             await loadProgress()
+            await loadImpactCredits()
         }
         } // NavigationStack
     }
@@ -440,6 +450,62 @@ struct DashboardView: View {
               let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
               let sessions = try? await BookingAPI.loadMySessions(token: tokenResult.token) else { return }
         bookedSessions = sessions
+    }
+
+    // MARK: - Impact Credits
+
+    @State private var impactCredits: [ImpactCredit] = []
+    @State private var directingCredit: ImpactCredit?
+    @State private var showImpactSummary = false
+
+    private var pendingCredits: [ImpactCredit] { impactCredits.filter { !$0.isDirected } }
+    private var pendingImpactTotal: Int { pendingCredits.reduce(0) { $0 + $1.amount } }
+
+    private func loadImpactCredits() async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
+              let credits = try? await ImpactAPI.loadMyCredits(token: tokenResult.token) else { return }
+        impactCredits = credits
+    }
+
+    private var impactCard: some View {
+        let gold = Color(hex: "#C9A063")
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "heart.circle.fill").font(.system(size: 18)).foregroundColor(gold)
+                Text("YOUR IMPACT")
+                    .font(.system(size: 12, weight: .bold)).kerning(0.8).foregroundColor(.montraTextPrimary)
+                Spacer()
+                Button("Community") { showImpactSummary = true }
+                    .font(.system(size: 12, weight: .semibold)).foregroundColor(gold)
+            }
+
+            if let credit = pendingCredits.first {
+                Text(pendingCredits.count > 1
+                     ? "You have $\(pendingImpactTotal) in Impact Credits to direct"
+                     : "You have a \(credit.amountLabel) Impact Credit to direct")
+                    .font(.system(size: 15, weight: .bold)).foregroundColor(.montraTextPrimary)
+                Text("Direct it to a cause you care about — donate, gift it, or apply it to your coaching.")
+                    .font(.system(size: 12)).foregroundColor(.montraTextSecondary)
+                Button { directingCredit = credit } label: {
+                    Text("DIRECT MY IMPACT")
+                        .font(.system(size: 14, weight: .bold)).foregroundColor(.black)
+                        .frame(maxWidth: .infinity).padding(.vertical, 13)
+                        .background(gold).clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .padding(.top, 2)
+            } else {
+                Text("Every session you book unlocks an Impact Credit you can direct to a cause that matters to you.")
+                    .font(.system(size: 12)).foregroundColor(.montraTextSecondary)
+                Button { showImpactSummary = true } label: {
+                    Text("View Community Impact")
+                        .font(.system(size: 13, weight: .semibold)).foregroundColor(gold)
+                }
+            }
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .montraCard(radius: 16)
     }
 
     private func loadProgress() async {

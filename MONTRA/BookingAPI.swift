@@ -37,13 +37,14 @@ struct BookedSession: Identifiable, Decodable, Hashable {
 enum BookingAPI {
     struct SessionResponse: Decodable {
         let session: BookedSession
+        let impactCredit: ImpactCredit?
     }
 
     struct SessionsResponse: Decodable {
         let sessions: [BookedSession]
     }
 
-    static func bookSession(trainerId: String, clientName: String, startTime: Date, durationMin: Int = 60, token: String) async throws -> BookedSession {
+    static func bookSession(trainerId: String, clientName: String, startTime: Date, durationMin: Int = 60, token: String) async throws -> (session: BookedSession, impactCredit: ImpactCredit?) {
         guard let url = MontraAPIConfig.url(for: "/api/client/sessions") else {
             throw ChatError.invalidURL
         }
@@ -62,7 +63,8 @@ enum BookingAPI {
 
         let (data, response) = try await URLSession.shared.data(for: request)
         try validate(response: response, data: data)
-        return try JSONDecoder().decode(SessionResponse.self, from: data).session
+        let decoded = try JSONDecoder().decode(SessionResponse.self, from: data)
+        return (decoded.session, decoded.impactCredit)
     }
 
     static func loadMySessions(token: String) async throws -> [BookedSession] {

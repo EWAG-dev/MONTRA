@@ -121,3 +121,26 @@ Implemented end-to-end:
 Remaining optional enhancement (not blocking): capture per-session calories / structured
 post-workout notes beyond the freeform `completionNotes` field, and surface a completion
 flow on the client SessionsView too.
+
+### Impact Credits ✅ (shipped)
+Booking an Intro Session unlocks a $10 Impact Credit the client can direct to a cause.
+Implemented end-to-end:
+- Backend: `impactStore.js` (`impactCredits` collection; `IMPACT_CAUSES` catalog — youth_sports,
+  fitness_access, mental_wellness, community_health, survivor_support). Credit is created
+  idempotently per `sessionId` inside `POST /api/client/sessions`. Routes:
+  `GET /api/client/impact-credits`, `POST /api/client/impact-credits/:id/direct`
+  (allocations: donate / coaching / gift / split — donate+split require a valid cause,
+  split sets `splitCausePct:50`, gift requires `giftEmail`; 404 unknown, 403 not-yours,
+  409 already-directed), and the public `GET /api/impact/community` aggregate
+  (amountDirected / creditsActivated / causesSupported / causesActive / livesImpacted,
+  plus `IMPACT_BASELINE_*` env offsets, default 0). Credits cleaned up in dev reset.
+- iOS: `ImpactAPI.swift` (cause catalog + models + load/direct/community), `ImpactFlowView.swift`
+  (3-screen flow: Session Confirmed → Direct Your $10 Impact Credit → Thank You), shown as a
+  `fullScreenCover` after booking in `SessionsView`. `ImpactSummaryView.swift` renders the
+  "MONTRA Community Impact" stat panel. DashboardView surfaces a "YOUR IMPACT" card that
+  re-opens the direct flow for any still-pending credit and links to the community summary.
+- E2E: `impact_credits_e2e_test.sh` covers unlock, list, invalid-cause 400, cross-client 403,
+  direct, re-direct 409, and community total increment — all passing against production.
+
+Optional future enhancement (not blocking): actually fan out gifted credits to the recipient's
+account by email, and wire real charity disbursement / receipts behind the directed totals.

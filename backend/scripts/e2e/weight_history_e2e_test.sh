@@ -23,6 +23,10 @@ CLIENT_UID=$(create_test_client "$ADMIN_TOKEN" "$TEST_CLIENT_EMAIL" "$TEST_CLIEN
 require "client creation" "$CLIENT_UID"
 CLIENT_TOKEN=$(sign_in "$TEST_CLIENT_EMAIL" "$TEST_CLIENT_PASSWORD")
 
+# Always clean up, even if an assertion fails midway (otherwise a reused test email
+# keeps a stale clientProgress doc that breaks the next run's empty-state assertion).
+trap 'cleanup_test_data "$ADMIN_TOKEN" "" "$CLIENT_UID" > /dev/null 2>&1' EXIT
+
 echo "== first weight-history load is empty =="
 HIST=$(curl -s "$BASE_URL/api/client/progress/weight-history" -H "Authorization: Bearer ${CLIENT_TOKEN}")
 [ "$(echo "$HIST" | jq -r '.weightLog | length')" = "0" ] || { echo "FAIL: expected empty weightLog ($HIST)"; exit 1; }

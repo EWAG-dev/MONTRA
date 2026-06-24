@@ -18,6 +18,10 @@ struct SessionsView: View {
     @State private var bookingError: String? = nil
     @State private var isBooking = false
 
+    // After a successful booking, present the Impact Credit flow over the session.
+    @State private var impactSession: BookedSession? = nil
+    @State private var impactCredit: ImpactCredit? = nil
+
     @AppStorage("client.schedule.days")      private var scheduleDaysRaw: String = ""
     @AppStorage("client.schedule.time")      private var scheduleTimeRaw: String = ""
     @AppStorage("trainer.availableDays")     private var trainerDaysRaw: String = ""
@@ -286,6 +290,10 @@ struct SessionsView: View {
         .sheet(isPresented: $showNotifications) {
             NotificationsView()
         }
+        .fullScreenCover(item: $impactCredit) { credit in
+            ImpactFlowView(session: impactSession, credit: credit)
+                .environmentObject(auth)
+        }
     }
 
     // MARK: - Helpers
@@ -309,13 +317,18 @@ struct SessionsView: View {
         defer { isBooking = false }
 
         do {
-            _ = try await BookingAPI.bookSession(
+            let result = try await BookingAPI.bookSession(
                 trainerId: requestedTrainerId,
                 clientName: clientFirstName,
                 startTime: startDate,
                 token: tokenResult.token
             )
             await loadMySessions()
+            // Kick off the Impact Credit flow if the booking unlocked one.
+            if let credit = result.impactCredit {
+                impactSession = result.session
+                impactCredit = credit
+            }
         } catch {
             bookingError = error.localizedDescription
         }
