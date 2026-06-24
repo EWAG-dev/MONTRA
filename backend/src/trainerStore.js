@@ -393,9 +393,27 @@ export async function listTrainers({ includeInactive = false, statuses = [] } = 
     .sort((left, right) => left.name.localeCompare(right.name));
 }
 
+// Firestore rejects document IDs that are empty, contain "/", are "." / "..", or
+// match the reserved __.*__ pattern — calling .doc(id).get() with one throws. Treat
+// any such id (and any transient lookup error) as "not found" so a bad path param
+// returns 404 instead of crashing the process via an unhandled rejection.
+function isValidDocId(id) {
+  const s = String(id ?? "");
+  if (!s || s.length > 1500) return false;
+  if (s.includes("/") || s === "." || s === "..") return false;
+  if (/^__.*__$/.test(s)) return false;
+  return true;
+}
+
 export async function getTrainer(id) {
-  const snapshot = await trainersCollection().doc(id).get();
-  return snapshot.exists ? serializeTrainer(snapshot) : null;
+  if (!isValidDocId(id)) return null;
+  try {
+    const snapshot = await trainersCollection().doc(id).get();
+    return snapshot.exists ? serializeTrainer(snapshot) : null;
+  } catch (err) {
+    console.error(`getTrainer(${id}) failed:`, err.message);
+    return null;
+  }
 }
 
 export async function getTrainerByAccountUid(accountUid) {

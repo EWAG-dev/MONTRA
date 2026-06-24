@@ -68,6 +68,14 @@ import {
 } from "./reviewStore.js";
 import { getTrainerInsights } from "./insightStore.js";
 
+// Safety net: Express 4 doesn't forward errors from async route handlers, so a
+// single rejecting request would otherwise become an unhandled rejection and crash
+// the whole process (Node's default). Log and keep serving instead of taking the
+// entire API down over one bad request.
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled promise rejection (kept alive):", reason);
+});
+
 const app = express();
 const port = Number(process.env.PORT || 8080);
 const autoApproveTrainers = String(process.env.AUTO_APPROVE_TRAINERS || "true").toLowerCase() === "true";
@@ -1107,12 +1115,17 @@ app.get("/api/trainers/:id/reviews", async (req, res) => {
 // the data model supports it (demand, background-verified, featured review), with
 // deterministic, swap-for-real placeholders elsewhere (see insightStore.js).
 app.get("/api/trainers/:id/insights", async (req, res) => {
-  const insights = await getTrainerInsights(req.params.id);
-  if (!insights) {
-    res.status(404).json({ error: "Trainer not found" });
-    return;
+  try {
+    const insights = await getTrainerInsights(req.params.id);
+    if (!insights) {
+      res.status(404).json({ error: "Trainer not found" });
+      return;
+    }
+    res.status(200).json(insights);
+  } catch (err) {
+    console.error("insights route failed:", err.message);
+    res.status(500).json({ error: "Could not load insights" });
   }
-  res.status(200).json(insights);
 });
 
 app.post("/api/client/match", requireFirebaseAuth, async (req, res) => {
