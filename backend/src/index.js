@@ -52,6 +52,14 @@ import {
   deleteProgramsForTrainerOrClient,
 } from "./programStore.js";
 import { saveDeviceToken, deleteDeviceToken, sendPushToUid } from "./pushStore.js";
+import {
+  createImpactCredit,
+  listClientCredits,
+  getCredit,
+  directCredit,
+  getCommunityImpact,
+  deleteCreditsForClient,
+} from "./impactStore.js";
 
 const app = express();
 const port = Number(process.env.PORT || 8080);
@@ -583,7 +591,9 @@ app.post("/api/dev/cleanup-test-data", requireFirebaseAuth, requireAdmin, async 
       clientUid,
     });
 
-    await Promise.all([matchesDeletion, sessionsDeletion, conversationsDeletion, programsDeletion]);
+    const creditsDeletion = clientUid ? deleteCreditsForClient(clientUid) : Promise.resolve();
+
+    await Promise.all([matchesDeletion, sessionsDeletion, conversationsDeletion, programsDeletion, creditsDeletion]);
 
     if (trainerUid) {
       try { await auth.deleteUser(trainerUid); } catch (e) { /* already gone */ }
@@ -1182,7 +1192,16 @@ app.post("/api/client/sessions", requireFirebaseAuth, async (req, res) => {
       }).catch(() => {});
     }
 
-    res.status(201).json({ session });
+    // Booking unlocks an Impact Credit the client can later direct to a cause.
+    // Best-effort: never let credit creation block a successful booking.
+    let impactCredit = null;
+    try {
+      impactCredit = await createImpactCredit({ clientUid: req.user.uid, sessionId: session.id });
+    } catch (e) {
+      console.error("Failed to unlock impact credit:", e.message);
+    }
+
+    res.status(201).json({ session, impactCredit });
   } catch (error) {
     res.status(400).json({ error: error.message || "Unable to book session" });
   }
@@ -1191,6 +1210,50 @@ app.post("/api/client/sessions", requireFirebaseAuth, async (req, res) => {
 app.get("/api/client/sessions", requireFirebaseAuth, async (req, res) => {
   const sessions = await listClientSessions(req.user.uid);
   res.status(200).json({ sessions });
+});
+
+// MARK: Impact Credits — unlocked at booking, directed to a cause by the client.
+
+app.get("/api/client/impact-credits", requireFirebaseAuth, async (req, res) => {
+  const impactCredits = await listClientCredits(req.user.uid);
+  res.status(200).json({ impactCredits });
+});
+
+app.post("/api/client/impact-credits/:id/direct", requireFirebaseAuth, async (req, res) => {
+  try {
+    const credit = await getCredit(req.params.id);
+    if (!credit) {
+      res.status(404).json({ error: "Impact credit not found" });
+      return;
+    }
+    if (credit.clientUid !== req.user.uid) {
+      res.status(403).json({ error: "Not your impact credit" });
+      return;
+    }
+    if (credit.status === "directed") {
+      res.status(409).json({ error: "This impact credit has already been directed" });
+      return;
+    }
+
+    const updated = await directCredit(req.params.id, {
+      type: req.body.type,
+      causeId: req.body.causeId,
+      giftEmail: req.body.giftEmail,
+    });
+    res.status(200).json({ impactCredit: updated });
+  } catch (error) {
+    res.status(400).json({ error: error.message || "Unable to direct impact credit" });
+  }
+});
+
+// Public aggregate for the community-impact panel (usable by app + website).
+app.get("/api/impact/community", async (_req, res) => {
+  try {
+    const community = await getCommunityImpact();
+    res.status(200).json({ community });
+  } catch (error) {
+    res.status(500).json({ error: "Unable to load community impact" });
+  }
 });
 
 app.post("/api/client/sessions/:id/cancel", requireFirebaseAuth, async (req, res) => {
