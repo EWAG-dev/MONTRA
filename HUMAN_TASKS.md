@@ -77,6 +77,23 @@ Hit the **Resend free-tier daily limit (100 emails/day)** during E2E test runs. 
 
 ## Future Features (require design + backend schema decisions before code)
 
+### MONTRA Match™ — follow-ups ⬜
+The match scoring + coach-profile redesign shipped (`assets/js/montra-match.js`,
+`coach-profile.html`, badges on index/quiz). Three things still need real data:
+- **Reviews**: profile shows the aggregate rating + a "Verified Reviews" badge but
+  **no individual testimonials** — we deliberately did not fabricate named quotes.
+  To show review cards (as in the client mockup) we need a backend reviews source:
+  `reviews: [{ clientName, rating, text, verifiedSessionId, createdAt }]` on the
+  trainer (or a `/api/trainers/:id/reviews` route), written when a client completes
+  a session. Until then the "What Clients Say" block stays aggregate-only.
+- **Budget Fit**: Get Matched has no budget question, so the "Budget Fit" factor is
+  a stable illustrative score. Add a budget step to the quiz (and a coach price
+  range — see Storefront below) to make it a real signal.
+- **Trust stack claim**: ID Verified / Background Checked / MONTRA Certified™ render
+  for *every approved* coach as platform-standard vetting. Confirm the approval flow
+  actually performs ID + background checks; if not, gate those rows behind real
+  per-trainer fields (like Insurance/CPR already are) to avoid overclaiming.
+
 ### Trainer Storefront & Pricing ⬜
 The Storefront tab currently shows "coming soon." Fully building this requires:
 - Stripe Connect integration for trainer payouts (or a similar payment processor)
