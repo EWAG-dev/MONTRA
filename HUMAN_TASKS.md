@@ -85,11 +85,12 @@ The Storefront tab currently shows "coming soon." Fully building this requires:
 - iOS: actual Stripe SDK or WKWebView for Stripe Connect onboarding
 - Website: pricing displayed per-trainer on coach-profile.html (currently shows no pricing because no schema exists)
 
-### Trainer Programs ⬜
-The Programs tab is a stub. Requires:
-- New backend schema: program templates (title, description, weeks, workouts[])
-- New Firestore collection: `trainerPrograms` + `clientPrograms` (assigned)
-- iOS program builder UI + client program view
+### Trainer Programs ✅ (shipped)
+Full end-to-end program authoring + assignment.
+- Backend: `programStore.js` (collections `trainerPrograms` templates + `clientPrograms` assignments) with 6 routes in `index.js`: list/create/update/delete templates (`/api/trainers/programs[/:id]`), assign (`POST /api/trainers/programs/:id/assign`, requires ownership + an accepted match with the client), and the client's view (`GET /api/client/programs`). Assignments store an **immutable snapshot** of the template, so later template edits don't mutate what a client is already following. Blank workouts/exercises are normalized out; weeks clamped 1..52.
+- iOS trainer: `ProgramAPI.swift` (models + CRUD/assign/loadClientPrograms), `TrainerProgramsView.swift` (live list + stats), `ProgramBuilderSheet.swift` (create/edit builder with dynamic workouts + exercises, and an assign-to-matched-client picker).
+- iOS client: `AssignedProgramCard.swift` (expandable card) surfaced in the Workouts tab of `ProgressView`, fed by `GET /api/client/programs`.
+- Tests: `programs_e2e_test.sh` covers create/normalize, missing-title 400, cross-trainer 403, update, assign-without-match 403, successful assign, client snapshot visibility, snapshot immutability, and delete — all passing against production.
 
 ### MONTRA Team / Support In-App Chat ⬜
 MessagesView has MONTRA Team and Support tabs that currently show a mailto: link.

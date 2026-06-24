@@ -55,6 +55,9 @@ struct WorkoutProgressView: View {
     @State private var bookedSessions: [BookedSession] = []
     @State private var isLoadingSessions = false
 
+    // Programs assigned to this client by their trainer (immutable snapshots).
+    @State private var assignedPrograms: [AssignedProgram] = []
+
     private var trainerProgress: TrainerProgressSnapshot {
         let now = Date()
         let records: [TrainerSessionRecord] = bookedSessions.compactMap { session in
@@ -590,7 +593,15 @@ struct WorkoutProgressView: View {
         .task {
             await loadProgress()
             await loadSessions()
+            await loadAssignedPrograms()
         }
+    }
+
+    private func loadAssignedPrograms() async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
+              let programs = try? await ProgramAPI.loadClientPrograms(token: tokenResult.token) else { return }
+        assignedPrograms = programs
     }
 
     private func loadProgress() async {
@@ -900,6 +911,21 @@ struct WorkoutProgressView: View {
 
     private var workoutsTabContent: some View {
         VStack(alignment: .leading, spacing: 16) {
+            if !assignedPrograms.isEmpty {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("YOUR PROGRAMS")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.montraTextPrimary)
+                        .kerning(0.8)
+
+                    ForEach(assignedPrograms) { program in
+                        AssignedProgramCard(program: program)
+                    }
+                }
+                .padding(18)
+                .montraCard(radius: 16)
+            }
+
             VStack(alignment: .leading, spacing: 12) {
                 Text("UPCOMING WORKOUTS")
                     .font(.system(size: 11, weight: .semibold))

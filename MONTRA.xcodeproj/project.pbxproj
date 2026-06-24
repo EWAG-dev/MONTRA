@@ -17,6 +17,7 @@
 		11B32CB05329DE0D5B193684 /* ProfileMenuSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58248E8AFB62D6F27B3C82F4 /* ProfileMenuSheet.swift */; };
 		16C4BE4BA8BD2500C54B0C80 /* TrainerTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3C060E3A69A93327AF0A025 /* TrainerTabView.swift */; };
 		174A32808C6C69C23A3E8F6F /* update.sample in Resources */ = {isa = PBXBuildFile; fileRef = 49F76DDDF85C481759AF2377 /* update.sample */; };
+		1AA531D11A4A7BB1186952D4 /* AssignedProgramCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5997E6F0D46AE53D585DB2A1 /* AssignedProgramCard.swift */; };
 		1D33D267C4BDCC61461C8EEA /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29AFF0C6AFD11FE7FCF767AF /* DashboardView.swift */; };
 		25AB472302B76E7DF6E9FD88 /* TrainerOrientationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBCC8DD3AA9BECEC5F2A2D92 /* TrainerOrientationView.swift */; };
 		270A8621D6698C7795B1DB6D /* SessionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D5593F7A430E689CBF764A2 /* SessionsView.swift */; };
@@ -42,7 +43,9 @@
 		A1862D4BE4E2E5201565D94C /* LiveDataConnectivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59670A1295AC6C55956DD37 /* LiveDataConnectivity.swift */; };
 		A454CD533725A1DCDF1B5452 /* ProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22FC335F43503AFBD39D9B67 /* ProgressView.swift */; };
 		A6958B59C26198F93F9ABA3A /* TrainerProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3CACE5834CF2C04AD3C45C /* TrainerProgress.swift */; };
+		AF0EE205986532BE38E998A0 /* ProgramBuilderSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E73A8B77569BB0833A79EC39 /* ProgramBuilderSheet.swift */; };
 		AFBA2D7AFFF5A19BF2D521F6 /* MontraCompactTopBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5136A81B3A141BC939C5F89 /* MontraCompactTopBar.swift */; };
+		BB29FA7D141A1C63C3449F1D /* ProgramAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01DF3D987C06D7A6A5A21CA /* ProgramAPI.swift */; };
 		BCEF887FD807991C87F9152C /* TrainerAgreementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CB2F152A8928645AD9B22D9 /* TrainerAgreementView.swift */; };
 		C02DB6CAC6197D6E2F438BAD /* MessagesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CE961CD047FDE66F2DF35D4 /* MessagesView.swift */; };
 		C171B7607A773B25DEDD8247 /* TrainerProgramsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 816B0C9B88470822F0525D2C /* TrainerProgramsView.swift */; };
@@ -106,6 +109,7 @@
 		5742AE69821EC195A7939EDF /* SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedComponents.swift; sourceTree = "<group>"; };
 		58248E8AFB62D6F27B3C82F4 /* ProfileMenuSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileMenuSheet.swift; sourceTree = "<group>"; };
 		587C8EBCC394ED69881B9150 /* 52031137c05df355704b6743fb39139eebb32b */ = {isa = PBXFileReference; path = 52031137c05df355704b6743fb39139eebb32b; sourceTree = "<group>"; };
+		5997E6F0D46AE53D585DB2A1 /* AssignedProgramCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssignedProgramCard.swift; sourceTree = "<group>"; };
 		5B31506E8787BE0CC7638830 /* 88a6a7b04f6983c3ebae06ddfb8cc546b6eb93 */ = {isa = PBXFileReference; path = 88a6a7b04f6983c3ebae06ddfb8cc546b6eb93; sourceTree = "<group>"; };
 		5CC67B1970619EB52F6B6AA0 /* ChatModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatModels.swift; sourceTree = "<group>"; };
 		6117A5980096AA4713DE4C8F /* 7d4422692186afd9560dd1ba734eb31080c115 */ = {isa = PBXFileReference; path = 7d4422692186afd9560dd1ba734eb31080c115; sourceTree = "<group>"; };
@@ -152,6 +156,7 @@
 		AD8EC497BCAAF7E212907258 /* d7bf4c30cbc4787f1377df4793b91d620a83a6 */ = {isa = PBXFileReference; path = d7bf4c30cbc4787f1377df4793b91d620a83a6; sourceTree = "<group>"; };
 		AEBA4C64AE1FC20AC56EC3F8 /* 5f6b2aeb0b7d9bb51a8945ac440f0b7c17e4d5 */ = {isa = PBXFileReference; path = 5f6b2aeb0b7d9bb51a8945ac440f0b7c17e4d5; sourceTree = "<group>"; };
 		AF6F4F1FD0E9C2288528F26A /* 32ab2212b5b4cdece16bdc129bf373d001f246 */ = {isa = PBXFileReference; path = 32ab2212b5b4cdece16bdc129bf373d001f246; sourceTree = "<group>"; };
+		B01DF3D987C06D7A6A5A21CA /* ProgramAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramAPI.swift; sourceTree = "<group>"; };
 		B172594E748DF3C8FC1A57A6 /* 9f2e53d3b01a4d2f3f163b607ea64bcf03eeb4 */ = {isa = PBXFileReference; path = 9f2e53d3b01a4d2f3f163b607ea64bcf03eeb4; sourceTree = "<group>"; };
 		B311A3F7F04EA954201FB48A /* b8304b4fae41e04145185eec2aa9d5de74c2d1 */ = {isa = PBXFileReference; path = b8304b4fae41e04145185eec2aa9d5de74c2d1; sourceTree = "<group>"; };
 		B5136A81B3A141BC939C5F89 /* MontraCompactTopBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MontraCompactTopBar.swift; sourceTree = "<group>"; };
@@ -180,6 +185,7 @@
 		DFC499BDAAD49D0E28B63F35 /* ProgressAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressAPI.swift; sourceTree = "<group>"; };
 		E0C397878607FCC241402A11 /* push-to-checkout.sample */ = {isa = PBXFileReference; path = "push-to-checkout.sample"; sourceTree = "<group>"; };
 		E46D8EFBF31AD9B88C19818C /* MONTRA_AND_WEBSITE_ARCHITECTURE_GUIDE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = MONTRA_AND_WEBSITE_ARCHITECTURE_GUIDE.md; sourceTree = "<group>"; };
+		E73A8B77569BB0833A79EC39 /* ProgramBuilderSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramBuilderSheet.swift; sourceTree = "<group>"; };
 		EA0614817A5A8A9A8AD45A21 /* COMMIT_EDITMSG */ = {isa = PBXFileReference; path = COMMIT_EDITMSG; sourceTree = "<group>"; };
 		EB1E01761DE55693AA80F5A3 /* pre-applypatch.sample */ = {isa = PBXFileReference; path = "pre-applypatch.sample"; sourceTree = "<group>"; };
 		EC384F94972FB8ABF7F4047A /* MONTRAApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MONTRAApp.swift; sourceTree = "<group>"; };
@@ -831,6 +837,7 @@
 			children = (
 				AB4BCFC481DE89C4708F65F5 /* AppDelegate.swift */,
 				1AB31CA4DEDFE8B135674FAA /* Assets.xcassets */,
+				5997E6F0D46AE53D585DB2A1 /* AssignedProgramCard.swift */,
 				F1AD8584BC907F0E9AAA1BBA /* AuthManager.swift */,
 				524ED06C69FDA48EFBC34169 /* BookingAPI.swift */,
 				5CC67B1970619EB52F6B6AA0 /* ChatModels.swift */,
@@ -850,6 +857,8 @@
 				71F506439AA346F5E43B5C4C /* NotificationsView.swift */,
 				8C31E6B650BAA18062C8E862 /* OnboardingQuizView.swift */,
 				58248E8AFB62D6F27B3C82F4 /* ProfileMenuSheet.swift */,
+				B01DF3D987C06D7A6A5A21CA /* ProgramAPI.swift */,
+				E73A8B77569BB0833A79EC39 /* ProgramBuilderSheet.swift */,
 				DFC499BDAAD49D0E28B63F35 /* ProgressAPI.swift */,
 				CF31AFC30C8CE4F651820006 /* ProgressProfileView.swift */,
 				22FC335F43503AFBD39D9B67 /* ProgressView.swift */,
@@ -1055,6 +1064,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F4D71A41C0E8305A58041191 /* AppDelegate.swift in Sources */,
+				1AA531D11A4A7BB1186952D4 /* AssignedProgramCard.swift in Sources */,
 				8A4A0DF89D00297F68849F65 /* AuthManager.swift in Sources */,
 				E01365D9DA74131BB7E653FC /* BookingAPI.swift in Sources */,
 				67E4B5630E736DE0E234F6D7 /* ChatModels.swift in Sources */,
@@ -1069,6 +1079,8 @@
 				E81191F04DD6C64F6C42619D /* NotificationsView.swift in Sources */,
 				6F143A4FA58A2A01D6847DA4 /* OnboardingQuizView.swift in Sources */,
 				11B32CB05329DE0D5B193684 /* ProfileMenuSheet.swift in Sources */,
+				BB29FA7D141A1C63C3449F1D /* ProgramAPI.swift in Sources */,
+				AF0EE205986532BE38E998A0 /* ProgramBuilderSheet.swift in Sources */,
 				5838CC21C85899EDB9974297 /* ProgressAPI.swift in Sources */,
 				0CB25A3063729E0FCFA7307F /* ProgressProfileView.swift in Sources */,
 				A454CD533725A1DCDF1B5452 /* ProgressView.swift in Sources */,
