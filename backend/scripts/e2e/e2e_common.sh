@@ -57,6 +57,10 @@ iso_in_days() {
   date -u -v+"${1}"d +"%Y-%m-%dT%H:%M:%S.000Z" 2>/dev/null || date -u -d "+${1} day" +"%Y-%m-%dT%H:%M:%S.000Z"
 }
 
+iso_in_seconds() {
+  date -u -v+"${1}"S +"%Y-%m-%dT%H:%M:%S.000Z" 2>/dev/null || date -u -d "+${1} sec" +"%Y-%m-%dT%H:%M:%S.000Z"
+}
+
 require() {
   local label="$1" value="$2"
   if [ -z "$value" ] || [ "$value" = "null" ]; then

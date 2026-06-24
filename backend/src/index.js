@@ -34,6 +34,7 @@ import {
 } from "./chatStore.js";
 import {
   cancelBookedSession,
+  completeBookedSession,
   createBookedSession,
   getBookedSession,
   listClientSessions,
@@ -770,6 +771,41 @@ app.post("/api/trainers/sessions/:id/cancel", requireFirebaseAuth, async (req, r
   res.status(200).json({ session });
 });
 
+app.post("/api/trainers/sessions/:id/complete", requireFirebaseAuth, async (req, res) => {
+  const trainer = await getTrainerByAccountUid(req.user.uid);
+  const existing = await getBookedSession(req.params.id);
+  if (!existing) {
+    res.status(404).json({ error: "Session not found" });
+    return;
+  }
+
+  if (!trainer || existing.trainerId !== trainer.id) {
+    res.status(403).json({ error: "Not your session" });
+    return;
+  }
+
+  if (existing.status === "cancelled") {
+    res.status(409).json({ error: "Cannot complete a cancelled session" });
+    return;
+  }
+
+  if (Date.parse(existing.startTime) > Date.now()) {
+    res.status(409).json({ error: "Cannot complete a session that hasn't started yet" });
+    return;
+  }
+
+  const session = await completeBookedSession(req.params.id, { notes: req.body?.notes });
+
+  // Push to the client
+  sendPushToUid(session.clientUid, {
+    title: "Session Completed",
+    body: `${trainer.name} marked your session as complete. Nice work!`,
+    data: { category: "session", sessionId: session.id },
+  }).catch(() => {});
+
+  res.status(200).json({ session });
+});
+
 app.post("/api/trainers/matches/:requestId/accept", requireFirebaseAuth, async (req, res) => {
   const trainer = await getTrainerByAccountUid(req.user.uid);
   if (!trainer) {
@@ -1048,12 +1084,50 @@ app.post("/api/client/sessions/:id/cancel", requireFirebaseAuth, async (req, res
 
   const session = await cancelBookedSession(req.params.id);
 
-  // Push to the trainer
-  const cancelledTrainer = await getTrainerByAccountUid(session.trainerId);
+  // Push to the trainer. session.trainerId is the trainer *profile* doc id,
+  // so resolve via getTrainer (not getTrainerByAccountUid, which expects a uid).
+  const cancelledTrainer = await getTrainer(session.trainerId);
   if (cancelledTrainer?.accountUid) {
     sendPushToUid(cancelledTrainer.accountUid, {
       title: "Session Cancelled",
       body: `${session.clientName || "Your client"} cancelled their session.`,
+      data: { category: "session", sessionId: session.id },
+    }).catch(() => {});
+  }
+
+  res.status(200).json({ session });
+});
+
+app.post("/api/client/sessions/:id/complete", requireFirebaseAuth, async (req, res) => {
+  const existing = await getBookedSession(req.params.id);
+  if (!existing) {
+    res.status(404).json({ error: "Session not found" });
+    return;
+  }
+
+  if (existing.clientUid !== req.user.uid) {
+    res.status(403).json({ error: "Not your session" });
+    return;
+  }
+
+  if (existing.status === "cancelled") {
+    res.status(409).json({ error: "Cannot complete a cancelled session" });
+    return;
+  }
+
+  if (Date.parse(existing.startTime) > Date.now()) {
+    res.status(409).json({ error: "Cannot complete a session that hasn't started yet" });
+    return;
+  }
+
+  const session = await completeBookedSession(req.params.id, { notes: req.body?.notes });
+
+  // Push to the trainer. session.trainerId is the trainer profile doc id.
+  const completedTrainer = await getTrainer(session.trainerId);
+  if (completedTrainer?.accountUid) {
+    sendPushToUid(completedTrainer.accountUid, {
+      title: "Session Completed",
+      body: `${session.clientName || "Your client"} marked their session as complete.`,
       data: { category: "session", sessionId: session.id },
     }).catch(() => {});
   }

@@ -93,6 +93,37 @@ export async function getBookedSession(id) {
   };
 }
 
+export async function completeBookedSession(id, { notes } = {}) {
+  const docId = normalizeString(id);
+  if (!docId) {
+    throw new Error("id is required");
+  }
+
+  const ref = collection().doc(docId);
+  const doc = await ref.get();
+  if (!doc.exists) {
+    return null;
+  }
+
+  const update = {
+    status: "completed",
+    completedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  const trimmedNotes = normalizeString(notes);
+  if (trimmedNotes) {
+    update.completionNotes = trimmedNotes;
+  }
+
+  await ref.update(update);
+
+  const updated = await ref.get();
+  return {
+    id: updated.id,
+    ...updated.data(),
+  };
+}
+
 export async function cancelBookedSession(id) {
   const docId = normalizeString(id);
   if (!docId) {
