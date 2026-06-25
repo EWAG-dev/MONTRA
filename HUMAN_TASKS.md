@@ -169,6 +169,32 @@ All three original follow-ups (real reviews, budget step, trust-stack gating) ar
 shipped — see the sections above. Budget Fit becomes a true signal once Storefront
 pricing exists (below).
 
+### MONTRA Team concierge chat (Maya) ⬜ (built; CRM/SMS hooks pending)
+A self-injecting concierge widget (`website/assets/js/montra-chat.js`) is on every
+public page: a "Chat With The MONTRA Team" launcher → premium black/orange panel with
+Maya, 6 quick actions, a guided discovery flow (goal → training location → city →
+start timing → match-or-browse) that always drives toward **Book Consultation**, the
+Match Guarantee™ copy, and a **Talk To A Human** callback form. Human-first language
+throughout (never "AI"/"bot").
+- Backend: `leadStore.js` (`leads` collection) + `POST /api/leads/callback` (public)
+  creates a lead, applies **priority routing** (coach_profile/pricing/homepage →
+  sales, existing_client → support, coach_application/for_trainers → recruiting), and
+  emails the team via Resend. `GET /api/admin/leads` lists them. E2E:
+  `leads_e2e_test.sh`. Dev cleanup takes `leadPhone`.
+- **What's real:** lead capture + Firestore storage + routing + **email** notification
+  to `ADMIN_EMAILS`.
+- **HUMAN ACTIONS / follow-ups:**
+  - **SMS to assigned rep** — no SMS provider wired. Add Twilio (or similar) and send
+    from `notifyLeadTeam` in `index.js`; today only email fires.
+  - **Real CRM** — `leads` is a lightweight stand-in. Point `createLead`/notification
+    at the real CRM (HubSpot/Salesforce/etc.) or forward via webhook when chosen.
+  - **Team inboxes** — all routed teams currently email `ADMIN_EMAILS`. Add per-team
+    addresses (sales/support/recruiting) and pick by `lead.team`.
+  - **Maya avatar** — the widget uses an SVG avatar placeholder; drop a real Maya
+    headshot into `montra-chat.js` (`PERSON_SVG` / `.mtc-av img`) for the concierge look.
+  - **Business hours / urgent phone** — the confirmation says "call our main office";
+    add the real phone number and (optionally) gate the 10–15 min ETA to business hours.
+
 ### Trainer Storefront & Pricing ⬜
 The Storefront tab currently shows "coming soon." Fully building this requires:
 - Stripe Connect integration for trainer payouts (or a similar payment processor)

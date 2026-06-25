@@ -68,6 +68,7 @@ import {
 } from "./reviewStore.js";
 import { getTrainerInsights } from "./insightStore.js";
 import { getTrainerPackages } from "./packageStore.js";
+import { createLead, listLeads, deleteLeadsForPhone } from "./leadStore.js";
 
 // Safety net: Express 4 doesn't forward errors from async route handlers, so a
 // single rejecting request would otherwise become an unhandled rejection and crash
@@ -609,8 +610,9 @@ app.post("/api/dev/cleanup-test-data", requireFirebaseAuth, requireAdmin, async 
 
     const creditsDeletion = clientUid ? deleteCreditsForClient(clientUid) : Promise.resolve();
     const reviewsDeletion = clientUid ? deleteReviewsForClient(clientUid) : Promise.resolve();
+    const leadsDeletion = req.body?.leadPhone ? deleteLeadsForPhone(req.body.leadPhone) : Promise.resolve();
 
-    await Promise.all([matchesDeletion, sessionsDeletion, conversationsDeletion, programsDeletion, creditsDeletion, reviewsDeletion]);
+    await Promise.all([matchesDeletion, sessionsDeletion, conversationsDeletion, programsDeletion, creditsDeletion, reviewsDeletion, leadsDeletion]);
 
     if (trainerUid) {
       try { await auth.deleteUser(trainerUid); } catch (e) { /* already gone */ }
@@ -1144,6 +1146,61 @@ app.get("/api/trainers/:id/packages", async (req, res) => {
     console.error("packages route failed:", err.message);
     res.status(500).json({ error: "Could not load packages" });
   }
+});
+
+// Notifies the routed internal team about a new callback request. Email is real
+// (Resend); SMS-to-rep is a documented follow-up (no SMS provider wired yet).
+async function notifyLeadTeam(lead) {
+  if (!adminEmails.length) return;
+  const ctx = lead.context || {};
+  const ctxRows = Object.entries(ctx)
+    .filter(([, v]) => v)
+    .map(([k, v]) => `<tr><td style="padding:2px 10px 2px 0;color:#888">${escapeHtml(k)}</td><td><b>${escapeHtml(String(v))}</b></td></tr>`)
+    .join("");
+  const html = `
+    <h2>New callback request — route to <span style="color:#E85D04">${escapeHtml(lead.team)}</span></h2>
+    <table style="font-size:14px">
+      <tr><td style="padding:2px 10px 2px 0;color:#888">Name</td><td><b>${escapeHtml(lead.firstName)}</b></td></tr>
+      <tr><td style="padding:2px 10px 2px 0;color:#888">Phone</td><td><b>${escapeHtml(lead.phone)}</b></td></tr>
+      ${lead.email ? `<tr><td style="padding:2px 10px 2px 0;color:#888">Email</td><td>${escapeHtml(lead.email)}</td></tr>` : ""}
+      ${lead.message ? `<tr><td style="padding:2px 10px 2px 0;color:#888">Message</td><td>${escapeHtml(lead.message)}</td></tr>` : ""}
+      <tr><td style="padding:2px 10px 2px 0;color:#888">From page</td><td>${escapeHtml(lead.source)} (${escapeHtml(lead.sourcePath || "—")})</td></tr>
+      ${ctxRows}
+    </table>
+    <p style="color:#888;font-size:12px">Call back within 10–15 minutes during business hours.</p>`;
+  await Promise.all(
+    adminEmails.map((to) =>
+      sendEmail(to, `📞 New callback request — ${lead.firstName} (${lead.team})`, html).catch((e) =>
+        console.error("lead email failed:", e.message)
+      )
+    )
+  );
+}
+
+// Public: "Talk to a Human" callback request from the MONTRA Team chat widget.
+// Creates a lead, routes it to the right team, and notifies the team.
+app.post("/api/leads/callback", async (req, res) => {
+  try {
+    const lead = await createLead({
+      firstName: req.body?.firstName,
+      phone: req.body?.phone,
+      email: req.body?.email,
+      message: req.body?.message,
+      source: req.body?.source,
+      sourcePath: req.body?.sourcePath,
+      context: req.body?.context,
+    });
+    notifyLeadTeam(lead).catch((e) => console.error("notifyLeadTeam failed:", e.message));
+    res.status(201).json({ ok: true, ticketId: lead.id, team: lead.team, etaMinutes: 15 });
+  } catch (err) {
+    const status = err.code === "invalid" ? 400 : 500;
+    res.status(status).json({ error: err.message || "Could not submit your request" });
+  }
+});
+
+app.get("/api/admin/leads", requireFirebaseAuth, requireAdmin, async (_req, res) => {
+  const allLeads = await listLeads({ limit: 200 });
+  res.status(200).json({ leads: allLeads });
 });
 
 app.post("/api/client/match", requireFirebaseAuth, async (req, res) => {
