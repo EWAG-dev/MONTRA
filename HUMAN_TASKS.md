@@ -240,9 +240,14 @@ baked into the static HTML. `sitemap.xml` + `robots.txt` are generated too. This
     `https://montra-27532.web.app`). When the real domain (e.g. montra.com) is connected
     in Firebase Hosting, run the prerender with `SITE_ORIGIN=https://montra.com` so canonical
     tags + sitemap point at it, and **submit `/sitemap.xml` in Google Search Console**.
-  - **Auto-rebuild** (optional) — to keep pages fresh without manual redeploys, add a
-    scheduled/CI job that runs `build:seo` + `firebase deploy` (e.g. nightly), or trigger
-    it from the trainer-approval flow.
+  - **Auto-rebuild** ✅ — `.github/workflows/deploy-website.yml` runs `build:seo` +
+    `firebase deploy` (via firebase-tools + the `FIREBASE_SERVICE_ACCOUNT` secret) on every
+    push touching `website/**`/`firebase.json` **and nightly at 08:00 UTC**, so
+    newly-approved coaches get a prerendered page + fresh sitemap without a manual deploy
+    (also `workflow_dispatch` for on-demand runs). Root `firebase.json` is the single
+    source of truth; the divergent `website/firebase.json` was removed. To change the
+    nightly time, edit the `schedule: cron`. Set the `SITE_ORIGIN` **repo variable** to the
+    custom domain when connected.
   - **Slug collisions** — same name + same city resolve to the first match; if that ever
     happens, extend `trainerSlug` to append a short id suffix.
 
