@@ -1,27 +1,47 @@
-name: Deploy Website to Firebase Hosting
+name: Build + Deploy Website (SEO)
+
 on:
+  # Deploy when website code changes…
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
       - 'website/**'
+      - 'firebase.json'
+      - '.github/workflows/deploy-website.yml'
+  # …and nightly, so newly-approved coaches get their prerendered /coaches/<slug>
+  # SEO page + a fresh sitemap without anyone pushing code.
+  schedule:
+    - cron: '0 8 * * *' # 08:00 UTC daily (~3–4am US Eastern)
+  workflow_dispatch: {}
 
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install Dependencies
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
         run: npm ci
         working-directory: website
-      - name: Build
-        run: npm run build
+      - name: Build + prerender coach SEO pages
+        run: npm run build:seo
         working-directory: website
+        env:
+          # Fetched by the prerender to build /coaches/<slug> pages + sitemap.
+          BACKEND_URL: https://montra-production.up.railway.app
+          # Set the SITE_ORIGIN repo variable to the custom domain (e.g. https://montra.com)
+          # once it's connected, so canonical/OG/sitemap point at it.
+          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://montra-27532.web.app' }}
       - name: Deploy to Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          projectId: montra-27532
-          channelId: live
-          entryPoint: website
+        # Mirrors the proven manual deploy: firebase-tools + service-account creds,
+        # using the root firebase.json (public: website/dist, plus the /coaches/**
+        # rewrite, redirects, and trailingSlash:false). More reliable than the
+        # hosting action's entryPoint resolution.
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
+          GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json" \
+            npx --yes firebase-tools@latest deploy --only hosting --project montra-27532 --non-interactive
