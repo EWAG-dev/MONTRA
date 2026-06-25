@@ -151,8 +151,10 @@ The coach profile has an interactive **Choose Your Session Package** section: a 
 slider (5/10/20/40 sessions), a selected-package card (features + total + per-session
 price), a **Session Frequency** dropdown, and a **live Estimated Duration** that
 recomputes as `ceil(sessions ÷ sessions-per-week)` (e.g. 20 sessions @ 2/wk = 10 weeks).
-A compact À-La-Carte add-ons row sits below it. **Nothing is hardcoded** — it all comes
-from `GET /api/trainers/:id/packages` (`packageStore.js`).
+Below it sit the **3/6/12-month Coaching Commitment** cards (each with its own weekly-
+frequency picker and a live monthly price) and a compact À-La-Carte add-ons row.
+**Nothing is hardcoded** — it all comes from `GET /api/trainers/:id/packages`
+(`packageStore.js`), which returns `packages`, `commitments`, and `addOns`.
 - **Real when available:** if a coach ever has a `sessionRate`/`sessionPriceMax`, the
   builder prices off it. The volume-discount tiers, frequency→duration math, and feature
   lists are real product logic.

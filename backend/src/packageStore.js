@@ -29,6 +29,30 @@ const TIER_COPY = {
   40: { blurb: "Full transformation with habits that stick.", badge: null },
 };
 
+// Monthly "Coaching Commitment" subscriptions. Each tier's monthly rate is derived
+// from the coach's base rate (× mult) and a per-extra-weekly-session step, so it
+// stays interactive with the frequency picker. Longer commitments unlock more.
+const COMMITMENT_TIERS = [
+  {
+    months: 3, mult: 1.0, defaultFreq: 1, emoji: "🚀", title: "3 Month Kickstart",
+    blurb: "Build momentum and start seeing results fast.",
+    badge: null, recommended: false,
+    features: ["Personalized training program", "Progress tracking", "Accountability & check-ins", "Messaging support"],
+  },
+  {
+    months: 6, mult: 1.8, defaultFreq: 3, emoji: "🏆", title: "6 Month Transformation",
+    blurb: "Sustainable changes. Real results.",
+    badge: "BEST VALUE", recommended: true,
+    features: ["Everything in 3 Month", "Nutrition guidance", "Unlimited messaging", "Monthly progress reviews"],
+  },
+  {
+    months: 12, mult: 2.2, defaultFreq: 5, emoji: "⭐", title: "12 Month Signature",
+    blurb: "Our best value for lasting results and lifetime habits.",
+    badge: null, recommended: false,
+    features: ["Everything in 6 Month", "Quarterly goal reviews", "Priority support", "Long-term habit building"],
+  },
+];
+
 function packageFeatures(n) {
   return [
     `${n} one-on-one training sessions`,
@@ -85,10 +109,31 @@ export async function getTrainerPackages(id) {
     { key: "custom", title: "Custom Session", desc: "Have a specific need? Let's build it together.", price: null, unit: "varies", icon: "dots" },
   ];
 
+  // Monthly subscription tiers. `monthlyFrom` is the price at 1×/week; each extra
+  // weekly session adds `freqStep`, so the frontend can recompute live as the
+  // client changes the frequency picker. Rounded to clean $10 increments.
+  const round10 = (v) => Math.round(v / 10) * 10;
+  const monthlyAnchor = round10(base * 1.8);
+  const freqStep = Math.max(20, round10(base * 0.35));
+  const commitments = COMMITMENT_TIERS.map((t) => ({
+    months: t.months,
+    title: t.title,
+    emoji: t.emoji,
+    blurb: t.blurb,
+    features: t.features,
+    badge: t.badge,
+    recommended: t.recommended,
+    defaultFreq: t.defaultFreq,
+    monthlyFrom: round10(monthlyAnchor * t.mult),
+    freqStep,
+    frequencies: FREQUENCIES,
+  }));
+
   return {
     currency: "USD",
     packages,
     frequencies,
+    commitments,
     addOns,
     guarantee: "MONTRA Match Guarantee™",
     derived: !hasRealRate,

@@ -242,6 +242,17 @@
           <p id="pkg-derived-note" class="hidden text-center text-[11px] text-gray-400 mt-2">Indicative pricing — your coach confirms the final rate once you're matched.</p>
         </div>
 
+        <!-- COACHING COMMITMENT -->
+        <div id="commitment-section" class="hidden border border-gray-200 rounded-2xl p-6 sm:p-7">
+          <h2 class="font-black text-lg mb-1">Choose Your Coaching Commitment</h2>
+          <p class="text-sm text-gray-500 mb-6">Pick the program length that aligns with your goals — the longer you commit, the more you unlock.</p>
+          <div id="commitment-grid" class="grid md:grid-cols-3 gap-4"></div>
+          <div class="flex items-center justify-center gap-2.5 mt-5 bg-orange-50 border border-orange-100 rounded-xl px-4 py-3">
+            <svg class="w-5 h-5 text-brand flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.4 9.4-8 11-4.6-1.6-8-6-8-11V5l8-3z"/></svg>
+            <p class="text-xs font-semibold text-gray-700">All programs are protected by the <span class="text-brand">MONTRA Match Guarantee™</span>.</p>
+          </div>
+        </div>
+
         <!-- À LA CARTE -->
         <div id="addons-section" class="hidden border border-gray-200 rounded-2xl p-6">
           <div class="flex items-center gap-2 mb-1">
@@ -902,9 +913,60 @@
           </div>`;
       }).join('');
 
+      renderCommitments();
+
       updatePackage();
       show('packages-section');
       if ((pkgData.addOns || []).length) show('addons-section');
+    }
+
+    function cmPrice(c, freq) { return Math.round((c.monthlyFrom + (freq - 1) * c.freqStep) / 10) * 10; }
+
+    // Monthly "Coaching Commitment" cards. Each card's price updates live from its
+    // own frequency dropdown — all values come from the packages endpoint.
+    function renderCommitments() {
+      const list = Array.isArray(pkgData.commitments) ? pkgData.commitments : [];
+      if (!list.length) return;
+      document.getElementById('commitment-grid').innerHTML = list.map((c, idx) => {
+        const badge = c.badge
+          ? `<span class="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[10px] font-black tracking-wide text-white bg-brand rounded-full px-3 py-1 whitespace-nowrap">${escapeHtml(c.badge)}</span>`
+          : '';
+        const features = (c.features || []).map((f) => `
+          <li class="flex items-center gap-2 text-xs text-gray-700">
+            <svg class="w-3.5 h-3.5 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.5-1.5z"/></svg>
+            ${escapeHtml(f)}
+          </li>`).join('');
+        const freqOpts = (c.frequencies || []).map((f) =>
+          `<option value="${f}"${f === c.defaultFreq ? ' selected' : ''}>${f}x per week</option>`).join('');
+        const cta = c.recommended
+          ? 'bg-brand text-white hover:bg-orange-700'
+          : 'border border-gray-300 text-gray-700 hover:bg-gray-50';
+        return `
+          <div class="relative rounded-2xl border ${c.recommended ? 'border-brand bg-orange-50/40 shadow-md' : 'border-gray-200'} p-5 flex flex-col">
+            ${badge}
+            <div class="flex items-center gap-2 mb-1 mt-1">
+              <span class="text-xl">${c.emoji || ''}</span>
+              <h3 class="font-black text-base leading-tight">${escapeHtml(c.title)}</h3>
+            </div>
+            <p class="text-xs text-gray-500 mb-3">${escapeHtml(c.blurb || '')}</p>
+            <ul class="space-y-1.5 mb-4 flex-1">${features}</ul>
+            <label class="text-[11px] font-semibold text-gray-600 mb-1.5 block">Choose your weekly training frequency</label>
+            <select data-cm="${idx}" class="cm-freq w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-semibold mb-3 outline-none focus:border-brand bg-white">${freqOpts}</select>
+            <p class="text-[11px] text-gray-400">Starts at</p>
+            <p class="mb-4"><span class="cm-price text-2xl font-black text-gray-900">${money(cmPrice(c, c.defaultFreq))}</span><span class="text-xs text-gray-400 font-medium"> /month</span></p>
+            <a href="quiz.html" class="block w-full ${cta} py-2.5 rounded-xl text-sm font-bold text-center transition-colors">View Program</a>
+          </div>`;
+      }).join('');
+
+      document.querySelectorAll('.cm-freq').forEach((sel) => {
+        sel.addEventListener('change', () => {
+          const c = list[Number(sel.dataset.cm)];
+          const priceEl = sel.parentElement.querySelector('.cm-price');
+          if (c && priceEl) priceEl.textContent = money(cmPrice(c, Number(sel.value)));
+        });
+      });
+
+      show('commitment-section');
     }
 
     async function loadCoachProfile() {
