@@ -218,6 +218,34 @@ throughout (never "AI"/"bot").
   - **Business hours / urgent phone** — the confirmation says "call our main office";
     add the real phone number and (optionally) gate the 10–15 min ETA to business hours.
 
+### SEO coach pages (/coaches/<slug>) ✅ (shipped — note deploy + domain)
+Every approved coach has a clean, location-specific, Google-indexable URL like
+`/coaches/aaron-horowitz-boston`, each a prerendered static page with a unique
+`<title>`, meta description, canonical, Open Graph, and JSON-LD `Person` schema (with
+`areaServed` + `aggregateRating` when reviews exist), plus the coach name/tagline/bio
+baked into the static HTML. `sitemap.xml` + `robots.txt` are generated too. This is the
+"100 coach pages = 100 chances to rank" SEO surface.
+- How it works: backend slug (`<name>-<city>`) + `GET /api/trainers/by-slug/:slug`;
+  `coach-profile.html` (`<base href="/">`) renders at `/coaches/<slug>` via a Firebase
+  rewrite fallback; the real SEO comes from `scripts/prerender-coaches.mjs`, which writes
+  `dist/coaches/<slug>/index.html` per approved coach after the Vite build.
+- **DEPLOY CHANGE — important:** deploy the site with **`npm run build:seo`** (build +
+  prerender), NOT plain `npm run build`. Plain build won't generate the coach pages or
+  sitemap, so they'd 404 / fall back to the generic client-rendered page. The prerender
+  fetches the live `/api/trainers`, so **redeploy whenever the coach roster changes** to
+  refresh the static pages + sitemap (new coaches still work immediately via the rewrite
+  fallback — they just aren't prerendered until the next `build:seo`).
+- **HUMAN ACTIONS:**
+  - **Custom domain** — canonical/OG/sitemap URLs use `SITE_ORIGIN` (default
+    `https://montra-27532.web.app`). When the real domain (e.g. montra.com) is connected
+    in Firebase Hosting, run the prerender with `SITE_ORIGIN=https://montra.com` so canonical
+    tags + sitemap point at it, and **submit `/sitemap.xml` in Google Search Console**.
+  - **Auto-rebuild** (optional) — to keep pages fresh without manual redeploys, add a
+    scheduled/CI job that runs `build:seo` + `firebase deploy` (e.g. nightly), or trigger
+    it from the trainer-approval flow.
+  - **Slug collisions** — same name + same city resolve to the first match; if that ever
+    happens, extend `trainerSlug` to append a short id suffix.
+
 ### Trainer Storefront & Pricing ⬜
 The Storefront tab currently shows "coming soon." Fully building this requires:
 - Stripe Connect integration for trainer payouts (or a similar payment processor)
