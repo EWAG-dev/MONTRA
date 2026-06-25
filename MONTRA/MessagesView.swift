@@ -15,6 +15,7 @@ struct CoachChatSheet: View {
     @State private var messageText = ""
     @State private var showProfileSheet = false
     @State private var showNotifications = false
+    @State private var showCallback = false
     @State private var threads: [ChatThread] = []
     @State private var selectedThread: ChatThread? = nil
     @State private var messages: [ChatMessage] = []
@@ -87,25 +88,34 @@ struct CoachChatSheet: View {
 
                         Divider().background(Color.montraDivider)
 
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("Contact us directly:")
-                                .font(.system(size: 12, weight: .semibold))
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text(selectedTarget == .support
+                                 ? "Need a hand? A member of the MONTRA Team can call you back — usually within 10–15 minutes during business hours."
+                                 : "Want to talk it through? Request a call and a member of the MONTRA Team will reach out — usually within 10–15 minutes during business hours.")
+                                .font(.system(size: 13))
                                 .foregroundColor(.montraTextSecondary)
 
-                            Link(destination: URL(string: "mailto:hello@eliteinhomefitness.com")!) {
-                                HStack(spacing: 10) {
-                                    Image(systemName: "envelope.fill")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.montraOrange)
-                                    Text("hello@eliteinhomefitness.com")
+                            Button {
+                                showCallback = true
+                            } label: {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "phone.fill")
                                         .font(.system(size: 14, weight: .semibold))
-                                        .foregroundColor(.montraOrange)
+                                    Text("Request a Callback")
+                                        .font(.system(size: 15, weight: .bold))
                                 }
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 13)
+                                .background(Color.montraOrange)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
                             }
 
-                            Text("In-app messaging with the MONTRA team is coming in a future update.")
-                                .font(.system(size: 12))
-                                .foregroundColor(.montraTextSecondary)
+                            Link(destination: URL(string: "mailto:hello@eliteinhomefitness.com")!) {
+                                Text("Or email hello@eliteinhomefitness.com")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundColor(.montraTextSecondary)
+                            }
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -156,6 +166,9 @@ struct CoachChatSheet: View {
         }
         .sheet(isPresented: $showNotifications) {
             NotificationsView()
+        }
+        .sheet(isPresented: $showCallback) {
+            CallbackRequestSheet(target: selectedTarget).environmentObject(auth)
         }
         .task {
             await refreshThreads()
@@ -461,6 +474,195 @@ struct MontraAIBotAvatar: View {
                 .offset(y: -(size * 0.34))
             }
             .overlay(Circle().stroke(Color.montraCardBorder, lineWidth: 0.8))
+        }
+    }
+}
+
+// MARK: - Request a Callback (MONTRA Team concierge)
+
+/// Mirrors the website's "Talk to a Human" callback flow inside the app. Posts to
+/// the same `/api/leads/callback` endpoint so app + web leads land in one place,
+/// with source-based priority routing (Support tab -> support, Team tab -> sales).
+struct CallbackRequestSheet: View {
+    let target: ChatTarget
+
+    @EnvironmentObject private var auth: AuthManager
+    @Environment(\.dismiss) private var dismiss
+    @AppStorage("quiz.firstName") private var quizFirstName: String = ""
+
+    @State private var firstName = ""
+    @State private var phone = ""
+    @State private var email = ""
+    @State private var message = ""
+    @State private var submitting = false
+    @State private var submitted = false
+    @State private var errorMessage: String? = nil
+
+    private let helpOptions = ["Choosing a coach", "Pricing question", "Booking a consultation", "Something else"]
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                if submitted {
+                    confirmation
+                } else {
+                    form
+                }
+            }
+            .background(Color.montraBackground)
+            .navigationTitle("MONTRA Team")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(submitted ? "Done" : "Close") { dismiss() }
+                }
+            }
+        }
+        .onAppear {
+            if firstName.isEmpty {
+                firstName = quizFirstName.isEmpty ? auth.userDisplayName.components(separatedBy: " ").first ?? "" : quizFirstName
+            }
+            if email.isEmpty { email = auth.user?.email ?? "" }
+            if message.isEmpty { message = helpOptions.first ?? "" }
+        }
+    }
+
+    private var form: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Need help from a real person?")
+                    .font(.system(size: 20, weight: .black))
+                    .foregroundColor(.montraTextPrimary)
+                Text("A member of the MONTRA Team can call you — usually within 10–15 minutes during business hours.")
+                    .font(.system(size: 13))
+                    .foregroundColor(.montraTextSecondary)
+            }
+
+            field(icon: "person.fill", placeholder: "First Name", text: $firstName)
+            field(icon: "phone.fill", placeholder: "Phone Number", text: $phone, keyboard: .phonePad)
+            field(icon: "envelope.fill", placeholder: "Email (optional)", text: $email, keyboard: .emailAddress)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("How can we help?")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.montraTextSecondary)
+                Picker("How can we help?", selection: $message) {
+                    ForEach(helpOptions, id: \.self) { Text($0).tag($0) }
+                }
+                .pickerStyle(.segmented)
+            }
+
+            if let errorMessage {
+                Text(errorMessage)
+                    .font(.system(size: 13))
+                    .foregroundColor(.red)
+            }
+
+            Button { Task { await submit() } } label: {
+                HStack {
+                    if submitting { ProgressView().tint(.white) }
+                    Text(submitting ? "Requesting…" : "Request a Call")
+                        .font(.system(size: 15, weight: .bold))
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(canSubmit ? Color.montraOrange : Color.montraOrange.opacity(0.5))
+                .foregroundColor(.white)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+            .disabled(!canSubmit || submitting)
+
+            Label("Your information is secure and will never be shared.", systemImage: "lock.fill")
+                .font(.system(size: 11))
+                .foregroundColor(.montraTextSecondary)
+                .frame(maxWidth: .infinity, alignment: .center)
+        }
+        .padding(20)
+    }
+
+    private var confirmation: some View {
+        VStack(spacing: 16) {
+            ZStack {
+                Circle().fill(Color.montraOrange).frame(width: 64, height: 64)
+                Image(systemName: "checkmark").font(.system(size: 28, weight: .black)).foregroundColor(.white)
+            }
+            .padding(.top, 40)
+            Text("Request Received!")
+                .font(.system(size: 22, weight: .black))
+                .foregroundColor(.montraTextPrimary)
+            Text("A member of the MONTRA Team will contact you within ")
+                .font(.system(size: 14))
+                .foregroundColor(.montraTextSecondary)
+            + Text("10–15 minutes").font(.system(size: 14, weight: .black)).foregroundColor(.montraOrange)
+            + Text(" during business hours.\n\nFor urgent requests, please call our main office.")
+                .font(.system(size: 14))
+                .foregroundColor(.montraTextSecondary)
+        }
+        .multilineTextAlignment(.center)
+        .padding(28)
+        .frame(maxWidth: .infinity)
+    }
+
+    private var canSubmit: Bool {
+        !firstName.trimmingCharacters(in: .whitespaces).isEmpty &&
+        phone.filter(\.isNumber).count >= 7
+    }
+
+    private func field(icon: String, placeholder: String, text: Binding<String>, keyboard: UIKeyboardType = .default) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 14))
+                .foregroundColor(.montraTextSecondary)
+                .frame(width: 18)
+            TextField(placeholder, text: text)
+                .keyboardType(keyboard)
+                .foregroundColor(.montraTextPrimary)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 13)
+        .montraFrostedCard(radius: 12)
+    }
+
+    private func submit() async {
+        submitting = true
+        errorMessage = nil
+        // Support tab routes to the support team; the Team tab routes to sales.
+        let source = target == .support ? "existing_client" : "ios_app"
+        do {
+            try await CallbackAPI.requestCallback(
+                firstName: firstName, phone: phone, email: email, message: message, source: source
+            )
+            submitted = true
+        } catch let ChatError.server(msg) {
+            errorMessage = msg
+        } catch {
+            errorMessage = "Couldn't submit your request. Please try again."
+        }
+        submitting = false
+    }
+}
+
+enum CallbackAPI {
+    static func requestCallback(firstName: String, phone: String, email: String, message: String, source: String) async throws {
+        guard let url = MontraAPIConfig.url(for: "/api/leads/callback") else { throw ChatError.invalidURL }
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try JSONSerialization.data(withJSONObject: [
+            "firstName": firstName.trimmingCharacters(in: .whitespacesAndNewlines),
+            "phone": phone.trimmingCharacters(in: .whitespacesAndNewlines),
+            "email": email.trimmingCharacters(in: .whitespacesAndNewlines),
+            "message": message,
+            "source": source,
+            "sourcePath": "ios-app",
+            "context": ["platform": "iOS app"],
+        ])
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        guard let http = resp as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+            if let payload = try? JSONDecoder().decode(ChatAPI.APIError.self, from: data) {
+                throw ChatError.server(payload.error)
+            }
+            throw ChatError.server("Request failed")
         }
     }
 }
