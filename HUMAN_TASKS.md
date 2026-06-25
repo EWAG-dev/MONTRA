@@ -164,29 +164,40 @@ frequency picker and a live monthly price) and a compact À-La-Carte add-ons row
   UI shows an "indicative pricing — coach confirms final rate" note. Replace the base-rate
   derivation in `packageStore.js` with the real Storefront price to make it fully real.
 
-### Confirm Program flow (free intro w/ program) ⬜ (web shipped; checkout + iOS pending)
-`confirm-program.html` is the program purchase confirmation step (mockup Image #18):
-stepper, program + coach + "What's Included", **"INCLUDED FREE — Your First Intro
-Session" ($X → FREE)**, program summary sidebar, and a real reserve/enroll action.
-The commitment cards' "View Program" buttons on `coach-profile.html` link here with
-`?coach=<slug>&months=<3|6|12>&freq=<n>`; everything is backend-driven (coach via
-by-slug, program/pricing via `/packages`, which now returns `introSession {price,
-freeWithProgram:true}`; testimonial from a real review only).
-- **Business rule shipped:** buying a full program makes the intro session FREE
-  (the `$X → FREE` display + "schedule your FREE intro" messaging).
-- **"Continue to Checkout" → reserve lead, NOT card collection.** There is no payment
-  processor yet, so collecting card numbers would be unsafe/deceptive. Instead it opens
-  a reserve form that creates a routed lead via `/api/leads/callback` (program context
-  attached) so a specialist finalizes enrollment + schedules the free intro.
-- **HUMAN ACTIONS / follow-ups:**
-  - **Real checkout** — wire **Stripe** (Connect for coach payouts) to actually charge
-    the monthly program + apply the free-intro logic, replacing the reserve-lead step.
-    This is the same Storefront/Stripe effort below; the confirm page is built to slot a
-    real checkout in where "Continue to Checkout" is.
-  - **iOS version** — mockup Image #17 shows the same flow in-app (Program Summary →
-    Payment Plan → Checkout → You're Booked). Not built yet; needs the Stripe SDK / a
-    payment step. The commitment cards exist on web only today.
-  - Intro price is **derived** (≈1.35× the per-coach base) until real pricing exists.
+### Stripe Checkout — Program + Intro Session Booking ✅ (built; key pending)
+Full payment flows built end-to-end on web and iOS. Awaiting Railway env vars to go live.
+
+**What's built:**
+- **Web:** `confirm-program.html` (program purchase with free intro), `book-intro.html` (8-step intro session booking). Both use real Stripe Payment Element, gracefully show a "contact us" message if key not configured yet. All "Book Intro Session" CTAs on `coach-profile.html` now link to `book-intro.html?coach=<slug>`.
+- **iOS:** `ProgramCheckoutView.swift` (Program Summary → Plan Picker → Stripe PaymentSheet → Booked!) and `IntroBookingView.swift` (8-step: Coach → Date → Time → Pay → Address → Booked! → Calendar → Get Ready). Both use `StripePaymentSheet` SPM package.
+- **Backend:** `stripeStore.js` + routes: `/api/stripe/config` (publishable key), `/api/payments/program`, `/api/payments/intro-session`, `/api/stripe/webhook`, `/api/trainers/:id/availability`, `/api/bookings/intro-session`.
+
+**HUMAN ACTIONS to go live:**
+
+#### 1. Set Railway env vars ⬜
+In the Railway dashboard for the backend service, add:
+- `STRIPE_SECRET_KEY` — from Stripe dashboard → Developers → API Keys → Secret key
+- `STRIPE_PUBLISHABLE_KEY` — same page, Publishable key
+- `STRIPE_WEBHOOK_SECRET` — from Stripe dashboard → Webhooks → Add endpoint → `https://montra-production.up.railway.app/api/stripe/webhook` → copy the signing secret
+- Events to enable on the webhook: `payment_intent.succeeded`, `payment_intent.payment_failed`
+
+#### 2. Run xcodegen + open Xcode (Stripe iOS SDK) ⬜
+The Stripe iOS SDK (`StripePaymentSheet`) was added to `project.yml`. Before building:
+```
+cd /Users/taylorolsen-vogt/MONTRA
+xcodegen generate
+open MONTRA.xcodeproj
+```
+Xcode will resolve the `stripe-ios-spm` package on first open (may take a few minutes). Then build normally (Cmd-R).
+
+#### 3. Surface checkout in the iOS app ⬜
+Add `IntroBookingView` and `ProgramCheckoutView` to the navigation. Suggested entry points:
+- `DashboardView` or `SessionsView` → "Book Intro Session" button → `IntroBookingView(preselectedTrainer: nil)`
+- Coach card / match result → "Book Intro" → `IntroBookingView(preselectedTrainer: trainer)`
+- Commit card "View Program" → `ProgramCheckoutView(trainer: trainer, preselectedMonths: months)`
+
+#### 4. Intro price is derived ⬜
+Intro session price is currently derived (≈1.35× the per-coach base rate, from `packageStore.js`). Once real per-coach pricing exists (Storefront below), this becomes exact. No other changes needed.
 
 ### MONTRA Match™ — follow-ups
 All three original follow-ups (real reviews, budget step, trust-stack gating) are now

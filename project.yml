@@ -7,6 +7,9 @@ packages:
   firebase-ios-sdk:
     url: https://github.com/firebase/firebase-ios-sdk.git
     from: "11.0.0"
+  stripe-ios-spm:
+    url: https://github.com/stripe/stripe-ios-spm.git
+    from: "23.0.0"
 targets:
   MONTRA:
     type: application
@@ -44,6 +47,8 @@ targets:
         product: FirebaseAuth
       - package: firebase-ios-sdk
         product: FirebaseMessaging
+      - package: stripe-ios-spm
+        product: StripePaymentSheet
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.elitehomefitness.montra

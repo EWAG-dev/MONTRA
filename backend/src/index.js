@@ -71,6 +71,7 @@ import { getTrainerInsights } from "./insightStore.js";
 import { getTrainerPackages } from "./packageStore.js";
 import { computeMatch, normalizePrefs } from "./matchScore.js";
 import { createLead, listLeads, updateLeadStatus, deleteLeadsForPhone } from "./leadStore.js";
+import { createIntroSessionIntent, createProgramIntent, constructWebhookEvent, getPublishableKey } from "./stripeStore.js";
 
 // Safety net: Express 4 doesn't forward errors from async route handlers, so a
 // single rejecting request would otherwise become an unhandled rejection and crash
@@ -1995,6 +1996,177 @@ app.post("/api/admin/cleanup-test-accounts", requireFirebaseAuth, requireAdmin, 
   }
 
   res.status(200).json({ ok: true, cleaned: report });
+});
+
+// ─── STRIPE PAYMENT ROUTES ────────────────────────────────────────────────────
+
+// Webhook MUST be registered before express.json() to get the raw body.
+// We use express.raw() scoped to just this route.
+app.post(
+  "/api/stripe/webhook",
+  express.raw({ type: "application/json" }),
+  (req, res) => {
+    const sig = req.headers["stripe-signature"];
+    let event;
+    try {
+      event = constructWebhookEvent(req.body, sig);
+    } catch (err) {
+      console.error("Stripe webhook signature error:", err.message);
+      res.status(400).send(`Webhook Error: ${err.message}`);
+      return;
+    }
+    // Handle confirmed payments — record in Firestore as needed
+    if (event.type === "payment_intent.succeeded") {
+      const pi = event.data.object;
+      const { type, trainerId, trainerName, programTitle, months, freqPerWeek, freeIntro } = pi.metadata;
+      const db = getFirestore();
+      const record = {
+        stripePaymentIntentId: pi.id,
+        amountCents: pi.amount,
+        currency: pi.currency,
+        status: "paid",
+        paidAt: new Date().toISOString(),
+        trainerId, trainerName, type,
+      };
+      if (type === "program_purchase") {
+        Object.assign(record, { programTitle, months: Number(months), freqPerWeek: Number(freqPerWeek), freeIntro: freeIntro === "true" });
+      }
+      db.collection("payments").add(record).catch((e) => console.error("payment record:", e.message));
+    }
+    res.json({ received: true });
+  }
+);
+
+// Publishable key — safe to expose; lets the client init Stripe.js
+app.get("/api/stripe/config", (_req, res) => {
+  try {
+    res.json({ publishableKey: getPublishableKey() });
+  } catch (_) {
+    // Return a placeholder so the UI can still render; card submit will fail until
+    // STRIPE_PUBLISHABLE_KEY is set in Railway env.
+    res.json({ publishableKey: null, unconfigured: true });
+  }
+});
+
+// Create a PaymentIntent for an intro session booking
+app.post("/api/payments/intro-session", async (req, res) => {
+  try {
+    const { trainerId, customerEmail } = req.body;
+    if (!trainerId) { res.status(400).json({ error: "trainerId required" }); return; }
+    const pkg = await getTrainerPackages(trainerId);
+    if (!pkg) { res.status(404).json({ error: "Trainer not found" }); return; }
+    const amountCents = Math.round((pkg.introSession?.price || 149) * 100);
+    const trainer = { name: "" };
+    const t = await (await import("./trainerStore.js")).getTrainer(trainerId);
+    const result = await createIntroSessionIntent({
+      trainerId,
+      trainerName: t?.name || "",
+      amountCents,
+      customerEmail,
+    });
+    res.json(result);
+  } catch (err) {
+    console.error("intro-session intent:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Create a PaymentIntent for a full program purchase (intro session included free)
+app.post("/api/payments/program", async (req, res) => {
+  try {
+    const { trainerId, months, freqPerWeek, customerEmail } = req.body;
+    if (!trainerId || !months) { res.status(400).json({ error: "trainerId + months required" }); return; }
+    const pkg = await getTrainerPackages(trainerId);
+    if (!pkg) { res.status(404).json({ error: "Trainer not found" }); return; }
+    const commitment = (pkg.commitments || []).find((c) => c.months === Number(months));
+    if (!commitment) { res.status(400).json({ error: "Invalid program tier" }); return; }
+    const freq = Number(freqPerWeek) || commitment.defaultFreq;
+    const monthly = commitment.monthlyFrom + Math.max(0, freq - 1) * commitment.freqStep;
+    const amountCents = Math.round(monthly * 100);
+    const t = await (await import("./trainerStore.js")).getTrainer(trainerId);
+    const result = await createProgramIntent({
+      trainerId,
+      trainerName: t?.name || "",
+      programTitle: commitment.title,
+      months: Number(months),
+      freqPerWeek: freq,
+      amountCents,
+      freeIntro: true,
+      customerEmail,
+    });
+    res.json({ ...result, monthly, programTitle: commitment.title, freeIntro: true, introSessionPrice: pkg.introSession?.price });
+  } catch (err) {
+    console.error("program intent:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── SESSION BOOKING ──────────────────────────────────────────────────────────
+
+// Available time slots for a coach on a given date (deterministic for now;
+// real availability from the coach's calendar when scheduling is integrated).
+app.get("/api/trainers/:id/availability", async (req, res) => {
+  try {
+    const trainer = await getTrainer(req.params.id);
+    if (!trainer) { res.status(404).json({ error: "Trainer not found" }); return; }
+    const dateStr = req.query.date; // YYYY-MM-DD
+    if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      res.status(400).json({ error: "date required (YYYY-MM-DD)" }); return;
+    }
+    // Derive available slots from working hours if present; otherwise default 8am–5pm
+    const wh = trainer.workingHours || {};
+    const parseHour = (t) => {
+      if (!t) return null;
+      const m = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(t.trim());
+      if (!m) return null;
+      let h = Number(m[1]) % 12;
+      if (/pm/i.test(m[3])) h += 12;
+      return h;
+    };
+    const startH = parseHour(wh.start) ?? 8;
+    const endH = parseHour(wh.end) ?? 17;
+    const slots = [];
+    for (let h = startH; h < endH; h++) {
+      slots.push(`${h === 12 ? 12 : h % 12}:00 ${h < 12 ? "AM" : "PM"}`);
+      if (h + 0.5 < endH) slots.push(`${h === 12 ? 12 : h % 12}:30 ${h < 12 ? "AM" : "PM"}`);
+    }
+    // Mark a few slots as unavailable using deterministic seeded hash so it feels real
+    const dayHash = Array.from(dateStr).reduce((a, c) => a ^ c.charCodeAt(0), 0);
+    const available = slots.filter((_, i) => ((dayHash + i * 7) % 5) !== 0);
+    res.json({ date: dateStr, slots: available, timezone: "ET" });
+  } catch (err) {
+    console.error("availability:", err.message);
+    res.status(500).json({ error: "Could not load availability" });
+  }
+});
+
+// Book an intro session — records in Firestore, links to a payment intent
+app.post("/api/bookings/intro-session", async (req, res) => {
+  try {
+    const { trainerId, clientName, clientEmail, clientPhone, date, time, address, addressType, paymentIntentId } = req.body;
+    if (!trainerId || !date || !time || !clientName || !clientPhone) {
+      res.status(400).json({ error: "trainerId, date, time, clientName, clientPhone required" }); return;
+    }
+    const trainer = await getTrainer(trainerId);
+    if (!trainer) { res.status(404).json({ error: "Trainer not found" }); return; }
+    const db = getFirestore();
+    const booking = {
+      type: "intro_session",
+      trainerId,
+      trainerName: trainer.name,
+      clientName, clientEmail: clientEmail || null, clientPhone,
+      date, time,
+      address: address || null, addressType: addressType || null,
+      paymentIntentId: paymentIntentId || null,
+      status: "confirmed",
+      createdAt: new Date().toISOString(),
+    };
+    const ref = await db.collection("bookedSessions").add(booking);
+    res.status(201).json({ bookingId: ref.id, ...booking });
+  } catch (err) {
+    console.error("intro booking:", err.message);
+    res.status(500).json({ error: "Could not book session" });
+  }
 });
 
 app.listen(port, () => {

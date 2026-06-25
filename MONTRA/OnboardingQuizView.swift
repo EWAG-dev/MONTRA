@@ -693,6 +693,12 @@ struct OnboardingQuizView: View {
                         // scored by the backend from this client's quiz answers.
                         if selectedTrainer != nil {
                             MatchScoreCard(result: matchResult, loading: matchLoading)
+                            if let trainer = selectedTrainer {
+                                MatchRecommendationCard(
+                                    title: recommendationTitle(for: trainer),
+                                    text: recommendationText(for: trainer)
+                                )
+                            }
                         }
 
                         Button {
@@ -1095,6 +1101,59 @@ struct OnboardingQuizView: View {
         matchLoading = true
         matchResult = try? await MatchAPI.score(trainerId: trainer.id, prefs: buildMatchPrefs())
         matchLoading = false
+    }
+
+    private func naturalLanguageJoin(_ items: [String]) -> String {
+        switch items.count {
+        case 0:
+            return ""
+        case 1:
+            return items[0]
+        case 2:
+            return "\(items[0]) and \(items[1])"
+        default:
+            return items.dropLast().joined(separator: ", ") + ", and " + (items.last ?? "")
+        }
+    }
+
+    private func recommendationTitle(for trainer: OnboardingTrainer) -> String {
+        let firstName = trainer.name.split(separator: " ").first.map(String.init) ?? trainer.name
+        return "Why MONTRA recommends \(firstName)"
+    }
+
+    private func recommendationText(for trainer: OnboardingTrainer) -> String {
+        let firstName = trainer.name.split(separator: " ").first.map(String.init) ?? trainer.name
+        let goal = savedGoal.trimmingCharacters(in: .whitespacesAndNewlines)
+        let location = savedLocation.trimmingCharacters(in: .whitespacesAndNewlines)
+        let coachPref = savedCoachPref.trimmingCharacters(in: .whitespacesAndNewlines)
+        let why = savedWhy.trimmingCharacters(in: .whitespacesAndNewlines)
+        let specialty = trainer.specialties.first?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let certification = trainer.certification.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        var reasons: [String] = []
+        if !goal.isEmpty { reasons.append("your goal to \(goal.lowercased())") }
+        if !location.isEmpty { reasons.append("your location in \(location)") }
+        if !coachPref.isEmpty { reasons.append("your preference for \(coachPref.lowercased())") }
+        if !why.isEmpty { reasons.append("the barriers you shared: \(why.lowercased())") }
+
+        let reasonPrefix = reasons.isEmpty ? "your quiz answers" : naturalLanguageJoin(reasons)
+
+        let fitDetails = [specialty, certification]
+            .compactMap { value -> String? in
+                guard let value, !value.isEmpty else { return nil }
+                return value.lowercased()
+            }
+
+        let fitSuffix: String
+        if fitDetails.isEmpty {
+            fitSuffix = ""
+        } else if fitDetails.count == 1 {
+            fitSuffix = " Their focus on \(fitDetails[0]) makes the fit feel especially relevant."
+        } else {
+            fitSuffix = " Their focus on \(fitDetails[0]) and \(fitDetails[1]) makes the fit feel especially relevant."
+        }
+
+        return "Based on \(reasonPrefix), MONTRA recommends \(firstName) because they align with what you said you want from a coach." + fitSuffix
     }
 
     private func postMatchRequest(trainer: OnboardingTrainer) async -> String? {
@@ -2135,6 +2194,40 @@ struct MatchScoreCard: View {
     private func ring(_ pct: Int) -> some View {
         ZStack {
             Circle().stroke(Color.montraBlue.opacity(0.15), lineWidth: 9)
+
+struct MatchRecommendationCard: View {
+    let title: String
+    let text: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 6) {
+                Image(systemName: "sparkles").font(.system(size: 11, weight: .bold))
+                Text("WHY MONTRA RECOMMENDS")
+                    .font(.system(size: 11, weight: .black))
+                    .kerning(0.6)
+            }
+            .foregroundColor(.montraBlue)
+
+            Text(title)
+                .font(.system(size: 17, weight: .black))
+                .foregroundColor(.montraTextPrimary)
+
+            Text(text)
+                .font(.system(size: 13))
+                .foregroundColor(.montraTextSecondary)
+                .lineSpacing(2)
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.montraBlue.opacity(0.05))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.montraBlue.opacity(0.18), lineWidth: 1)
+        )
+    }
+}
             Circle()
                 .trim(from: 0, to: CGFloat(pct) / 100)
                 .stroke(

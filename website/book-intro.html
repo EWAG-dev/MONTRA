@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Book Your Intro Session | Elite Home Fitness</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://js.stripe.com/v3/"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script>tailwind.config={theme:{extend:{colors:{brand:'#E85D04'},fontFamily:{sans:['Inter','sans-serif']}}}}</script>
+  <style>
+    body{font-family:'Inter',sans-serif;}
+    .cal-day{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
+    .cal-day:hover{background:#E85D04;color:#fff;}
+    .cal-day.selected{background:#E85D04;color:#fff;}
+    .cal-day.today{border:2px solid #E85D04;color:#E85D04;}
+    .cal-day.today.selected{color:#fff;}
+    .cal-day.other-month{color:#d1d5db;}
+    .cal-day.disabled{color:#e5e7eb;cursor:default;pointer-events:none;}
+    .time-slot{border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;text-align:center;}
+    .time-slot:hover{border-color:#E85D04;color:#E85D04;}
+    .time-slot.selected{background:#E85D04;border-color:#E85D04;color:#fff;}
+    .addr-type{border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:10px;}
+    .addr-type:hover{border-color:#E85D04;}
+    .addr-type.selected{border-color:#E85D04;background:#fff8f5;}
+    .step-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;}
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen antialiased">
+
+<!-- NAV -->
+<nav class="bg-black border-b border-gray-800 sticky top-0 z-50">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
+    <a href="/" class="flex items-center gap-2.5">
+      <img src="assets/images/logo.png" alt="Elite Home Fitness" class="h-9"/>
+      <div class="border-l border-gray-600 pl-2.5 leading-tight">
+        <div class="text-[8px] text-gray-400 tracking-wide">POWERED BY</div>
+        <div class="text-brand font-bold text-sm">MONTRA</div>
+      </div>
+    </a>
+    <p class="text-white font-bold text-sm hidden sm:block">Book Your Intro Session</p>
+    <div class="w-20"></div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<div class="bg-black text-white py-8 text-center px-4">
+  <h1 class="text-2xl sm:text-3xl font-black mb-1">Book Your Paid Intro Session</h1>
+  <p class="text-gray-400 text-sm">A simple process. We handle the details. You focus on showing up.</p>
+</div>
+
+<!-- Progress bar -->
+<div class="max-w-5xl mx-auto px-4 sm:px-6 py-4">
+  <div class="flex items-center gap-1 sm:gap-2">
+    <!-- Steps 1-8 shown as dots with connecting lines -->
+    <template id="step-tmpl"><!-- rendered by JS --></template>
+    <div id="progress-bar" class="flex items-center w-full gap-1"></div>
+  </div>
+</div>
+
+<main class="max-w-5xl mx-auto px-4 sm:px-6 pb-16">
+
+  <!-- STEP 1: Choose Coach -->
+  <div id="step-1" class="step-panel">
+    <div class="max-w-xl mx-auto">
+      <h2 class="text-xl font-black mb-1">Choose Your Coach</h2>
+      <p class="text-sm text-gray-500 mb-5">Review your coach's background and expertise.</p>
+      <div id="coach-list" class="space-y-3"></div>
+      <div id="s1-loading" class="text-center py-8 text-gray-400 text-sm">Loading coaches…</div>
+      <button id="s1-next" class="hidden w-full bg-brand text-white font-bold py-3.5 rounded-xl text-sm mt-5 hover:bg-orange-700 transition-colors">Continue</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: Select Date -->
+  <div id="step-2" class="step-panel hidden">
+    <div class="max-w-xl mx-auto">
+      <h2 class="text-xl font-black mb-1">Select Date</h2>
+      <p class="text-sm text-gray-500 mb-5">Pick a date that works for your schedule.</p>
+      <div class="bg-white border border-gray-200 rounded-2xl p-5">
+        <div class="flex items-center justify-between mb-4">
+          <button id="cal-prev" class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:border-brand hover:text-brand transition-colors">‹</button>
+          <p id="cal-month" class="font-bold text-base"></p>
+          <button id="cal-next" class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:border-brand hover:text-brand transition-colors">›</button>
+        </div>
+        <div class="grid grid-cols-7 gap-1 mb-2">
+          <div class="text-center text-[11px] font-bold text-gray-400">SUN</div>
+          <div class="text-center text-[11px] font-bold text-gray-400">MON</div>
+          <div class="text-center text-[11px] font-bold text-gray-400">TUE</div>
+          <div class="text-center text-[11px] font-bold text-gray-400">WED</div>
+          <div class="text-center text-[11px] font-bold text-gray-400">THU</div>
+          <div class="text-center text-[11px] font-bold text-gray-400">FRI</div>
+          <div class="text-center text-[11px] font-bold text-gray-400">SAT</div>
+        </div>
+        <div id="cal-grid" class="grid grid-cols-7 gap-1 justify-items-center"></div>
+        <p id="cal-selected" class="text-xs text-gray-400 mt-3 text-center"></p>
+      </div>
+      <button id="s2-next" class="hidden w-full bg-brand text-white font-bold py-3.5 rounded-xl text-sm mt-5 hover:bg-orange-700 transition-colors">Continue</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Select Time -->
+  <div id="step-3" class="step-panel hidden">
+    <div class="max-w-xl mx-auto">
+      <h2 class="text-xl font-black mb-1">Select Time</h2>
+      <p class="text-sm text-gray-500 mb-1">Choose an available time slot.</p>
+      <p id="s3-date" class="text-xs font-semibold text-brand mb-4"></p>
+      <div id="time-slots" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
+      <p id="s3-loading" class="text-center text-gray-400 text-sm py-4">Loading availability…</p>
+      <p class="text-[11px] text-gray-400 mt-3">All times shown in ET</p>
+      <button id="s3-next" class="hidden w-full bg-brand text-white font-bold py-3.5 rounded-xl text-sm mt-5 hover:bg-orange-700 transition-colors">Continue</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: Review & Pay -->
+  <div id="step-4" class="step-panel hidden">
+    <div class="max-w-2xl mx-auto grid sm:grid-cols-5 gap-6">
+      <div class="sm:col-span-3">
+        <h2 class="text-xl font-black mb-1">Review &amp; Pay</h2>
+        <p class="text-sm text-gray-500 mb-5">Review details and complete payment.</p>
+        <div class="bg-white border border-gray-200 rounded-2xl p-5 mb-4">
+          <p class="text-xs font-bold text-brand mb-3">Intro Session <span class="text-gray-400 font-medium">· One-time payment</span></p>
+          <div class="flex justify-between text-sm mb-2"><span class="text-gray-500">Intro Session (60 min)</span><span id="s4-price" class="font-bold"></span></div>
+          <div class="flex justify-between text-sm mb-3"><span class="text-gray-500">Tax</span><span class="font-bold">$0.00</span></div>
+          <div class="flex justify-between border-t pt-3"><span class="font-black">Total</span><span id="s4-total" class="font-black text-brand text-lg"></span></div>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-2xl p-5">
+          <p class="font-bold text-sm mb-1">Session Details</p>
+          <div class="space-y-1.5 text-sm text-gray-600 mb-4">
+            <div class="flex items-center gap-2"><span class="text-gray-400">👤</span><span>Coach <span id="s4-coach" class="font-semibold text-gray-900"></span></span></div>
+            <div class="flex items-center gap-2"><span class="text-gray-400">📅</span><span id="s4-date" class="font-semibold text-gray-900"></span></div>
+            <div class="flex items-center gap-2"><span class="text-gray-400">⏰</span><span id="s4-time" class="font-semibold text-gray-900"></span> <span class="text-gray-400">(60 min)</span></div>
+            <div class="flex items-center gap-2"><span class="text-gray-400">📍</span><span class="text-gray-500">In-Home Session (address provided after payment)</span></div>
+          </div>
+
+          <!-- Contact info -->
+          <div class="space-y-2 mb-4">
+            <p class="text-xs font-bold text-gray-600 mb-2">Your Information</p>
+            <input id="pay-name" placeholder="Full Name*" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-brand"/>
+            <input id="pay-email" type="email" placeholder="Email Address*" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-brand"/>
+            <input id="pay-phone" type="tel" placeholder="Phone Number*" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-brand"/>
+          </div>
+
+          <p class="font-bold text-sm mb-3">Payment Method</p>
+          <!-- Stripe Payment Element mounts here -->
+          <div id="payment-element-intro" class="mb-4 min-h-[60px]"></div>
+          <label class="flex items-start gap-2 text-xs text-gray-500 mb-4 cursor-pointer">
+            <input type="checkbox" id="pay-agree" class="mt-0.5 accent-brand flex-shrink-0"/>
+            <span>I agree to the <a href="#" class="text-brand underline">MONTRA Terms of Service</a> and <a href="#" class="text-brand underline">Coaching Program Agreement</a>.</span>
+          </label>
+          <p id="s4-err" class="hidden text-sm text-red-600 mb-3"></p>
+          <button id="s4-pay" class="w-full bg-brand hover:bg-orange-700 text-white font-bold py-3.5 rounded-xl text-sm flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
+            Pay <span id="s4-pay-label"></span>
+          </button>
+          <p class="text-center text-[11px] text-gray-400 mt-2">🔒 Secure &amp; Encrypted</p>
+        </div>
+      </div>
+      <!-- Summary sidebar -->
+      <div class="sm:col-span-2">
+        <div class="bg-white border border-gray-200 rounded-2xl p-5 sticky top-20">
+          <p class="font-bold text-sm mb-3 text-gray-700">Order Summary</p>
+          <div class="flex gap-3 items-start pb-4 border-b border-gray-100 mb-4">
+            <div id="s4-coach-avatar" class="w-12 h-12 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center flex-shrink-0"></div>
+            <div><p id="s4-coach-name" class="font-bold text-sm"></p><p id="s4-coach-cert" class="text-xs text-gray-400"></p></div>
+          </div>
+          <div class="space-y-1 text-xs text-gray-600 mb-4">
+            <div class="flex justify-between"><span>Intro Session (60 min)</span><span id="s4-sum-price" class="font-bold"></span></div>
+            <div class="flex justify-between"><span>Tax</span><span>$0.00</span></div>
+            <div class="flex justify-between pt-2 border-t border-gray-100 mt-2 text-sm"><span class="font-black">Total</span><span id="s4-sum-total" class="font-black text-brand"></span></div>
+          </div>
+          <div class="bg-blue-50 border border-blue-100 rounded-xl p-3">
+            <p class="text-xs text-blue-700 font-semibold flex items-center gap-1.5"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.25 3.75 10.2 9 11.25C17.25 21.2 21 16.25 21 11V5l-9-4z"/></svg> MONTRA Match Guarantee™</p>
+            <p class="text-[11px] text-blue-600 mt-1">If it's not the right fit, we'll rematch you at no cost.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 5: Add Your Address -->
+  <div id="step-5" class="step-panel hidden">
+    <div class="max-w-xl mx-auto">
+      <h2 class="text-xl font-black mb-1">Add Your Address</h2>
+      <p class="text-sm text-gray-500 mb-5">Tell us where your coach will come to you.</p>
+      <div class="bg-white border border-gray-200 rounded-2xl p-5">
+        <p class="font-bold text-sm mb-3">Where should your coach meet you?</p>
+        <div class="relative mb-4">
+          <input id="addr-input" placeholder="Search address" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-brand pr-10"/>
+          <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </div>
+        <p class="text-xs font-semibold text-gray-500 mb-2">Popular</p>
+        <div class="space-y-2">
+          <div class="addr-type" data-type="home"><span class="text-xl">🏠</span><div><p class="font-bold text-sm">Home</p><p class="text-xs text-gray-400">Your home address</p></div><span class="ml-auto text-[10px] bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded-full">Most Popular</span></div>
+          <div class="addr-type" data-type="apartment"><span class="text-xl">🏢</span><div><p class="font-bold text-sm">Apartment / Condo</p><p class="text-xs text-gray-400">Include unit number</p></div></div>
+          <div class="addr-type" data-type="outdoor"><span class="text-xl">🌳</span><div><p class="font-bold text-sm">Outdoor (Park, etc.)</p><p class="text-xs text-gray-400">Outdoor session location</p></div></div>
+        </div>
+        <p class="text-[11px] text-gray-400 mt-4">🔒 Your address is securely shared with your coach only.</p>
+      </div>
+      <button id="s5-next" class="hidden w-full bg-brand text-white font-bold py-3.5 rounded-xl text-sm mt-5 hover:bg-orange-700 transition-colors">Continue</button>
+    </div>
+  </div>
+
+  <!-- STEP 6: You're Booked! -->
+  <div id="step-6" class="step-panel hidden">
+    <div class="max-w-lg mx-auto text-center">
+      <div class="w-24 h-24 rounded-full bg-green-500 text-white flex items-center justify-center mx-auto mb-5">
+        <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.5-1.5z"/></svg>
+      </div>
+      <h2 class="text-3xl font-black mb-1">You're All Set! 🎉</h2>
+      <p class="text-gray-500 text-sm mb-6">Your Intro Session is confirmed.</p>
+      <div class="bg-white border border-gray-200 rounded-2xl p-5 text-left text-sm space-y-3 mb-5">
+        <div class="flex justify-between items-center"><span class="flex items-center gap-2 text-gray-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 6v6l4 2"/></svg> Date</span><span id="c6-date" class="font-semibold text-right"></span></div>
+        <div class="flex justify-between items-center"><span class="flex items-center gap-2 text-gray-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 6v6l4 2"/></svg> Time</span><span id="c6-time" class="font-semibold"></span></div>
+        <div class="flex justify-between items-center"><span class="flex items-center gap-2 text-gray-500">👤 Coach</span><span id="c6-coach" class="font-semibold"></span></div>
+        <div class="flex justify-between items-center"><span class="flex items-center gap-2 text-gray-500">📍 Location</span><span id="c6-loc" class="font-semibold text-right"></span></div>
+        <div class="flex justify-between items-center"><span class="flex items-center gap-2 text-gray-500">💳 Investment</span><span id="c6-price" class="font-semibold"></span></div>
+      </div>
+      <div class="bg-black text-white rounded-2xl p-5 flex items-center gap-4 mb-4 text-left">
+        <div class="w-12 h-12 bg-brand rounded-xl flex items-center justify-center flex-shrink-0 font-black text-lg">M</div>
+        <div>
+          <p class="font-bold text-sm">Get the full MONTRA experience</p>
+          <p class="text-xs text-gray-400 mt-0.5">Download the app to chat with your coach, manage sessions, and track progress.</p>
+        </div>
+        <a href="#" class="ml-auto bg-brand text-white font-bold text-xs px-4 py-2.5 rounded-xl flex-shrink-0">Download</a>
+      </div>
+      <button id="s6-calendar" class="w-full border border-gray-200 text-gray-700 font-bold py-3 rounded-xl text-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 mb-3">
+        📅 Add to Calendar
+      </button>
+      <a href="/" class="block w-full bg-gray-900 text-white font-bold py-3 rounded-xl text-sm text-center hover:bg-gray-800 transition-colors">Go to Dashboard</a>
+    </div>
+  </div>
+
+  <!-- STEP 7: Add to Calendar -->
+  <div id="step-7" class="step-panel hidden">
+    <div class="max-w-md mx-auto text-center">
+      <div class="text-5xl mb-4">📅</div>
+      <h2 class="text-xl font-black mb-2">Add to your calendar</h2>
+      <p class="text-sm text-gray-500 mb-6">Add to your calendar to never miss it.</p>
+      <div class="space-y-2">
+        <a id="cal-google" href="#" target="_blank" class="flex items-center justify-between w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 font-semibold text-sm hover:border-brand transition-colors"><span class="flex items-center gap-3"><span class="text-xl">📅</span>Google Calendar</span><span class="text-gray-300">›</span></a>
+        <a id="cal-apple" href="#" class="flex items-center justify-between w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 font-semibold text-sm hover:border-brand transition-colors"><span class="flex items-center gap-3"><span class="text-xl">🍎</span>Apple Calendar</span><span class="text-gray-300">›</span></a>
+        <a id="cal-outlook" href="#" target="_blank" class="flex items-center justify-between w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 font-semibold text-sm hover:border-brand transition-colors"><span class="flex items-center gap-3"><span class="text-xl">📧</span>Outlook Calendar</span><span class="text-gray-300">›</span></div>
+        <div class="flex items-center justify-between w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 font-semibold text-sm hover:border-brand transition-colors cursor-pointer" id="cal-other"><span class="flex items-center gap-3"><span class="text-xl">📆</span>Other Calendar</span><span class="text-gray-300">›</span></div>
+      </div>
+      <button id="s7-done" class="w-full mt-5 bg-gray-900 text-white font-bold py-3 rounded-xl text-sm hover:bg-gray-800 transition-colors">Back to Dashboard</button>
+    </div>
+  </div>
+
+  <!-- STEP 8: Get Ready -->
+  <div id="step-8" class="step-panel hidden">
+    <div class="max-w-md mx-auto text-center">
+      <div class="text-5xl mb-4">🚀</div>
+      <h2 class="text-xl font-black mb-2">Get Ready!</h2>
+      <p class="text-sm text-gray-500 mb-6"><span id="s8-coach-first" class="font-semibold"></span> has received your booking and location. He'll reach out within <span class="font-bold">24 hours</span> to introduce himself and confirm your intro session.</p>
+      <div class="bg-white border border-gray-200 rounded-2xl p-5 text-left space-y-3 mb-5">
+        <div class="flex items-center gap-2 text-sm"><svg class="w-4 h-4 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.5-1.5z"/></svg><span class="text-gray-700">Session Booked</span></div>
+        <div class="flex items-center gap-2 text-sm"><svg class="w-4 h-4 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.5-1.5z"/></svg><span class="text-gray-700">Location Shared</span></div>
+        <div class="flex items-center gap-2 text-sm"><svg class="w-4 h-4 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.5-1.5z"/></svg><span class="text-gray-700">Coach Notified</span></div>
+      </div>
+      <a href="/" class="block w-full bg-brand text-white font-bold py-3.5 rounded-xl text-sm text-center hover:bg-orange-700 transition-colors">Go to Dashboard</a>
+    </div>
+  </div>
+
+  <!-- Trust strip (always visible) -->
+  <div class="mt-10 pt-8 border-t border-gray-200 grid grid-cols-2 sm:grid-cols-5 gap-4 text-center">
+    <div class="flex flex-col items-center gap-1"><svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg><p class="text-xs font-bold text-gray-700">Secure &amp; Trusted</p><p class="text-[11px] text-gray-400">Your payment is protected.</p></div>
+    <div class="flex flex-col items-center gap-1"><svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg><p class="text-xs font-bold text-gray-700">Verified Coaches</p><p class="text-[11px] text-gray-400">Background checked.</p></div>
+    <div class="flex flex-col items-center gap-1"><svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 002.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 012.916.52 6.003 6.003 0 01-5.395 4.972m0 0a6.726 6.726 0 01-2.749 1.35m0 0a6.772 6.772 0 01-3.044 0"/></svg><p class="text-xs font-bold text-gray-700">MONTRA Match Guarantee™</p><p class="text-[11px] text-gray-400">Not right? We'll rematch free.</p></div>
+    <div class="flex flex-col items-center gap-1"><svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg><p class="text-xs font-bold text-gray-700">Private &amp; Confidential</p><p class="text-[11px] text-gray-400">Your data is safe.</p></div>
+    <div class="flex flex-col items-center gap-1 col-span-2 sm:col-span-1"><svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155"/></svg><p class="text-xs font-bold text-gray-700">Need Help?</p><p class="text-[11px] text-gray-400">Support team 7 days a week.</p></div>
+  </div>
+</main>
+
+<script type="module">
+  const API = 'https://montra-production.up.railway.app';
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  const money = (n) => '$' + Number(n).toLocaleString('en-US');
+  const $  = (id) => document.getElementById(id);
+  const show = (id) => $(id).classList.remove('hidden');
+  const hide = (id) => $(id).classList.add('hidden');
+
+  // State
+  let currentStep = 1, selectedCoach = null, selectedDate = null, selectedTime = null, selectedAddrType = 'home', enteredAddress = '', stripe = null, elements = null, introPrice = 149, bookingId = null;
+
+  const STEPS = 8;
+  const STEP_LABELS = ['Coach','Date','Time','Review & Pay','Address','Booked!','Calendar','Get Ready'];
+  const BEFORE_PAY = [1,2,3,4];
+  const AFTER_PAY = [5,6,7,8];
+
+  function renderProgressBar() {
+    const bar = $('progress-bar');
+    bar.innerHTML = '';
+    for (let i = 1; i <= STEPS; i++) {
+      const done = i < currentStep;
+      const active = i === currentStep;
+      const afterPay = i > 4;
+      const dot = document.createElement('div');
+      dot.className = `step-dot ${done ? 'bg-green-500 text-white' : active ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'}`;
+      dot.innerHTML = done ? '<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.5-1.5z"/></svg>' : String(i);
+      if (afterPay && active) dot.classList.add('bg-green-600');
+      bar.appendChild(dot);
+      if (i < STEPS) {
+        const line = document.createElement('div');
+        line.className = `flex-1 h-0.5 ${i < currentStep ? 'bg-green-400' : 'bg-gray-200'}`;
+        bar.appendChild(line);
+      }
+    }
+  }
+
+  function goTo(step) {
+    for (let i = 1; i <= STEPS; i++) {
+      const el = $(`step-${i}`);
+      if (el) el.classList.toggle('hidden', i !== step);
+    }
+    currentStep = step;
+    renderProgressBar();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── STEP 1: Choose Coach ──────────────────────────────────────────────────
+  async function loadCoaches() {
+    const params = new URLSearchParams(location.search);
+    const preSlug = params.get('coach');
+    try {
+      const data = await fetch(`${API}/api/trainers`).then(r => r.json());
+      const trainers = (data.trainers || []).filter(t => t.status === 'approved' || t.approved);
+      hide('s1-loading');
+      if (!trainers.length) { $('coach-list').innerHTML = '<p class="text-sm text-gray-400">No coaches available yet.</p>'; return; }
+      $('coach-list').innerHTML = trainers.map(t => {
+        const initials = esc(t.initials || (t.name||'?').slice(0,2).toUpperCase());
+        const photo = t.photoDataUrl ? `<img src="${t.photoDataUrl}" alt="${esc(t.name)}" class="w-full h-full object-cover"/>` : `<span class="text-brand font-black text-xl">${initials}</span>`;
+        return `<div class="coach-card border-2 border-gray-200 rounded-2xl p-4 flex gap-4 cursor-pointer hover:border-brand transition-colors" data-id="${esc(t.id)}" data-slug="${esc(t.slug||'')}">
+          <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">${photo}</div>
+          <div class="flex-1 min-w-0">
+            <p class="font-bold text-sm">${esc(t.name)}</p>
+            <p class="text-xs text-gray-500">${esc(t.certification||'Certified Trainer')}</p>
+            <p class="text-xs text-gray-400 mt-0.5">${esc((t.locations||[]).join(' · '))}</p>
+            <div class="flex flex-wrap gap-1 mt-1.5">
+              ${(t.specialties||[]).slice(0,2).map(s=>`<span class="text-[10px] bg-orange-50 text-brand font-semibold px-2 py-0.5 rounded-full">${esc(s)}</span>`).join('')}
+            </div>
+          </div>
+          <div class="self-center w-6 h-6 rounded-full border-2 border-gray-200 flex-shrink-0 coach-radio"></div>
+        </div>`;
+      }).join('');
+
+      document.querySelectorAll('.coach-card').forEach(card => {
+        card.addEventListener('click', () => {
+          document.querySelectorAll('.coach-card').forEach(c => { c.classList.remove('border-brand'); c.querySelector('.coach-radio').classList.remove('border-brand','bg-brand'); });
+          card.classList.add('border-brand');
+          card.querySelector('.coach-radio').classList.add('border-brand','bg-brand');
+          const tid = card.dataset.id;
+          selectedCoach = trainers.find(t => t.id === tid);
+          show('s1-next');
+        });
+      });
+
+      // Auto-select if coach pre-specified in URL
+      if (preSlug) {
+        const match = trainers.find(t => t.slug === preSlug || t.id === preSlug);
+        if (match) document.querySelector(`[data-id="${match.id}"]`)?.click();
+      }
+    } catch(e) { $('s1-loading').textContent = 'Could not load coaches.'; }
+  }
+
+  $('s1-next').addEventListener('click', () => {
+    if (!selectedCoach) return;
+    // Pre-fetch intro price
+    fetch(`${API}/api/trainers/${selectedCoach.id}/packages`).then(r=>r.json()).then(pkg => {
+      introPrice = pkg.introSession?.price || 149;
+    }).catch(()=>{});
+    goTo(2);
+    renderCalendar();
+  });
+
+  // ── STEP 2: Calendar ────────────────────────────────────────────────────
+  let calYear, calMonth;
+  function renderCalendar() {
+    const now = new Date();
+    calYear = calYear || now.getFullYear();
+    calMonth = calMonth !== undefined ? calMonth : now.getMonth();
+    const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    $('cal-month').textContent = `${MONTHS[calMonth]} ${calYear}`;
+    const grid = $('cal-grid');
+    grid.innerHTML = '';
+    const first = new Date(calYear, calMonth, 1).getDay();
+    const days = new Date(calYear, calMonth + 1, 0).getDate();
+    const prevDays = new Date(calYear, calMonth, 0).getDate();
+    for (let i = 0; i < first; i++) {
+      const d = document.createElement('div');
+      d.className = 'cal-day other-month disabled'; d.textContent = prevDays - first + 1 + i; grid.appendChild(d);
+    }
+    for (let d = 1; d <= days; d++) {
+      const el = document.createElement('div');
+      const date = new Date(calYear, calMonth, d);
+      const isPast = date < new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      el.className = 'cal-day' + (isPast ? ' disabled' : '');
+      if (!isPast && d === now.getDate() && calMonth === now.getMonth() && calYear === now.getFullYear()) el.classList.add('today');
+      if (dateStr === selectedDate) el.classList.add('selected');
+      el.textContent = d;
+      if (!isPast) el.addEventListener('click', () => {
+        document.querySelectorAll('.cal-day').forEach(x => x.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedDate = dateStr;
+        const displayDate = date.toLocaleDateString('en-US', {weekday:'long',month:'long',day:'numeric',year:'numeric'});
+        $('cal-selected').textContent = `Selected: ${displayDate}`;
+        show('s2-next');
+      });
+      grid.appendChild(el);
+    }
+  }
+
+  $('cal-prev').addEventListener('click', () => { calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); });
+  $('cal-next').addEventListener('click', () => { calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); });
+  $('s2-next').addEventListener('click', () => { if(!selectedDate) return; goTo(3); loadTimeSlots(); });
+
+  // ── STEP 3: Time Slots ──────────────────────────────────────────────────
+  async function loadTimeSlots() {
+    const d = new Date(selectedDate + 'T00:00:00');
+    $('s3-date').textContent = d.toLocaleDateString('en-US', {weekday:'long',month:'long',day:'numeric',year:'numeric'});
+    $('s3-loading').style.display = '';
+    $('time-slots').innerHTML = '';
+    try {
+      const data = await fetch(`${API}/api/trainers/${selectedCoach.id}/availability?date=${selectedDate}`).then(r=>r.json());
+      $('s3-loading').style.display = 'none';
+      if (!data.slots?.length) { $('s3-loading').textContent='No slots available — pick a different date.'; $('s3-loading').style.display=''; return; }
+      $('time-slots').innerHTML = data.slots.map(s => `<div class="time-slot" data-time="${esc(s)}">${esc(s)}</div>`).join('');
+      document.querySelectorAll('.time-slot').forEach(el => {
+        el.addEventListener('click', () => {
+          document.querySelectorAll('.time-slot').forEach(x => x.classList.remove('selected'));
+          el.classList.add('selected');
+          selectedTime = el.dataset.time;
+          show('s3-next');
+        });
+      });
+    } catch(_) { $('s3-loading').textContent = 'Could not load slots.'; }
+  }
+
+  $('s3-next').addEventListener('click', () => { if(!selectedTime) return; goTo(4); setupPayment(); });
+
+  // ── STEP 4: Review & Pay ─────────────────────────────────────────────────
+  async function setupPayment() {
+    const priceStr = money(introPrice);
+    [$('s4-price'),$('s4-total'),$('s4-sum-price'),$('s4-sum-total')].forEach(el => { if(el) el.textContent = priceStr; });
+    $('s4-pay-label').textContent = priceStr;
+    const d = new Date(selectedDate + 'T00:00:00');
+    $('s4-date').textContent = d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+    $('s4-time').textContent = selectedTime;
+    $('s4-coach').textContent = selectedCoach.name;
+    $('s4-coach-name').textContent = selectedCoach.name;
+    $('s4-coach-cert').textContent = selectedCoach.certification || '';
+    const avatar = $('s4-coach-avatar');
+    if (selectedCoach.photoDataUrl) {
+      avatar.innerHTML = `<img src="${selectedCoach.photoDataUrl}" class="w-full h-full object-cover"/>`;
+    } else {
+      avatar.textContent = (selectedCoach.initials || selectedCoach.name.slice(0,2)).toUpperCase();
+    }
+
+    if (elements) return;
+    const cfg = await fetch(`${API}/api/stripe/config`).then(r=>r.json()).catch(()=>({}));
+    if (!cfg.publishableKey) {
+      $('payment-element-intro').innerHTML = '<p class="text-xs text-amber-600 p-3">Payment processing is being configured. Please contact us to book.</p>';
+      return;
+    }
+    stripe = Stripe(cfg.publishableKey);
+    const pi = await fetch(`${API}/api/payments/intro-session`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ trainerId: selectedCoach.id }),
+    }).then(r=>r.json());
+    elements = stripe.elements({ clientSecret: pi.clientSecret, appearance: { theme: 'stripe', variables: { colorPrimary: '#E85D04' } } });
+    elements.create('payment').mount('#payment-element-intro');
+  }
+
+  $('s4-pay').addEventListener('click', async () => {
+    const name = $('pay-name').value.trim(), email = $('pay-email').value.trim(), phone = $('pay-phone').value.trim();
+    const agreed = $('pay-agree').checked;
+    const errEl = $('s4-err');
+    errEl.classList.add('hidden');
+    if (!name || !email || !phone) { errEl.textContent='Please fill in your name, email, and phone.'; errEl.classList.remove('hidden'); return; }
+    if (!agreed) { errEl.textContent='Please agree to the terms to continue.'; errEl.classList.remove('hidden'); return; }
+    const btn = $('s4-pay'); btn.disabled=true; btn.textContent='Processing…';
+    if (!stripe || !elements) { errEl.textContent='Payment not ready yet.'; errEl.classList.remove('hidden'); btn.disabled=false; btn.textContent=`Pay ${money(introPrice)}`; return; }
+    const { paymentIntent, error } = await stripe.confirmPayment({ elements, confirmParams: { payment_method_data: { billing_details: { name, email } } }, redirect: 'if_required' });
+    if (error) { errEl.textContent=error.message; errEl.classList.remove('hidden'); btn.disabled=false; btn.innerHTML=`<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/></svg> Pay ${money(introPrice)}`; return; }
+    // Payment OK — save names for later steps, go to address
+    window._bookingInfo = { name, email, phone, paymentIntentId: paymentIntent?.id };
+    goTo(5);
+  });
+
+  // ── STEP 5: Address ──────────────────────────────────────────────────────
+  document.querySelectorAll('.addr-type').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.addr-type').forEach(x => x.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedAddrType = el.dataset.type;
+    });
+  });
+  // Select home by default
+  document.querySelector('[data-type="home"]')?.classList.add('selected');
+  $('addr-input').addEventListener('input', (e) => { enteredAddress = e.target.value; });
+  $('s5-next').textContent = 'Continue';
+  show('s5-next');
+  $('s5-next').addEventListener('click', async () => {
+    // Book the session in backend
+    const info = window._bookingInfo || {};
+    try {
+      const res = await fetch(`${API}/api/bookings/intro-session`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ trainerId: selectedCoach.id, clientName: info.name||'', clientEmail: info.email, clientPhone: info.phone, date: selectedDate, time: selectedTime, address: enteredAddress, addressType: selectedAddrType, paymentIntentId: info.paymentIntentId }),
+      });
+      const bk = await res.json();
+      bookingId = bk.bookingId;
+    } catch(_) {}
+    fillConfirmation();
+    goTo(6);
+  });
+
+  // ── STEP 6: Booked! ────────────────────────────────────────────────────
+  function fillConfirmation() {
+    const d = new Date(selectedDate + 'T00:00:00');
+    const displayDate = d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+    const location = enteredAddress ? `${enteredAddress} (${selectedAddrType.charAt(0).toUpperCase()+selectedAddrType.slice(1)})` : `In-Home Session${(selectedCoach.locations||[])[0] ? ', '+(selectedCoach.locations||[])[0] : ''}`;
+    $('c6-date').textContent = displayDate;
+    $('c6-time').textContent = `${selectedTime} (60 min)`;
+    $('c6-coach').textContent = selectedCoach.name;
+    $('c6-loc').textContent = location;
+    $('c6-price').textContent = money(introPrice);
+    // Also fill step 8
+    $('s8-coach-first').textContent = (selectedCoach.name||'Your coach').split(' ')[0];
+    // Set calendar links
+    const startISO = `${selectedDate.replace(/-/g,'')}T${selectedTime.replace(/[: ]/g,'').replace('AM','').replace('PM','')}00`;
+    const gcUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`Intro Session with ${selectedCoach.name}`)}&dates=${startISO}/${startISO}&details=${encodeURIComponent('MONTRA In-Home Fitness Intro Session')}&location=${encodeURIComponent(enteredAddress||'Your location')}`;
+    const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nSUMMARY:Intro Session with ${selectedCoach.name}\nDTSTART:${startISO}\nDURATION:PT60M\nLOCATION:${enteredAddress||'Your location'}\nEND:VEVENT\nEND:VCALENDAR`;
+    const icsBlob = new Blob([icsContent], { type: 'text/calendar' });
+    const icsUrl = URL.createObjectURL(icsBlob);
+    $('cal-google').href = gcUrl;
+    $('cal-apple').href = icsUrl;
+    $('cal-apple').download = 'montra-session.ics';
+    $('cal-outlook').href = gcUrl;
+    $('cal-other').addEventListener('click', () => { const a = document.createElement('a'); a.href=icsUrl; a.download='montra-session.ics'; a.click(); });
+  }
+  $('s6-calendar').addEventListener('click', () => goTo(7));
+  $('s7-done').addEventListener('click', () => goTo(8));
+
+  // ── Boot ────────────────────────────────────────────────────────────────
+  renderProgressBar();
+  goTo(1);
+  loadCoaches();
+</script>
+<script type="module" src="assets/js/montra-chat.js"></script>
+</body>
+</html>

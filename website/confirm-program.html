@@ -6,6 +6,7 @@
   <meta name="robots" content="noindex">
   <title>Confirm Your Program | Elite Home Fitness</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://js.stripe.com/v3/"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script>
     tailwind.config = { theme: { extend: { colors: { brand: '#E85D04' }, fontFamily: { sans: ['Inter','sans-serif'] } } } }
@@ -140,44 +141,75 @@
       <button id="checkout-btn" class="bg-brand hover:bg-orange-700 text-white font-bold px-7 py-3.5 rounded-xl text-sm transition-colors w-full lg:w-auto">Continue to Checkout →</button>
     </div>
 
-    <!-- Reserve form (revealed by Continue to Checkout — no card data collected without a payment processor) -->
-    <div id="reserve" class="hidden mt-6 bg-white border border-gray-200 rounded-2xl p-6 max-w-xl mx-auto">
-      <h3 class="font-black text-lg mb-1">Reserve your program</h3>
-      <p class="text-sm text-gray-500 mb-4">A MONTRA specialist will finalize your enrollment and schedule your <span class="text-brand font-bold">FREE</span> intro session — usually within 10–15 minutes during business hours.</p>
-      <div class="space-y-3">
-        <input id="r-name" placeholder="First Name*" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-brand"/>
-        <input id="r-phone" type="tel" placeholder="Phone Number*" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-brand"/>
-        <input id="r-email" type="email" placeholder="Email (optional)" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-brand"/>
-        <p id="r-err" class="hidden text-sm text-red-600"></p>
-        <button id="r-submit" class="w-full bg-brand hover:bg-orange-700 text-white font-bold py-3 rounded-xl text-sm transition-colors">Reserve &amp; Schedule My Free Intro</button>
-        <p class="text-[11px] text-gray-400 text-center">🔒 Secure &amp; encrypted. No payment is taken now — you confirm everything with your specialist.</p>
+    <!-- Stripe Checkout Panel -->
+    <div id="checkout-panel" class="hidden mt-6 bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 max-w-2xl mx-auto">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h3 class="font-black text-xl">Secure Checkout</h3>
+          <p class="text-sm text-gray-500 mt-0.5">First month · <span id="ck-title" class="font-semibold text-gray-700"></span> · Includes <span class="text-green-600 font-bold">FREE Intro Session</span></p>
+        </div>
+        <div class="text-right">
+          <p class="text-2xl font-black text-brand" id="ck-amount"></p>
+          <p class="text-xs text-gray-400">/month</p>
+        </div>
       </div>
+      <!-- Contact info -->
+      <div class="grid sm:grid-cols-2 gap-3 mb-4">
+        <input id="ck-name" placeholder="Full Name*" class="border border-gray-300 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-brand"/>
+        <input id="ck-email" type="email" placeholder="Email Address*" class="border border-gray-300 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-brand"/>
+      </div>
+      <!-- Stripe Payment Element -->
+      <div id="payment-element" class="border border-gray-200 rounded-xl p-4 mb-4 min-h-[60px]"></div>
+      <p id="ck-err" class="hidden text-sm text-red-600 mb-3"></p>
+      <label class="flex items-start gap-2 text-xs text-gray-500 mb-4 cursor-pointer">
+        <input type="checkbox" id="ck-agree" class="mt-0.5 accent-brand flex-shrink-0"/>
+        <span>I agree to the <a href="#" class="text-brand underline">MONTRA Terms of Service</a> and <a href="#" class="text-brand underline">Coaching Program Agreement</a>.</span>
+      </label>
+      <button id="pay-btn" class="w-full bg-brand hover:bg-orange-700 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.25 3.75 10.2 9 11.25C17.25 21.2 21 16.25 21 11V5l-9-4z"/></svg>
+        Start My Transformation
+      </button>
+      <p class="text-center text-[11px] text-gray-400 mt-2">🔒 Secure &amp; Encrypted — You'll schedule your FREE Intro Session next.</p>
     </div>
 
-    <!-- Reserved confirmation -->
-    <div id="reserved" class="hidden mt-6 bg-white border border-gray-200 rounded-2xl p-8 max-w-xl mx-auto text-center">
-      <div class="w-16 h-16 rounded-full bg-green-500 text-white flex items-center justify-center mx-auto mb-4"><svg class="w-9 h-9" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.5-1.5z"/></svg></div>
-      <h3 class="text-xl font-black mb-2">You're reserved! 🎉</h3>
-      <p class="text-sm text-gray-600">A member of the MONTRA Team will contact you within <span class="text-brand font-black">10–15 minutes</span> during business hours to finalize your enrollment and schedule your <span class="text-green-600 font-bold">FREE</span> intro session.</p>
+    <!-- Booked confirmation -->
+    <div id="booked" class="hidden mt-6 bg-white border border-gray-200 rounded-2xl p-8 max-w-2xl mx-auto text-center">
+      <div class="w-20 h-20 rounded-full bg-green-500 text-white flex items-center justify-center mx-auto mb-4">
+        <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.5-1.5z"/></svg>
+      </div>
+      <h3 class="text-2xl font-black mb-2">You're All Set! 🎉</h3>
+      <p class="text-gray-500 text-sm mb-6">Your program is confirmed. A MONTRA specialist will reach out within 10–15 minutes to schedule your <span class="text-green-600 font-bold">FREE</span> intro session.</p>
+      <div class="bg-gray-50 rounded-xl p-5 text-left text-sm space-y-2 mb-6">
+        <div class="flex justify-between"><span class="text-gray-500">Program</span><span id="conf-program" class="font-semibold"></span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Coach</span><span id="conf-coach" class="font-semibold"></span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Frequency</span><span id="conf-freq" class="font-semibold"></span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Monthly</span><span id="conf-price" class="font-bold text-brand"></span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Intro Session</span><span class="font-bold text-green-600">FREE</span></div>
+      </div>
+      <div class="bg-black text-white rounded-xl p-4 flex items-center gap-4 mb-4 text-left">
+        <div class="w-10 h-10 bg-brand rounded-lg flex items-center justify-center flex-shrink-0 text-lg font-black">M</div>
+        <div><p class="text-sm font-bold">Get the full MONTRA experience</p><p class="text-xs text-gray-400">Download the app to chat with your coach, manage sessions, and track progress.</p></div>
+      </div>
+      <a href="/" class="block w-full border border-gray-200 text-gray-700 font-bold py-3 rounded-xl text-sm hover:bg-gray-50 transition-colors">Back to Find a Coach</a>
     </div>
 
     <p class="text-center text-xs text-gray-400 mt-6">All programs are protected by the <span class="text-brand font-semibold">MONTRA Match Guarantee™</span>.</p>
   </main>
 
-  <script type="module">
+  <script type=”module”>
     const API = 'https://montra-production.up.railway.app';
     const params = new URLSearchParams(location.search);
     const slug = params.get('coach') || '';
     const months = Number(params.get('months') || 6);
     let freq = Number(params.get('freq') || 3);
 
-    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c]));
+    const esc = (v) => String(v ?? '').replace(/[&<>”']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','”':'&quot;',”'”:'&#039;' }[c]));
     const money = (n) => '$' + Number(n).toLocaleString('en-US');
     const show = (id) => document.getElementById(id).classList.remove('hidden');
     const hide = (id) => document.getElementById(id).classList.add('hidden');
     const round10 = (v) => Math.round(v / 10) * 10;
 
-    let coach = null, commitment = null, monthlyPrice = 0;
+    let coach = null, commitment = null, monthlyPrice = 0, stripe = null, elements = null;
 
     async function load() {
       if (!slug) return fail();
@@ -195,7 +227,6 @@
     function fail() { hide('loading'); show('error-state'); }
 
     function render(pkg) {
-      const first = (coach.name || 'Coach').split(' ')[0];
       const city = (coach.locations || [])[0] || '';
       const initials = coach.initials || (coach.name || '?').slice(0, 2).toUpperCase();
       monthlyPrice = round10(commitment.monthlyFrom + (freq - 1) * commitment.freqStep);
@@ -203,13 +234,12 @@
 
       document.getElementById('step-program').textContent = commitment.title;
       document.getElementById('step-freq').textContent = `${freq}x per week`;
-
       document.getElementById('prog-emoji').textContent = commitment.emoji || '🏆';
       document.getElementById('prog-title').textContent = commitment.title;
       document.getElementById('prog-freq').textContent = freqLabel;
 
       if (coach.photoDataUrl) {
-        document.getElementById('coach-photo').innerHTML = `<img src="${coach.photoDataUrl}" alt="${esc(coach.name)}" class="w-full h-full object-cover"/>`;
+        document.getElementById('coach-photo').innerHTML = `<img src=”${coach.photoDataUrl}” alt=”${esc(coach.name)}” class=”w-full h-full object-cover”/>`;
       } else {
         document.getElementById('coach-initials').textContent = initials;
       }
@@ -217,28 +247,21 @@
       document.getElementById('coach-loc').textContent = city ? `📍 ${city}` : '';
 
       const included = [...(commitment.features || []), 'MONTRA Match Guarantee™'];
-      const checkRow = (t, accent) => `<div class="flex items-center gap-2 text-xs"><svg class="w-3.5 h-3.5 ${accent || 'text-green-600'} flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.5-1.5z"/></svg><span class="${t.includes('Guarantee') ? 'text-brand font-semibold' : 'text-gray-700'}">${esc(t)}</span></div>`;
-      document.getElementById('included-list').innerHTML = included.map((t) => checkRow(t)).join('');
-      document.getElementById('sum-included').innerHTML = [`Everything in ${commitment.title.replace(/^\d+ Month /, '')} Program`, freqLabel, ...(commitment.features || []).slice(1)].map((t) => checkRow(t)).join('');
+      const checkRow = (t) => `<div class=”flex items-center gap-2 text-xs”><svg class=”w-3.5 h-3.5 text-green-600 flex-shrink-0” fill=”currentColor” viewBox=”0 0 24 24”><path d=”M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.5-1.5z”/></svg><span class=”${t.includes('Guarantee') ? 'text-brand font-semibold' : 'text-gray-700'}”>${esc(t)}</span></div>`;
+      document.getElementById('included-list').innerHTML = included.map(checkRow).join('');
+      document.getElementById('sum-included').innerHTML = [`Everything in ${commitment.title.replace(/^\d+ Month /, '')} Program`, freqLabel, ...(commitment.features || []).slice(1)].map(checkRow).join('');
 
-      // Intro session — free with program
       const intro = pkg.introSession || { price: 149 };
       document.getElementById('intro-was').textContent = money(intro.price);
-
-      // Sidebar
       document.getElementById('sum-program').textContent = commitment.title;
       document.getElementById('sum-freq').textContent = freqLabel;
       document.getElementById('sum-coach').textContent = coach.name;
       document.getElementById('sum-price').textContent = money(monthlyPrice);
 
-      // Testimonial (real review only)
       fetch(`${API}/api/trainers/${encodeURIComponent(coach.id)}/insights`).then((r) => r.json()).then((d) => {
         const fr = d?.proof?.featuredReview;
-        if (fr && fr.text) {
-          document.getElementById('testimonial').innerHTML = `
-            <p class="text-sm text-gray-700 italic leading-relaxed">“${esc(fr.text)}”</p>
-            <div class="flex items-center gap-2 mt-2"><span class="text-yellow-400 text-sm">★★★★★</span><span class="text-xs font-bold text-gray-900">— ${esc(fr.author || 'Verified Client')}</span></div>
-            <p class="text-[11px] text-gray-400 mt-0.5">Actual MONTRA Client</p>`;
+        if (fr?.text) {
+          document.getElementById('testimonial').innerHTML = `<p class=”text-sm text-gray-700 italic”>”${esc(fr.text)}”</p><div class=”flex items-center gap-2 mt-2”><span class=”text-yellow-400 text-sm”>★★★★★</span><span class=”text-xs font-bold”>— ${esc(fr.author || 'Verified Client')}, Actual MONTRA Client</span></div>`;
           show('testimonial');
         }
       }).catch(() => {});
@@ -246,38 +269,72 @@
       hide('loading'); show('content');
     }
 
-    // Continue to Checkout → reserve form (no card data collected without a processor)
-    document.getElementById('checkout-btn').addEventListener('click', () => {
-      show('reserve');
-      document.getElementById('reserve').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Continue to Checkout → init Stripe and show checkout panel
+    document.getElementById('checkout-btn').addEventListener('click', async () => {
+      show('checkout-panel');
+      document.getElementById('checkout-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('ck-title').textContent = commitment?.title || '';
+      document.getElementById('ck-amount').textContent = money(monthlyPrice);
+      await initStripe();
     });
 
-    document.getElementById('r-submit').addEventListener('click', async () => {
-      const firstName = document.getElementById('r-name').value.trim();
-      const phone = document.getElementById('r-phone').value.trim();
-      const email = document.getElementById('r-email').value.trim();
-      const err = document.getElementById('r-err');
-      err.classList.add('hidden');
-      if (!firstName || !phone) { err.textContent = 'Please add your first name and phone number.'; err.classList.remove('hidden'); return; }
-      const btn = document.getElementById('r-submit');
-      btn.disabled = true; btn.textContent = 'Reserving…';
-      try {
-        const res = await fetch(`${API}/api/leads/callback`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            firstName, phone, email,
-            message: `Program enrollment: ${commitment.title}, ${freq}x/week with ${coach.name} (${money(monthlyPrice)}/mo). FREE intro.`,
-            source: 'pricing', sourcePath: location.pathname + location.search,
-            context: { program: commitment.title, frequency: `${freq}x/week`, coach: coach.name, monthly: money(monthlyPrice) },
-          }),
-        });
-        if (!res.ok) throw new Error('failed');
-        hide('reserve'); show('reserved');
-        document.getElementById('reserved').scrollIntoView({ behavior: 'smooth', block: 'center' });
-      } catch (_) {
-        err.textContent = 'Something went wrong. Please try again.'; err.classList.remove('hidden');
-        btn.disabled = false; btn.textContent = 'Reserve & Schedule My Free Intro';
+    async function initStripe() {
+      if (elements) return; // already mounted
+      // Get publishable key from backend
+      const cfg = await fetch(`${API}/api/stripe/config`).then((r) => r.json()).catch(() => ({}));
+      if (!cfg.publishableKey) {
+        document.getElementById('payment-element').innerHTML = '<p class=”text-xs text-amber-600”>Payment processing is being configured. Please contact us to complete enrollment.</p>';
+        return;
       }
+      stripe = Stripe(cfg.publishableKey);
+
+      // Create payment intent
+      const pi = await fetch(`${API}/api/payments/program`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trainerId: coach.id, months, freqPerWeek: freq }),
+      }).then((r) => r.json());
+
+      elements = stripe.elements({ clientSecret: pi.clientSecret, appearance: { theme: 'stripe', variables: { colorPrimary: '#E85D04' } } });
+      const payEl = elements.create('payment');
+      payEl.mount('#payment-element');
+    }
+
+    document.getElementById('pay-btn').addEventListener('click', async () => {
+      if (!stripe || !elements) return;
+      const name = document.getElementById('ck-name').value.trim();
+      const email = document.getElementById('ck-email').value.trim();
+      const agreed = document.getElementById('ck-agree').checked;
+      const errEl = document.getElementById('ck-err');
+      errEl.classList.add('hidden');
+
+      if (!name || !email) { errEl.textContent = 'Please enter your name and email.'; errEl.classList.remove('hidden'); return; }
+      if (!agreed) { errEl.textContent = 'Please agree to the terms to continue.'; errEl.classList.remove('hidden'); return; }
+
+      const btn = document.getElementById('pay-btn');
+      btn.disabled = true; btn.textContent = 'Processing…';
+
+      const { error } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          payment_method_data: { billing_details: { name, email } },
+          return_url: location.href, // fallback for redirect-based methods
+        },
+        redirect: 'if_required',
+      });
+
+      if (error) {
+        errEl.textContent = error.message; errEl.classList.remove('hidden');
+        btn.disabled = false; btn.innerHTML = '<svg class=”w-4 h-4” fill=”currentColor” viewBox=”0 0 24 24”><path d=”M12 1L3 5v6c0 5.25 3.75 10.2 9 11.25C17.25 21.2 21 16.25 21 11V5l-9-4z”/></svg> Start My Transformation';
+        return;
+      }
+
+      // Payment succeeded — show confirmation
+      document.getElementById('conf-program').textContent = commitment.title;
+      document.getElementById('conf-coach').textContent = coach.name;
+      document.getElementById('conf-freq').textContent = `${freq}x per week`;
+      document.getElementById('conf-price').textContent = money(monthlyPrice) + '/month';
+      hide('checkout-panel'); show('booked');
+      document.getElementById('booked').scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
 
     load();

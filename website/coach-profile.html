@@ -37,6 +37,30 @@
     .pkg-tick .n { font-size:22px; font-weight:900; line-height:1; transition:color .2s, transform .2s; }
     .pkg-tick .l { font-size:10px; font-weight:700; letter-spacing:.08em; color:#9ca3af; margin-top:3px; }
     .pkg-tick[data-active="true"] .n { transform:scale(1.12); }
+    .addons-shell { position:relative; overflow:hidden; background:linear-gradient(180deg,#fffdf9 0%,#ffffff 100%); }
+    .addons-shell::before { content:''; position:absolute; inset:0 auto auto 0; width:100%; height:10px; background:linear-gradient(90deg,#b4ec8c 0%,#8dd86f 45%,#b4ec8c 100%); opacity:.95; }
+    .addon-card { border:1px solid #eadfd4; border-radius:20px; overflow:hidden; background:#fff; box-shadow:0 10px 30px rgba(17,24,39,.06); }
+    .addon-thumb { position:relative; aspect-ratio: 16 / 9; overflow:hidden; background:#f3f4f6; }
+    .addon-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+    .addon-badge { position:absolute; top:16px; left:16px; width:54px; height:54px; border-radius:9999px; background:rgba(255,251,247,.96); border:1px solid #f2ddcb; box-shadow:0 10px 24px rgba(232,93,4,.14); display:flex; align-items:center; justify-content:center; color:#e57b35; }
+    .addon-cta { display:flex; align-items:center; justify-content:center; gap:10px; border:1.5px solid #ddb18c; border-radius:12px; padding:12px 16px; font-size:14px; font-weight:800; color:#1f2937; transition:background-color .2s,border-color .2s,color .2s,transform .2s; }
+    .addon-cta:hover { background:#fff6ef; border-color:#E85D04; color:#111827; transform:translateY(-1px); }
+    .addon-benefits { border:1px solid #efe5db; border-radius:18px; background:#fff; box-shadow:0 8px 22px rgba(17,24,39,.04); }
+    .addon-benefit + .addon-benefit { border-top:1px solid #f1ece6; }
+    .floating-cta-wrap { position:sticky; bottom:18px; z-index:40; padding:0 14px 14px; pointer-events:none; }
+    .floating-cta-bar { pointer-events:auto; max-width:1460px; margin:0 auto; border-radius:34px; background:linear-gradient(135deg,#cf4f0a 0%,#e25e13 35%,#d75109 100%); box-shadow:0 18px 42px rgba(172,62,8,.28), 0 8px 20px rgba(17,24,39,.12); border:1px solid rgba(255,255,255,.14); }
+    .floating-cta-icon { width:88px; height:88px; border-radius:28px; background:linear-gradient(180deg,rgba(255,188,138,.22) 0%,rgba(255,213,183,.14) 100%); box-shadow:inset 0 1px 0 rgba(255,255,255,.12); }
+    .floating-cta-button { min-height:88px; border-radius:28px; background:#fff; color:#d65a12; box-shadow:0 10px 24px rgba(138,48,4,.14); }
+    .floating-cta-button:hover { background:#fff8f2; }
+    @media (min-width: 768px) {
+      .addon-benefit + .addon-benefit { border-top:0; border-left:1px solid #f1ece6; }
+    }
+    @media (max-width: 767px) {
+      .floating-cta-wrap { bottom:12px; padding:0 10px 10px; }
+      .floating-cta-bar { border-radius:26px; }
+      .floating-cta-icon { width:64px; height:64px; border-radius:22px; }
+      .floating-cta-button { min-height:64px; border-radius:22px; }
+    }
   </style>
 </head>
 <body class="bg-white text-gray-900 antialiased">
@@ -60,7 +84,7 @@
           <a href="for-trainers.html" class="text-sm font-medium text-gray-700 hover:text-brand transition-colors">Become a Trainer</a>
         </div>
         <div class="flex items-center gap-3">
-          <a href="quiz.html" class="bg-brand !text-white rounded-lg px-4 py-2 text-sm font-bold hover:bg-orange-700 transition-colors">Book Intro Session</a>
+          <a id="nav-book-intro" href="book-intro.html" class="bg-brand !text-white rounded-lg px-4 py-2 text-sm font-bold hover:bg-orange-700 transition-colors">Book Intro Session</a>
         </div>
       </div>
     </div>
@@ -281,18 +305,19 @@
           </div>
         </div>
 
-        <!-- À LA CARTE -->
-        <div id="addons-section" class="hidden border border-gray-200 rounded-2xl p-6">
-          <div class="flex items-center gap-2 mb-1">
-            <h2 class="font-black text-lg">À La Carte Sessions</h2>
-            <span class="text-[11px] font-bold text-green-600 bg-green-50 border border-green-100 rounded-full px-2.5 py-0.5">Add on or stand alone</span>
+        <!-- More Ways To Train -->
+        <div id="addons-section" class="hidden addons-shell border border-[#efe6dc] rounded-[28px] p-6 pt-9 sm:p-7 sm:pt-10">
+          <div class="flex flex-wrap items-center gap-2 mb-1">
+            <h2 class="font-black text-lg">More Ways to Train</h2>
           </div>
-          <p class="text-sm text-gray-500 mb-5">Flexible options to support your goals on your terms.</p>
-          <div id="addons-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3"></div>
+          <p class="text-sm text-gray-500 mb-6">Choose the coaching experience that fits your goals.</p>
+          <div id="addons-grid" class="grid gap-4 md:grid-cols-3"></div>
+          <div id="addons-benefits" class="addon-benefits mt-5 grid md:grid-cols-4"></div>
         </div>
 
         <!-- SPECIALTIES / SERVING / AVAILABILITY -->
-        <div id="detail-section" class="hidden border border-gray-200 rounded-2xl p-6 space-y-5">
+         <!-- Luis said: "Can we remove the specialty session altogether since we are ready list these and they duplicate the availability is under the calendar." -->
+        <!-- <div id="detail-section" class="hidden border border-gray-200 rounded-2xl p-6 space-y-5">
           <div id="specialties-section" class="hidden">
             <p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Specialties</p>
             <div id="specialties-list" class="flex flex-wrap gap-2"></div>
@@ -306,7 +331,7 @@
             <p id="working-hours" class="text-sm text-gray-600 mb-2"></p>
             <div id="availability-days" class="flex flex-wrap gap-2"></div>
           </div>
-        </div>
+        </div> -->
 
         <!-- WHAT CLIENTS SAY -->
         <div id="reviews-section" class="hidden border border-gray-200 rounded-2xl p-6">
@@ -418,19 +443,24 @@
   </div>
 
   <!-- BOTTOM CTA BAR -->
-  <div class="bg-brand text-white py-5 sticky bottom-0 z-40 shadow-2xl">
-    <div class="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-        <div class="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+  <div class="floating-cta-wrap">
+    <div class="floating-cta-bar text-white px-5 py-4 sm:px-7 sm:py-5 lg:px-8">
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
+        <div class="flex items-center gap-4 sm:gap-5 min-w-0">
+          <div class="floating-cta-icon flex items-center justify-center flex-shrink-0 text-white/95">
+            <svg class="w-8 h-8 sm:w-9 sm:h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.15" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          </div>
+          <div class="min-w-0 max-w-2xl">
+            <p class="font-black text-[1.1rem] leading-tight sm:text-[1.45rem]">Ready to take the first step?</p>
+            <p class="mt-1 text-[15px] leading-7 text-orange-50/95 sm:text-[17px]">MONTRA already did the hard work — book your intro session with this coach.</p>
+          </div>
         </div>
-        <div>
-          <p class="font-bold text-sm">Ready to take the first step?</p>
-          <p class="text-orange-100 text-xs">MONTRA already did the hard work — book your intro session with this coach.</p>
+        <div class="flex-shrink-0 lg:w-[480px] xl:w-[520px]">
+          <a href="quiz.html" class="floating-cta-button w-full inline-flex items-center justify-center gap-3 px-6 py-4 text-[1.15rem] font-black tracking-[-0.02em] transition-colors sm:px-8 sm:text-[1.45rem]">
+            <span>Book Intro Session</span>
+            <svg class="w-7 h-7 sm:w-8 sm:h-8" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </a>
         </div>
-      </div>
-      <div class="flex gap-3 flex-shrink-0">
-        <a href="quiz.html" class="bg-white text-brand font-bold px-5 py-2.5 rounded-xl text-sm hover:bg-orange-50 transition-colors">Book Intro Session →</a>
       </div>
     </div>
   </div>
@@ -854,9 +884,57 @@
     let pkgSelectedIndex = 0;
     let pkgFreq = 2;
 
-    function money(n) { return '$' + Number(n).toLocaleString('en-US'); }
-    function addonIcon(key) { return ({ dumbbell: '🏋️', clipboard: '📋', run: '🏃', calendar: '📅', dots: '⋯' }[key] || '•'); }
+    const ADDON_CARD_PRESETS = [
+      {
+        key: 'online-1on1',
+        title: 'Online 1-on-1 Coaching',
+        desc: 'Work privately with your coach from anywhere.',
+        image: 'assets/images/personaltraining.png',
+        alt: 'Online one-on-one coaching',
+        icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="4" y="5" width="12" height="10" rx="1.5"></rect><path stroke-linecap="round" stroke-linejoin="round" d="M8 19h8M12 15v4M7 9h6M7 12h4"></path></svg>`,
+      },
+      {
+        key: 'live-group',
+        title: 'Live Group Coaching',
+        desc: 'Join coach-led virtual classes and train alongside others.',
+        image: 'assets/images/coach-hero.png',
+        alt: 'Live group coaching',
+        icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 19a4 4 0 00-8 0"></path><circle cx="12" cy="10" r="3"></circle><path stroke-linecap="round" stroke-linejoin="round" d="M6 18a3 3 0 00-2-2.82M18 18a3 3 0 012-2.82M7.5 8.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zm14 0a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path></svg>`,
+      },
+      {
+        key: 'group-fitness',
+        title: 'Group Fitness Membership',
+        desc: 'Unlimited access to in-person group classes.',
+        image: 'assets/images/services.png',
+        alt: 'Group fitness membership',
+        icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9h3l2-3v12l-2-3H3m18 0h-3l-2 3V6l2 3h3"></path><path stroke-linecap="round" d="M10 12h4"></path></svg>`,
+      },
+    ];
 
+    const ADDON_BENEFITS = [
+      {
+        title: 'Expert Coaches',
+        text: 'Background-checked and certified.',
+        icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4"></path></svg>`,
+      },
+      {
+        title: 'Flexible Scheduling',
+        text: 'Sessions that work with your life.',
+        icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 3v3m8-3v3M5 9h14M5 6h14a1 1 0 011 1v11a2 2 0 01-2 2H6a2 2 0 01-2-2V7a1 1 0 011-1z"></path></svg>`,
+      },
+      {
+        title: 'Secure & Trusted',
+        text: 'Protected by the MONTRA Match Guarantee™.',
+        icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3l7 3v5c0 4.5-2.9 8.5-7 10-4.1-1.5-7-5.5-7-10V6l7-3z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M9.5 12.5l1.8 1.8 3.2-3.6"></path></svg>`,
+      },
+      {
+        title: 'Support Every Step',
+        text: 'We\'re here to help you succeed.',
+        icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h8M8 14h5"></path><path stroke-linecap="round" stroke-linejoin="round" d="M6 5h12a2 2 0 012 2v8a2 2 0 01-2 2h-5l-4 3v-3H6a2 2 0 01-2-2V7a2 2 0 012-2z"></path></svg>`,
+      },
+    ];
+
+    function money(n) { return '$' + Number(n).toLocaleString('en-US'); }
     function pkgPct(i) { return pkgData.packages.length > 1 ? (i / (pkgData.packages.length - 1)) * 100 : 0; }
 
     function updateDuration() {
@@ -938,25 +1016,36 @@
 
       if (pkgData.derived) document.getElementById('pkg-derived-note').classList.remove('hidden');
 
-      // À la carte add-ons
-      document.getElementById('addons-grid').innerHTML = (pkgData.addOns || []).map((a) => {
-        const price = a.price != null
-          ? `<p class="text-lg font-black text-gray-900">${money(a.price)}<span class="text-[11px] font-medium text-gray-400">/${escapeHtml(a.unit)}</span></p>`
-          : `<p class="text-sm font-bold text-gray-700">Pricing varies</p>`;
-        return `
-          <div class="border border-gray-200 rounded-xl p-4 flex flex-col">
-            <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center mb-2 text-base">${addonIcon(a.icon)}</div>
-            <p class="text-sm font-bold text-gray-900 leading-tight">${escapeHtml(a.title)}</p>
-            <p class="text-[11px] text-gray-500 mt-1 mb-3 flex-1">${escapeHtml(a.desc)}</p>
-            ${price}
-          </div>`;
-      }).join('');
+      document.getElementById('addons-grid').innerHTML = ADDON_CARD_PRESETS.map((card) => `
+        <article class="addon-card flex flex-col">
+          <div class="addon-thumb">
+            <img src="${card.image}" alt="${escapeHtml(card.alt)}" loading="lazy"/>
+            <span class="addon-badge">${card.icon}</span>
+          </div>
+          <div class="flex flex-1 flex-col px-5 pt-4 pb-4 text-center">
+            <h3 class="text-[1.65rem] leading-tight font-black text-gray-900">${escapeHtml(card.title)}</h3>
+            <p class="mt-2 text-[15px] leading-6 text-gray-600 flex-1">${escapeHtml(card.desc)}</p>
+            <a href="quiz.html" class="addon-cta mt-4">
+              <span>View Options</span>
+              <svg class="w-4 h-4 text-[#d07a3c]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6l6 6-6 6"></path></svg>
+            </a>
+          </div>
+        </article>`).join('');
+
+      document.getElementById('addons-benefits').innerHTML = ADDON_BENEFITS.map((item) => `
+        <div class="addon-benefit flex items-start gap-3 px-4 py-4 sm:px-5">
+          <span class="w-10 h-10 rounded-full border border-[#f0dfd0] bg-[#fff9f5] text-[#1f2937] flex items-center justify-center flex-shrink-0">${item.icon}</span>
+          <div>
+            <p class="text-sm font-black text-gray-900 leading-tight">${escapeHtml(item.title)}</p>
+            <p class="text-xs leading-5 text-gray-500 mt-0.5">${escapeHtml(item.text)}</p>
+          </div>
+        </div>`).join('');
 
       renderCommitments();
 
       updatePackage();
       show('packages-section');
-      if ((pkgData.addOns || []).length) show('addons-section');
+      show('addons-section');
     }
 
     function cmPrice(c, freq) { return Math.round((c.monthlyFrom + (freq - 1) * c.freqStep) / 10) * 10; }
@@ -1056,6 +1145,11 @@
         currentCoachId = trainer.id;
         updateFavoriteButton();
         pageCoachSlug = trainer.slug || '';
+        // Wire all "Book Intro Session" CTAs to book-intro.html with the coach pre-selected
+        const bookIntroHref = `/book-intro.html?coach=${encodeURIComponent(pageCoachSlug)}`;
+        ['pkg-cta','side-cta','nav-book-intro'].forEach(id => { const el = document.getElementById(id); if(el) el.href = bookIntroHref; });
+        const floatingCta = document.querySelector('.floating-cta-button');
+        if (floatingCta) floatingCta.href = bookIntroHref;
         renderProfile(trainer);
         renderReviews(trainer.id);
         renderInsights(trainer.id);

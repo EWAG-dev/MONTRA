@@ -17,6 +17,7 @@ module.exports = defineConfig({
         trainerApply: path.resolve(__dirname, 'trainer-apply.html'),
         trainerOnboarding: path.resolve(__dirname, 'trainer-onboarding.html'),
         trainerApplication: path.resolve(__dirname, 'trainer-application.html'),
+        bookIntro: path.resolve(__dirname, 'book-intro.html'),
         about: path.resolve(__dirname, 'about.html'),
         admin: path.resolve(__dirname, 'admin.html'),
         // coaches.html removed — orphaned page never linked anywhere; firebase.json
