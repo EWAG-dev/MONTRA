@@ -650,6 +650,19 @@ struct OnboardingQuizView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 24) {
                         VStack(alignment: .leading, spacing: 6) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "sparkles")
+                                    .font(.system(size: 11, weight: .bold))
+                                Text("MONTRA MATCH™")
+                                    .font(.system(size: 11, weight: .black))
+                                    .kerning(0.6)
+                            }
+                            .foregroundColor(.montraBlue)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Color.montraBlue.opacity(0.12))
+                            .clipShape(Capsule())
+
                             Text("Here are your\nmatches, \(savedFirstName.isEmpty ? "there" : savedFirstName).")
                                 .font(.system(size: 30, weight: .black))
                                 .foregroundColor(.montraTextPrimary)
@@ -1487,14 +1500,14 @@ struct TrainerMatchCard: View {
 
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 20))
-                    .foregroundColor(isSelected ? Color.montraOrange : Color.white.opacity(0.2))
+                    .foregroundColor(isSelected ? Color.montraBlue : Color.white.opacity(0.2))
             }
             .padding(16)
-            .background(isSelected ? Color.montraOrange.opacity(0.08) : Color.white.opacity(0.05))
+            .background(isSelected ? Color.montraBlue.opacity(0.10) : Color.white.opacity(0.05))
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(isSelected ? Color.montraOrange : Color.montraCardBorder,
+                    .stroke(isSelected ? Color.montraBlue : Color.montraCardBorder,
                             lineWidth: isSelected ? 1.5 : 0.8)
             )
         }
@@ -1876,21 +1889,21 @@ private struct MatchChecklistIntroView: View {
                     HStack(alignment: .top, spacing: 12) {
                         ZStack {
                             Circle()
-                                .fill(index < completedCount ? Color.montraOrange : Color.clear)
+                                .fill(index < completedCount ? Color.montraBlue : Color.clear)
                                 .frame(width: 24, height: 24)
                                 .overlay(
                                     Circle()
-                                        .stroke(index < completedCount ? Color.montraOrange : Color.montraOrange.opacity(0.45), lineWidth: 1.6)
+                                        .stroke(index < completedCount ? Color.montraBlue : Color.montraBlue.opacity(0.45), lineWidth: 1.6)
                                 )
 
                             if index < completedCount {
                                 Image(systemName: "checkmark")
                                     .font(.system(size: 11, weight: .bold))
-                                    .foregroundColor(.black)
+                                    .foregroundColor(.white)
                             } else if index == completedCount {
                                 Circle()
                                     .trim(from: 0.1, to: 0.85)
-                                    .stroke(Color.montraOrange, style: StrokeStyle(lineWidth: 1.8, lineCap: .round))
+                                    .stroke(Color.montraBlue, style: StrokeStyle(lineWidth: 1.8, lineCap: .round))
                                     .frame(width: 16, height: 16)
                                     .rotationEffect(.degrees(-90))
                             }

@@ -73,6 +73,17 @@ extension Color {
         dark: UIColor(hex: "#FF8A3D"),
         light: UIColor(hex: "#FF9A52")
     )
+
+    // Elite blue — used for the MONTRA Match / AI-matching experience (premium,
+    // AI-driven feel). Green stays for status/completion; orange stays for CTAs.
+    static let montraBlue = modeColor(
+        dark: UIColor(hex: "#3B82F6"),
+        light: UIColor(hex: "#2563EB")
+    )
+    static let montraBlueLight = modeColor(
+        dark: UIColor(hex: "#60A5FA"),
+        light: UIColor(hex: "#3B82F6")
+    )
     
     static let montraFrostedSurface = modeColor(
         dark: UIColor.white.withAlphaComponent(0.05),
