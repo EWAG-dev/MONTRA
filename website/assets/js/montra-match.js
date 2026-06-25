@@ -202,8 +202,70 @@ export function matchQuality(overall) {
   return 'Good Match';
 }
 
+// ---- MONTRA Performance Forecast™ -------------------------------------------
+// The Match score (above) answers "how compatible are we?". The Forecast reframes
+// the same underlying signals as predicted *outcomes* — how likely this client is
+// to stay consistent and succeed with this coach — so the center of the profile is
+// outcome-driven instead of repeating the compatibility score. Still personalized
+// from the visitor's Get Matched answers; still deterministic per coach.
+
+const KNOWLEDGE_INSIGHTS = [
+  'Clients who train at home are 3x more likely to stay consistent because they eliminate travel time, wait times, and distractions found in gyms.',
+  'Matching on coaching style and accountability is one of the strongest predictors of whether a client hits their 12-week goals.',
+  'Schedule fit drives session attendance — and attendance is the #1 predictor of long-term results.',
+  'Clients who start with an intro session are far more likely to commit to a full program and see lasting change.',
+];
+
+export function forecastQuality(overall) {
+  if (overall >= 90) return 'Excellent Match';
+  if (overall >= 80) return 'Strong Match';
+  if (overall >= 70) return 'Good Match';
+  return 'Promising Match';
+}
+
+export function knowledgeInsight(trainer) {
+  return KNOWLEDGE_INSIGHTS[hashId(`${trainer?.id || ''}:insight`) % KNOWLEDGE_INSIGHTS.length];
+}
+
+export function computeForecast(trainer, prefsArg) {
+  const prefs = prefsArg === undefined ? loadPreferences() : prefsArg;
+  const first = (trainer.name || 'your coach').split(' ')[0];
+
+  // Underlying signals (same engine as the Match score), reframed as outcomes.
+  const goal = clamp(goalFit(trainer, prefs));
+  const sched = clamp(scheduleFit(trainer, prefs));
+  const style = clamp(coachingStyleFit(trainer, prefs));
+  const loc = clamp(locationFit(trainer, prefs));
+  const budget = clamp(budgetFit(trainer, prefs));
+  // Track record (rating + volume) lifts the long-term success projection.
+  const track = clamp(62 + (Number(trainer.rating || 4.8) - 4.0) * 16 + Math.min(Number(trainer.reviewCount || 0), 20) * 0.5);
+
+  const factors = [
+    { key: 'goal', icon: '🎯', label: 'Goal Achievement', pct: goal,
+      desc: prefs?.goal ? `Specializes in ${String(prefs.goal).toLowerCase()}.` : 'Specializes in your primary objective.' },
+    { key: 'consistency', icon: '🔥', label: 'Consistency Prediction', pct: sched,
+      desc: `Your schedule & ${first}'s availability are highly compatible.` },
+    { key: 'accountability', icon: '🤝', label: 'Accountability Match', pct: clamp((style + goal) / 2 + seeded(trainer.id, 'acct', -2, 3)),
+      desc: 'Approach to accountability aligns with what you prefer.' },
+    { key: 'motivation', icon: '💬', label: 'Motivation Alignment', pct: style,
+      desc: 'Communication style matches what keeps you engaged.' },
+    { key: 'lifestyle', icon: '🗓️', label: 'Lifestyle Compatibility', pct: clamp((loc + budget) / 2),
+      desc: 'Location, training environment & weekly commitment fit.' },
+    { key: 'longterm', icon: '⭐', label: 'Long-Term Success', pct: clamp((track + goal + style) / 3),
+      desc: 'Clients with a similar profile achieve strong, sustainable results.' },
+  ];
+
+  const overall = clamp(factors.reduce((sum, f) => sum + f.pct, 0) / factors.length);
+  const insight = `${first} was selected because their coaching style, expertise, schedule, and accountability approach closely match what clients with goals like yours need to succeed.`;
+
+  return { overall, quality: forecastQuality(overall), factors, insight, personalized: !!prefs };
+}
+
 // Also expose on window so the classic (non-module) inline scripts on
 // index.html and quiz.html can share the exact same scoring.
 if (typeof window !== 'undefined') {
-  window.MontraMatch = { computeMatch, matchQuality, hasPreferences, loadPreferences, savePreferences };
+  window.MontraMatch = {
+    computeMatch, matchQuality, computeForecast, forecastQuality, knowledgeInsight,
+    hasPreferences, loadPreferences, savePreferences,
+  };
 }

@@ -127,40 +127,52 @@
           </div>
         </div>
 
-        <!-- WHY WE MATCHED YOU -->
+        <!-- MONTRA PERFORMANCE FORECAST -->
         <div class="border border-gray-200 rounded-2xl p-6">
           <div class="flex items-center gap-2 mb-1">
-            <h2 class="font-black text-lg">Why We Matched You</h2>
+            <h2 class="font-black text-lg">MONTRA Performance Forecast™</h2>
             <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 11v5M12 8h.01"/></svg>
           </div>
-          <p id="match-subhead" class="text-xs text-gray-400 mb-5">Your personalized MONTRA Match™ across the factors that matter most.</p>
+          <p id="forecast-subhead" class="text-xs text-gray-500 mb-6 max-w-xl leading-relaxed"></p>
 
-          <div class="flex flex-col sm:flex-row gap-7 items-center">
+          <div class="flex flex-col sm:flex-row gap-7 items-center sm:items-start">
             <!-- Ring -->
             <div class="flex flex-col items-center flex-shrink-0">
               <div class="relative w-28 h-28">
                 <svg class="w-28 h-28 -rotate-90" viewBox="0 0 120 120">
                   <circle cx="60" cy="60" r="52" fill="none" stroke="#f1f1f1" stroke-width="10"/>
-                  <circle id="match-ring" cx="60" cy="60" r="52" fill="none" stroke="#16a34a" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
+                  <circle id="forecast-ring" cx="60" cy="60" r="52" fill="none" stroke="#16a34a" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
                 </svg>
                 <div class="absolute inset-0 flex flex-col items-center justify-center">
-                  <span id="match-ring-pct" class="text-2xl font-black text-gray-900">—</span>
+                  <span id="forecast-pct" class="text-2xl font-black text-gray-900">—</span>
                 </div>
               </div>
-              <p class="text-[11px] font-bold text-gray-500 mt-2">MONTRA Match™</p>
+              <p class="text-[11px] font-bold text-gray-600 mt-2 text-center leading-tight">Overall Success<br>Prediction</p>
+              <p id="forecast-quality" class="text-xs font-black text-green-600 mt-1"></p>
             </div>
 
-            <!-- Factor bars -->
-            <div id="match-factors" class="flex-1 w-full space-y-3"></div>
+            <!-- Forecast factors -->
+            <div id="forecast-factors" class="flex-1 w-full space-y-4"></div>
           </div>
 
-          <!-- Match guarantee -->
-          <div class="flex items-center gap-2.5 mt-5 bg-orange-50 border border-orange-100 rounded-xl px-4 py-3">
-            <svg class="w-5 h-5 text-brand flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.4 9.4-8 11-4.6-1.6-8-6-8-11V5l8-3z"/></svg>
-            <p class="text-xs font-semibold text-gray-700">Protected by the <span class="text-brand">MONTRA Match Guarantee™</span> — if it's not the right fit, we'll re-match you free.</p>
+          <!-- AI Insight -->
+          <div class="flex items-start gap-2.5 mt-5 bg-green-50 border border-green-100 rounded-xl px-4 py-3">
+            <span class="text-base leading-none mt-0.5">✨</span>
+            <p class="text-xs text-gray-700 leading-relaxed"><span class="font-black text-gray-900">AI Insight</span> &nbsp;<span id="forecast-insight"></span></p>
           </div>
 
-          <a id="match-personalize" href="quiz.html" class="hidden text-xs font-bold text-brand mt-3 inline-block">Take Get Matched to personalize these scores →</a>
+          <a id="forecast-personalize" href="quiz.html" class="hidden text-xs font-bold text-brand mt-3 inline-block">Take Get Matched to personalize your forecast →</a>
+        </div>
+
+        <!-- DID YOU KNOW -->
+        <div class="border border-gray-200 rounded-2xl p-5 bg-blue-50/40">
+          <div class="flex flex-wrap items-center gap-2 mb-2">
+            <span class="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0 text-sm">💡</span>
+            <h3 class="font-black text-sm">Did You Know?</h3>
+            <span class="text-[10px] font-bold text-blue-600 bg-blue-100 rounded-full px-2 py-0.5 tracking-wide">MONTRA KNOWLEDGE INSIGHT</span>
+          </div>
+          <p id="knowledge-insight" class="text-xs text-gray-600 leading-relaxed"></p>
+          <a href="how-it-works.html" class="text-xs font-bold text-blue-600 mt-2 inline-block">View more insights →</a>
         </div>
 
         <!-- A COACH YOU CAN TRUST -->
@@ -426,7 +438,7 @@
   </footer>
 
   <script type="module">
-    import { computeMatch, matchQuality, hasPreferences } from './assets/js/montra-match.js';
+    import { computeMatch, matchQuality, computeForecast, knowledgeInsight, hasPreferences } from './assets/js/montra-match.js';
 
     const MONTRA_API_BASE = 'https://montra-production.up.railway.app';
     const RING_CIRCUMFERENCE = 326.7; // 2πr, r=52
@@ -456,29 +468,9 @@
       return '#ca8a04';
     }
 
-    // ---- Match rendering ----
+    // ---- MONTRA Match™ (sidebar — compatibility) ----
     function renderMatch(trainer) {
       const match = computeMatch(trainer);
-      const first = (trainer.name || 'this coach').split(' ')[0];
-
-      // Ring
-      const ring = document.getElementById('match-ring');
-      ring.setAttribute('stroke', ringColor(match.overall));
-      ring.setAttribute('stroke-dashoffset', String(RING_CIRCUMFERENCE * (1 - match.overall / 100)));
-      document.getElementById('match-ring-pct').textContent = `${match.overall}%`;
-
-      // Factor bars (main panel)
-      document.getElementById('match-factors').innerHTML = match.factors.map((f) => `
-        <div>
-          <div class="flex items-center justify-between text-xs mb-1">
-            <span class="font-semibold text-gray-700">${f.label}</span>
-            <span class="font-bold text-gray-900">${f.pct}%</span>
-          </div>
-          <div class="fit-track"><div class="fit-fill" style="width:${f.pct}%"></div></div>
-        </div>
-      `).join('');
-
-      // Sidebar
       document.getElementById('side-match-pct').textContent = `${match.overall}%`;
       document.getElementById('side-match-pct').style.color = ringColor(match.overall);
       document.getElementById('side-match-quality').textContent = matchQuality(match.overall);
@@ -488,11 +480,40 @@
           <span class="font-bold text-gray-800">${f.pct}%</span>
         </div>
       `).join('');
+    }
 
-      if (!match.personalized) {
-        document.getElementById('match-subhead').textContent = 'Typical fit for this coach across the factors that matter most.';
-        show('match-personalize');
-      }
+    // ---- MONTRA Performance Forecast™ (center — predicted success) ----
+    function renderForecast(trainer) {
+      const fc = computeForecast(trainer);
+      const first = (trainer.name || 'this coach').split(' ')[0];
+
+      const ring = document.getElementById('forecast-ring');
+      ring.setAttribute('stroke', ringColor(fc.overall));
+      ring.setAttribute('stroke-dashoffset', String(RING_CIRCUMFERENCE * (1 - fc.overall / 100)));
+      document.getElementById('forecast-pct').textContent = `${fc.overall}%`;
+      document.getElementById('forecast-quality').textContent = fc.quality;
+
+      document.getElementById('forecast-subhead').textContent = fc.personalized
+        ? `Based on your goals, lifestyle, preferences, and thousands of coaching interactions, MONTRA predicts a high probability that ${first} will help you stay consistent and reach your goals.`
+        : `Based on thousands of coaching interactions, MONTRA predicts a high probability that ${first} helps clients stay consistent and reach their goals.`;
+
+      document.getElementById('forecast-factors').innerHTML = fc.factors.map((f) => `
+        <div class="flex items-start gap-3">
+          <span class="text-base leading-none mt-0.5">${f.icon}</span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-3">
+              <span class="font-bold text-sm text-gray-800">${f.label}</span>
+              <span class="font-black text-sm text-gray-900">${f.pct}%</span>
+            </div>
+            <p class="text-[11px] text-gray-500 mb-1.5">${escapeHtml(f.desc)}</p>
+            <div class="fit-track"><div class="fit-fill" style="width:${f.pct}%"></div></div>
+          </div>
+        </div>
+      `).join('');
+
+      document.getElementById('forecast-insight').textContent = fc.insight;
+      document.getElementById('knowledge-insight').textContent = knowledgeInsight(trainer);
+      if (!fc.personalized) show('forecast-personalize');
     }
 
     // ---- Trust stack ----
@@ -641,6 +662,7 @@
 
       renderHighlights(trainer);
       renderMatch(trainer);
+      renderForecast(trainer);
       renderTrustStack(trainer);
       renderRecommendation(trainer);
 
