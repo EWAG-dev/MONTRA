@@ -675,6 +675,20 @@
 
       grid.innerHTML = filtered.map(renderTrainerCard).join('');
       updateFilterCount();
+      fillMatchBadges(filtered.map((t) => t.id));
+    }
+
+    // One backend call scores every visible card, then reveals the % badges.
+    async function fillMatchBadges(ids) {
+      if (!window.MontraMatch) return;
+      const scores = await window.MontraMatch.fetchMatchBatch(ids);
+      scores.forEach((res, id) => {
+        const el = document.querySelector(`[data-match-id="${CSS.escape(id)}"]`);
+        if (!el) return;
+        el.querySelector('.match-pct').textContent = `${res.overall}%`;
+        el.classList.remove('hidden');
+        el.classList.add('flex');
+      });
     }
 
     // Count of non-default filters, shown as a badge on the mobile Filters button.
@@ -861,11 +875,11 @@
       const accent = escapeHtml(trainer.accentHex || '#E85D04');
       const photo = trainer.photoDataUrl ? `<img src="${escapeHtml(trainer.photoDataUrl)}" alt="${name}" class="h-full w-full object-cover">` : `<div class="h-full w-full flex items-center justify-center"><span class="text-brand font-black text-3xl">${initials}</span></div>`;
 
-      const match = window.MontraMatch?.computeMatch(trainer);
-      const matchBadge = match ? `
-            <span class="absolute top-3 right-3 flex items-center gap-1 bg-white text-gray-900 text-[11px] font-black px-2 py-0.5 rounded-full shadow">
-              <span class="text-green-600">${match.overall}%</span><span class="text-gray-500 font-bold">Match</span>
-            </span>` : '';
+      // Score filled in asynchronously by fillMatchBadges() (one backend call for all cards).
+      const matchBadge = `
+            <span data-match-id="${escapeHtml(trainer.id)}" class="hidden absolute top-3 right-3 items-center gap-1 bg-white text-gray-900 text-[11px] font-black px-2 py-0.5 rounded-full shadow">
+              <span class="match-pct text-blue-600"></span><span class="text-gray-500 font-bold">Match</span>
+            </span>`;
 
       return `
         <article class="bg-[#111] rounded-2xl overflow-hidden border border-white/10 flex flex-col transition hover:-translate-y-0.5">

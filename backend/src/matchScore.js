@@ -131,6 +131,19 @@ export function matchQuality(overall) {
   return "Good Match";
 }
 
+// Normalizes a raw prefs object (from the iOS app or the website's stored Get
+// Matched answers) into the exact shape the scoring functions expect.
+export function normalizePrefs(p = {}) {
+  return {
+    goal: typeof p.goal === "string" ? p.goal : "",
+    location: typeof p.location === "string" ? p.location : "",
+    experience: typeof p.experience === "string" ? p.experience : "",
+    gender: typeof p.gender === "string" ? p.gender : "",
+    budget: typeof p.budget === "string" ? p.budget : "",
+    schedule: Array.isArray(p.schedule) ? p.schedule.filter((s) => typeof s === "string") : [],
+  };
+}
+
 export function computeMatch(trainer, prefs) {
   const factors = [
     { key: "goal", label: "Goal Fit", pct: clamp(goalFit(trainer, prefs)) },

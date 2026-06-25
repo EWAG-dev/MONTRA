@@ -632,8 +632,8 @@
         const specialties = Array.isArray(coach.specialties) && coach.specialties.length
           ? coach.specialties.join(', ')
           : (coach.certification || 'Certified Trainer');
-        const match = window.MontraMatch?.computeMatch(coach);
-        const matchPill = match ? `<span class="inline-flex items-center gap-1 bg-green-500/15 border border-green-500/30 text-green-400 text-[11px] font-black px-2 py-0.5 rounded-full">${match.overall}% MONTRA Match™</span>` : '';
+        // Filled in by fillMatchPills() — one backend call scores all matched coaches.
+        const matchPill = `<span data-match-id="${escapeHtml(coach.id)}" class="hidden items-center gap-1 bg-blue-500/15 border border-blue-500/30 text-blue-400 text-[11px] font-black px-2 py-0.5 rounded-full"><span class="match-pct"></span> MONTRA Match™</span>`;
 
         return `
         <div class="border border-white/10 rounded-xl overflow-hidden hover:border-brand/50 transition-colors">
@@ -656,6 +656,21 @@
         </div>
       `;
       }).join('');
+
+      fillMatchPills(matched.map((c) => c.id));
+    }
+
+    // One backend call scores all matched coaches, then reveals their % pills.
+    async function fillMatchPills(ids) {
+      if (!window.MontraMatch) return;
+      const scores = await window.MontraMatch.fetchMatchBatch(ids);
+      scores.forEach((res, id) => {
+        const el = document.querySelector(`[data-match-id="${CSS.escape(id)}"]`);
+        if (!el) return;
+        el.querySelector('.match-pct').textContent = `${res.overall}%`;
+        el.classList.remove('hidden');
+        el.classList.add('inline-flex');
+      });
     }
 
     function updateAnswerSummary() {

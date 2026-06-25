@@ -116,12 +116,17 @@
 
           <!-- Identity -->
           <div class="flex-1 min-w-0">
-            <div class="flex flex-wrap items-center gap-2 mb-1">
-              <h1 id="coach-name" class="text-3xl font-black"></h1>
-              <span id="pro-badge" class="hidden items-center gap-1 bg-orange-50 text-brand border border-orange-200 rounded-full px-2.5 py-1 text-[11px] font-bold">
-                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M5 16L3 7l5.5 4L12 4l3.5 7L21 7l-2 9H5zm0 2h14v2H5v-2z"/></svg>
-                Elite Pro Coach™
-              </span>
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <h1 id="coach-name" class="text-3xl font-black"></h1>
+                <span id="pro-badge" class="hidden items-center gap-1 bg-orange-50 text-brand border border-orange-200 rounded-full px-2.5 py-1 text-[11px] font-bold">
+                  <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M5 16L3 7l5.5 4L12 4l3.5 7L21 7l-2 9H5zm0 2h14v2H5v-2z"/></svg>
+                  Elite Pro Coach™
+                </span>
+              </div>
+              <button id="favorite-btn" class="flex-shrink-0 w-10 h-10 rounded-full hover:bg-gray-100 transition-colors flex items-center justify-center text-xl" aria-label="Save this coach" title="Save this coach">
+                <span id="favorite-icon">🤍</span>
+              </button>
             </div>
             <p id="coach-tagline" class="text-gray-600 text-base mb-1"></p>
             <p id="coach-serving" class="hidden items-center gap-1.5 text-gray-400 text-sm mb-4"></p>
@@ -413,7 +418,7 @@
   </div>
 
   <!-- BOTTOM CTA BAR -->
-  <div class="bg-blue-700 text-white py-5 sticky bottom-0 z-40 shadow-2xl">
+  <div class="bg-brand text-white py-5 sticky bottom-0 z-40 shadow-2xl">
     <div class="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between gap-4">
       <div class="flex items-center gap-3">
         <div class="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -421,11 +426,11 @@
         </div>
         <div>
           <p class="font-bold text-sm">Ready to take the first step?</p>
-          <p class="text-blue-100 text-xs">MONTRA already did the hard work — book your intro session with this coach.</p>
+          <p class="text-orange-100 text-xs">MONTRA already did the hard work — book your intro session with this coach.</p>
         </div>
       </div>
       <div class="flex gap-3 flex-shrink-0">
-        <a href="quiz.html" class="bg-white text-blue-700 font-bold px-5 py-2.5 rounded-xl text-sm hover:bg-blue-50 transition-colors">Book Intro Session →</a>
+        <a href="quiz.html" class="bg-white text-brand font-bold px-5 py-2.5 rounded-xl text-sm hover:bg-orange-50 transition-colors">Book Intro Session →</a>
       </div>
     </div>
   </div>
@@ -449,7 +454,7 @@
   </footer>
 
   <script type="module">
-    import { computeMatch, matchQuality, computeForecast, knowledgeInsight, hasPreferences } from './assets/js/montra-match.js';
+    import { fetchMatch, computeForecast, knowledgeInsight, hasPreferences } from './assets/js/montra-match.js';
 
     const MONTRA_API_BASE = 'https://montra-production.up.railway.app';
     const RING_CIRCUMFERENCE = 326.7; // 2πr, r=52
@@ -480,12 +485,11 @@
       return '#60a5fa';
     }
 
-    // ---- MONTRA Match™ (sidebar — compatibility) ----
-    function renderMatch(trainer) {
-      const match = computeMatch(trainer);
+    // ---- MONTRA Match™ (sidebar — compatibility) — backend-scored ----
+    function renderMatch(trainer, match) {
       document.getElementById('side-match-pct').textContent = `${match.overall}%`;
       document.getElementById('side-match-pct').style.color = ringColor(match.overall);
-      document.getElementById('side-match-quality').textContent = matchQuality(match.overall);
+      document.getElementById('side-match-quality').textContent = match.quality;
       document.getElementById('side-factors').innerHTML = match.factors.map((f) => `
         <div class="flex items-center justify-between text-xs">
           <span class="text-gray-500">${f.label}</span>
@@ -495,8 +499,8 @@
     }
 
     // ---- MONTRA Performance Forecast™ (center — predicted success) ----
-    function renderForecast(trainer) {
-      const fc = computeForecast(trainer);
+    function renderForecast(trainer, match) {
+      const fc = computeForecast(match, trainer);
       const first = (trainer.name || 'this coach').split(' ')[0];
 
       const ring = document.getElementById('forecast-ring');
@@ -673,8 +677,6 @@
       }
 
       renderHighlights(trainer);
-      renderMatch(trainer);
-      renderForecast(trainer);
       renderTrustStack(trainer);
       renderRecommendation(trainer);
 
@@ -1005,6 +1007,33 @@
       show('commitment-section');
     }
 
+    // ---- Favorites / Save Coach ----
+    let currentCoachId = null;
+
+    function updateFavoriteButton() {
+      if (!currentCoachId) return;
+      const favorites = JSON.parse(localStorage.getItem('montra_favorite_coaches') || '[]');
+      const isFavorited = favorites.includes(currentCoachId);
+      const icon = document.getElementById('favorite-icon');
+      icon.textContent = isFavorited ? '❤️' : '🤍';
+      document.getElementById('favorite-btn').classList.toggle('bg-red-50', isFavorited);
+    }
+
+    function toggleFavorite() {
+      if (!currentCoachId) return;
+      let favorites = JSON.parse(localStorage.getItem('montra_favorite_coaches') || '[]');
+      const idx = favorites.indexOf(currentCoachId);
+      if (idx >= 0) {
+        favorites.splice(idx, 1);
+      } else {
+        favorites.push(currentCoachId);
+      }
+      localStorage.setItem('montra_favorite_coaches', JSON.stringify(favorites));
+      updateFavoriteButton();
+    }
+
+    document.getElementById('favorite-btn')?.addEventListener('click', toggleFavorite);
+
     async function loadCoachProfile() {
       // Pretty URL: /coaches/<slug>. Fall back to the legacy ?id= query.
       const slugMatch = window.location.pathname.match(/\/coaches\/([^/]+)\/?$/);
@@ -1018,10 +1047,18 @@
         if (!response.ok) throw new Error('Not found');
         const { trainer } = await response.json();
         if (!trainer || trainer.status !== 'approved' || trainer.isActive === false) throw new Error('Not available');
+        currentCoachId = trainer.id;
+        updateFavoriteButton();
         renderProfile(trainer);
         renderReviews(trainer.id);
         renderInsights(trainer.id);
         renderPackages(trainer.id);
+        // MONTRA Match (sidebar) + Performance Forecast (center) are scored by the
+        // backend (single source of truth) and rendered once the score returns.
+        fetchMatch(trainer.id).then((match) => {
+          renderMatch(trainer, match);
+          renderForecast(trainer, match);
+        }).catch(() => { /* leave the —/placeholder if scoring is unavailable */ });
       } catch (error) {
         hide('loading-state'); show('not-found-state');
       }

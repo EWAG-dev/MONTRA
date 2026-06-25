@@ -104,6 +104,16 @@ MKEYS=$(echo "$MATCH" | jq -c '[.factors[].key]')
 [ "$(echo "$MATCH" | jq -r '.personalized')" = "true" ] && pass "match flagged personalized (prefs sent)" || fail "personalized flag"
 [ -n "$(echo "$MATCH" | jq -r '.quality')" ] && pass "match quality label present ($(echo "$MATCH" | jq -r '.quality'))" || fail "quality missing"
 
+echo "== POST /match/batch scores multiple coaches in one call =="
+BATCH=$(curl -s -X POST "$BASE_URL/api/match/batch" \
+  -H "Content-Type: application/json" \
+  -d "{\"ids\":[\"${TRAINER_DOC_ID}\",\"no-such-coach\"],\"prefs\":{\"goal\":\"Build Muscle\",\"location\":\"Boston\"}}")
+[ "$(echo "$BATCH" | jq '.results | length')" = "1" ] && pass "batch skips unknown ids (1 result)" || fail "batch result count ($BATCH)"
+BID=$(echo "$BATCH" | jq -r '.results[0].id')
+[ "$BID" = "$TRAINER_DOC_ID" ] && pass "batch result id matches" || fail "batch id ($BID)"
+BOVR=$(echo "$BATCH" | jq -r '.results[0].overall')
+[ "$BOVR" -ge 1 ] && [ "$BOVR" -le 100 ] && pass "batch overall in range ($BOVR%)" || fail "batch overall ($BOVR)"
+
 # ───────────────── RESERVED-ID SAFETY (regression) ─────────────────
 echo "== reserved/invalid id returns 404 without crashing =="
 for path in "insights" "packages"; do

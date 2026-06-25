@@ -69,7 +69,7 @@ import {
 } from "./reviewStore.js";
 import { getTrainerInsights } from "./insightStore.js";
 import { getTrainerPackages } from "./packageStore.js";
-import { computeMatch } from "./matchScore.js";
+import { computeMatch, normalizePrefs } from "./matchScore.js";
 import { createLead, listLeads, updateLeadStatus, deleteLeadsForPhone } from "./leadStore.js";
 
 // Safety net: Express 4 doesn't forward errors from async route handlers, so a
@@ -1159,19 +1159,37 @@ app.post("/api/trainers/:id/match", async (req, res) => {
       res.status(404).json({ error: "Trainer not found" });
       return;
     }
-    const p = req.body?.prefs || {};
-    const prefs = {
-      goal: typeof p.goal === "string" ? p.goal : "",
-      location: typeof p.location === "string" ? p.location : "",
-      experience: typeof p.experience === "string" ? p.experience : "",
-      gender: typeof p.gender === "string" ? p.gender : "",
-      budget: typeof p.budget === "string" ? p.budget : "",
-      schedule: Array.isArray(p.schedule) ? p.schedule.filter((s) => typeof s === "string") : [],
-    };
-    res.status(200).json(computeMatch(trainer, prefs));
+    res.status(200).json(computeMatch(trainer, normalizePrefs(req.body?.prefs)));
   } catch (err) {
     console.error("match route failed:", err.message);
     res.status(500).json({ error: "Could not compute match" });
+  }
+});
+
+// Batch MONTRA Match scores for many coaches at once (the Find-a-Coach + Get Matched
+// card badges) — one call instead of N. Returns id -> { overall, quality }.
+app.post("/api/match/batch", async (req, res) => {
+  try {
+    const ids = Array.isArray(req.body?.ids) ? req.body.ids.filter((x) => typeof x === "string").slice(0, 60) : [];
+    if (!ids.length) {
+      res.status(200).json({ results: [] });
+      return;
+    }
+    const prefs = normalizePrefs(req.body?.prefs);
+    const all = await listTrainers({ includeInactive: true });
+    const byId = new Map(all.map((t) => [t.id, t]));
+    const results = ids
+      .map((id) => {
+        const trainer = byId.get(id);
+        if (!trainer) return null;
+        const m = computeMatch(trainer, prefs);
+        return { id, overall: m.overall, quality: m.quality };
+      })
+      .filter(Boolean);
+    res.status(200).json({ results });
+  } catch (err) {
+    console.error("match batch route failed:", err.message);
+    res.status(500).json({ error: "Could not compute matches" });
   }
 });
 
