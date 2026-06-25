@@ -25,8 +25,10 @@
     nav.dark-nav .border-gray-200 { border-color: #374151 !important; }
     nav.dark-nav .border-gray-300 { border-color: #4b5563 !important; }
     nav.dark-nav .hover\:bg-gray-50:hover { background-color: #1f2937 !important; color: #ffffff; }
-    .fit-track { background:#f1f1f1; border-radius:9999px; height:6px; overflow:hidden; }
-    .fit-fill { background:linear-gradient(90deg,#16a34a,#22c55e); height:100%; border-radius:9999px; }
+    .fit-track { background:#eef2f7; border-radius:9999px; height:6px; overflow:hidden; }
+    /* Elite blue — Match score / confidence / AI analysis (green is reserved for
+       status indicators like Verified or Available). */
+    .fit-fill { background:linear-gradient(90deg,#1d4ed8,#3b82f6); height:100%; border-radius:9999px; }
     /* Session-package slider */
     .pkg-track { position:relative; height:14px; border-radius:9999px; background:linear-gradient(90deg,#2563eb,#7c3aed,#E85D04); box-shadow: inset 0 1px 3px rgba(0,0,0,.15); }
     .pkg-knob { position:absolute; top:50%; width:30px; height:30px; border-radius:9999px; background:#fff; border:4px solid #E85D04; box-shadow:0 3px 10px rgba(0,0,0,.18); transform:translate(-50%,-50%); transition:left .35s cubic-bezier(.34,1.3,.5,1); cursor:pointer; }
@@ -143,15 +145,21 @@
             <div class="flex flex-col items-center flex-shrink-0">
               <div class="relative w-28 h-28">
                 <svg class="w-28 h-28 -rotate-90" viewBox="0 0 120 120">
-                  <circle cx="60" cy="60" r="52" fill="none" stroke="#f1f1f1" stroke-width="10"/>
-                  <circle id="forecast-ring" cx="60" cy="60" r="52" fill="none" stroke="#16a34a" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
+                  <defs>
+                    <linearGradient id="forecastGrad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0" stop-color="#60a5fa"/>
+                      <stop offset="1" stop-color="#1d4ed8"/>
+                    </linearGradient>
+                  </defs>
+                  <circle cx="60" cy="60" r="52" fill="none" stroke="#eef2f7" stroke-width="10"/>
+                  <circle id="forecast-ring" cx="60" cy="60" r="52" fill="none" stroke="url(#forecastGrad)" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
                 </svg>
                 <div class="absolute inset-0 flex flex-col items-center justify-center">
                   <span id="forecast-pct" class="text-2xl font-black text-gray-900">—</span>
                 </div>
               </div>
               <p class="text-[11px] font-bold text-gray-600 mt-2 text-center leading-tight">Overall Success<br>Prediction</p>
-              <p id="forecast-quality" class="text-xs font-black text-green-600 mt-1"></p>
+              <p id="forecast-quality" class="text-xs font-black text-blue-600 mt-1"></p>
             </div>
 
             <!-- Forecast factors -->
@@ -159,9 +167,9 @@
           </div>
 
           <!-- AI Insight -->
-          <div class="flex items-start gap-2.5 mt-5 bg-green-50 border border-green-100 rounded-xl px-4 py-3">
+          <div class="flex items-start gap-2.5 mt-5 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
             <span class="text-base leading-none mt-0.5">✨</span>
-            <p class="text-xs text-gray-700 leading-relaxed"><span class="font-black text-gray-900">AI Insight</span> &nbsp;<span id="forecast-insight"></span></p>
+            <p class="text-xs text-gray-700 leading-relaxed"><span class="font-black text-blue-700">AI Insight</span> &nbsp;<span id="forecast-insight"></span></p>
           </div>
 
           <a id="forecast-personalize" href="quiz.html" class="hidden text-xs font-bold text-brand mt-3 inline-block">Take Get Matched to personalize your forecast →</a>
@@ -344,7 +352,7 @@
         <div class="border border-gray-200 rounded-2xl p-6 shadow-sm">
           <p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Your MONTRA Match™</p>
           <div class="flex items-end gap-2 mb-1">
-            <span id="side-match-pct" class="text-4xl font-black text-green-600">—</span>
+            <span id="side-match-pct" class="text-4xl font-black text-blue-600">—</span>
           </div>
           <p id="side-match-quality" class="text-sm font-bold text-gray-700 mb-4"></p>
 
@@ -465,10 +473,11 @@
         .join('');
     }
 
+    // Match / confidence scores render in Elite blue (premium, AI-driven feel).
     function ringColor(pct) {
-      if (pct >= 88) return '#16a34a';
-      if (pct >= 78) return '#65a30d';
-      return '#ca8a04';
+      if (pct >= 88) return '#2563eb';
+      if (pct >= 78) return '#3b82f6';
+      return '#60a5fa';
     }
 
     // ---- MONTRA Match™ (sidebar — compatibility) ----
@@ -491,7 +500,7 @@
       const first = (trainer.name || 'this coach').split(' ')[0];
 
       const ring = document.getElementById('forecast-ring');
-      ring.setAttribute('stroke', ringColor(fc.overall));
+      // Keep the blue gradient stroke (#forecastGrad); just advance the arc.
       ring.setAttribute('stroke-dashoffset', String(RING_CIRCUMFERENCE * (1 - fc.overall / 100)));
       document.getElementById('forecast-pct').textContent = `${fc.overall}%`;
       document.getElementById('forecast-quality').textContent = fc.quality;
