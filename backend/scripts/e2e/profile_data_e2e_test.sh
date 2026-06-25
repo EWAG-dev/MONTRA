@@ -91,6 +91,19 @@ BYSLUG_ID=$(curl -s "$BASE_URL/api/trainers/by-slug/${SLUG}" | jq -r '.trainer.i
 UNKSLUG=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/api/trainers/by-slug/no-such-coach-nowhere")
 [ "$UNKSLUG" = "404" ] && pass "unknown slug -> 404" || fail "unknown slug expected 404, got $UNKSLUG"
 
+# ───────────────────────── MATCH SCORE ─────────────────────────
+echo "== POST /match returns overall + 5 factors =="
+MATCH=$(curl -s -X POST "$BASE_URL/api/trainers/${TRAINER_DOC_ID}/match" \
+  -H "Content-Type: application/json" \
+  -d '{"prefs":{"goal":"Build Muscle","location":"Boston","schedule":["Morning","Evening"],"gender":"No preference"}}')
+MOVERALL=$(echo "$MATCH" | jq -r '.overall')
+[ "$MOVERALL" -ge 1 ] && [ "$MOVERALL" -le 100 ] && pass "match overall in 1–100 ($MOVERALL%)" || fail "match overall out of range ($MATCH)"
+[ "$(echo "$MATCH" | jq '.factors | length')" = "5" ] && pass "match has 5 factors" || fail "match factor count"
+MKEYS=$(echo "$MATCH" | jq -c '[.factors[].key]')
+[ "$MKEYS" = '["goal","schedule","budget","location","style"]' ] && pass "match factor keys correct" || fail "match keys ($MKEYS)"
+[ "$(echo "$MATCH" | jq -r '.personalized')" = "true" ] && pass "match flagged personalized (prefs sent)" || fail "personalized flag"
+[ -n "$(echo "$MATCH" | jq -r '.quality')" ] && pass "match quality label present ($(echo "$MATCH" | jq -r '.quality'))" || fail "quality missing"
+
 # ───────────────── RESERVED-ID SAFETY (regression) ─────────────────
 echo "== reserved/invalid id returns 404 without crashing =="
 for path in "insights" "packages"; do

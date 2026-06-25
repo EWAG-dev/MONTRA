@@ -69,6 +69,7 @@ import {
 } from "./reviewStore.js";
 import { getTrainerInsights } from "./insightStore.js";
 import { getTrainerPackages } from "./packageStore.js";
+import { computeMatch } from "./matchScore.js";
 import { createLead, listLeads, updateLeadStatus, deleteLeadsForPhone } from "./leadStore.js";
 
 // Safety net: Express 4 doesn't forward errors from async route handlers, so a
@@ -1147,6 +1148,31 @@ app.get("/api/trainers/:id", async (req, res) => {
     return;
   }
   res.status(200).json({ trainer });
+});
+
+// MONTRA Match score + factor breakdown for a coach, personalized from the client's
+// quiz prefs (same algorithm as the website, scored against the full trainer record).
+app.post("/api/trainers/:id/match", async (req, res) => {
+  try {
+    const trainer = await getTrainer(req.params.id);
+    if (!trainer) {
+      res.status(404).json({ error: "Trainer not found" });
+      return;
+    }
+    const p = req.body?.prefs || {};
+    const prefs = {
+      goal: typeof p.goal === "string" ? p.goal : "",
+      location: typeof p.location === "string" ? p.location : "",
+      experience: typeof p.experience === "string" ? p.experience : "",
+      gender: typeof p.gender === "string" ? p.gender : "",
+      budget: typeof p.budget === "string" ? p.budget : "",
+      schedule: Array.isArray(p.schedule) ? p.schedule.filter((s) => typeof s === "string") : [],
+    };
+    res.status(200).json(computeMatch(trainer, prefs));
+  } catch (err) {
+    console.error("match route failed:", err.message);
+    res.status(500).json({ error: "Could not compute match" });
+  }
 });
 
 // Public: real client reviews for a coach, newest first. Powers the

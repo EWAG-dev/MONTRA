@@ -103,6 +103,8 @@ struct OnboardingQuizView: View {
     @State private var selectedSchedule: Set<String> = []
     @State private var firstName = ""
     @State private var selectedTrainer: OnboardingTrainer? = nil
+    @State private var matchResult: MatchResult? = nil
+    @State private var matchLoading = false
     @State private var selectedLocation = ""
     @State private var selectedEquipment = ""
     @State private var selectedInjuries: Set<String> = []
@@ -682,8 +684,15 @@ struct OnboardingQuizView: View {
                                     isSelected: selectedTrainer?.id == trainer.id
                                 ) {
                                     withAnimation(.easeInOut(duration: 0.18)) { selectedTrainer = trainer }
+                                    Task { await loadMatch(for: trainer) }
                                 }
                             }
+                        }
+
+                        // Real MONTRA Match breakdown for the selected coach (blue),
+                        // scored by the backend from this client's quiz answers.
+                        if selectedTrainer != nil {
+                            MatchScoreCard(result: matchResult, loading: matchLoading)
                         }
 
                         Button {
@@ -1065,6 +1074,27 @@ struct OnboardingQuizView: View {
         } catch {
             // Network unavailable — keep nil so static fallback is used
         }
+    }
+
+    private func buildMatchPrefs() -> [String: Any] {
+        let schedule = savedSchedule
+            .components(separatedBy: ", ")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+        return [
+            "goal": savedGoal,
+            "location": savedLocation,
+            "experience": savedExperience,
+            "gender": savedCoachPref,
+            "schedule": schedule,
+        ]
+    }
+
+    private func loadMatch(for trainer: OnboardingTrainer) async {
+        matchResult = nil
+        matchLoading = true
+        matchResult = try? await MatchAPI.score(trainerId: trainer.id, prefs: buildMatchPrefs())
+        matchLoading = false
     }
 
     private func postMatchRequest(trainer: OnboardingTrainer) async -> String? {
@@ -2009,6 +2039,130 @@ private struct ClientTermsSheet: View {
                 .lineSpacing(4)
             Divider().background(Color.white.opacity(0.08))
         }
+    }
+}
+
+// MARK: - MONTRA Match (backend-scored)
+
+struct MatchFactor: Decodable, Identifiable {
+    let key: String
+    let label: String
+    let pct: Int
+    var id: String { key }
+}
+
+struct MatchResult: Decodable {
+    let overall: Int
+    let quality: String
+    let factors: [MatchFactor]
+    let personalized: Bool
+}
+
+enum MatchAPI {
+    /// Asks the backend for the MONTRA Match % + factor breakdown for a coach,
+    /// personalized from the client's quiz prefs (same algorithm as the website).
+    static func score(trainerId: String, prefs: [String: Any]) async throws -> MatchResult {
+        guard let url = MontraAPIConfig.url(for: "/api/trainers/\(trainerId)/match") else {
+            throw ChatError.invalidURL
+        }
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try JSONSerialization.data(withJSONObject: ["prefs": prefs])
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        guard let http = resp as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+            throw ChatError.server("Could not load match")
+        }
+        return try JSONDecoder().decode(MatchResult.self, from: data)
+    }
+}
+
+/// "Your MONTRA Match" card — blue confidence ring + factor bars, mirroring the
+/// website coach profile. Blue = Match/AI; orange stays for CTAs, green for status.
+struct MatchScoreCard: View {
+    let result: MatchResult?
+    let loading: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 6) {
+                Image(systemName: "sparkles").font(.system(size: 11, weight: .bold))
+                Text("YOUR MONTRA MATCH™").font(.system(size: 11, weight: .black)).kerning(0.6)
+            }
+            .foregroundColor(.montraBlue)
+
+            if let result {
+                HStack(alignment: .center, spacing: 18) {
+                    ring(result.overall)
+                    VStack(alignment: .leading, spacing: 9) {
+                        ForEach(result.factors) { f in
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text(f.label)
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundColor(.montraTextSecondary)
+                                    Spacer()
+                                    Text("\(f.pct)%")
+                                        .font(.system(size: 12, weight: .bold))
+                                        .foregroundColor(.montraTextPrimary)
+                                }
+                                bar(f.pct)
+                            }
+                        }
+                    }
+                }
+            } else if loading {
+                HStack(spacing: 10) {
+                    ProgressView().tint(.montraBlue)
+                    Text("Scoring your match…")
+                        .font(.system(size: 13))
+                        .foregroundColor(.montraTextSecondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.vertical, 18)
+            }
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.montraBlue.opacity(0.06))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.montraBlue.opacity(0.25), lineWidth: 1)
+        )
+    }
+
+    private func ring(_ pct: Int) -> some View {
+        ZStack {
+            Circle().stroke(Color.montraBlue.opacity(0.15), lineWidth: 9)
+            Circle()
+                .trim(from: 0, to: CGFloat(pct) / 100)
+                .stroke(
+                    LinearGradient(colors: [Color.montraBlueLight, Color.montraBlue], startPoint: .topLeading, endPoint: .bottomTrailing),
+                    style: StrokeStyle(lineWidth: 9, lineCap: .round)
+                )
+                .rotationEffect(.degrees(-90))
+            VStack(spacing: 1) {
+                Text("\(pct)%").font(.system(size: 22, weight: .black)).foregroundColor(.montraTextPrimary)
+                Text(result?.quality ?? "")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundColor(.montraBlue)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .frame(width: 96, height: 96)
+    }
+
+    private func bar(_ pct: Int) -> some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.montraBlue.opacity(0.12)).frame(height: 6)
+                Capsule()
+                    .fill(LinearGradient(colors: [Color.montraBlue, Color.montraBlueLight], startPoint: .leading, endPoint: .trailing))
+                    .frame(width: max(6, geo.size.width * CGFloat(pct) / 100), height: 6)
+            }
+        }
+        .frame(height: 6)
     }
 }
 
