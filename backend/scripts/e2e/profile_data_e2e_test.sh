@@ -82,6 +82,15 @@ REC6=$(echo "$PKG" | jq -r '.commitments[] | select(.months==6) | .recommended')
 [ "$(echo "$PKG" | jq '.addOns | length')" = "5" ] && pass "5 à-la-carte add-ons" || fail "addOns count"
 [ "$(echo "$PKG" | jq -r '.derived')" = "true" ] && pass "pricing flagged derived (no real rate)" || fail "derived flag"
 
+# ───────────────────────── SEO SLUG ─────────────────────────
+echo "== GET /by-slug resolves to the same trainer =="
+SLUG=$(curl -s "$BASE_URL/api/trainers/${TRAINER_DOC_ID}" | jq -r '.trainer.slug')
+require "trainer slug" "$SLUG"
+BYSLUG_ID=$(curl -s "$BASE_URL/api/trainers/by-slug/${SLUG}" | jq -r '.trainer.id')
+[ "$BYSLUG_ID" = "$TRAINER_DOC_ID" ] && pass "by-slug resolves to the trainer ($SLUG)" || fail "by-slug id mismatch ($BYSLUG_ID vs $TRAINER_DOC_ID)"
+UNKSLUG=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/api/trainers/by-slug/no-such-coach-nowhere")
+[ "$UNKSLUG" = "404" ] && pass "unknown slug -> 404" || fail "unknown slug expected 404, got $UNKSLUG"
+
 # ───────────────── RESERVED-ID SAFETY (regression) ─────────────────
 echo "== reserved/invalid id returns 404 without crashing =="
 for path in "insights" "packages"; do

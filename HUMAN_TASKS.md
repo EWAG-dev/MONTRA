@@ -184,8 +184,25 @@ throughout (never "AI"/"bot").
 - **What's real:** lead capture + Firestore storage + routing + **email** notification
   to `ADMIN_EMAILS`.
 - **HUMAN ACTIONS / follow-ups:**
-  - **SMS to assigned rep** — no SMS provider wired. Add Twilio (or similar) and send
-    from `notifyLeadTeam` in `index.js`; today only email fires.
+  - **SMS to assigned rep** ✅ (code shipped — needs Twilio account + env vars). The
+    backend now SMSes the routed team via Twilio's REST API in `notifyLeadTeam`
+    (`sendSMS`), no-op until configured. **Set these Railway env vars to turn it on:**
+    `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM` (a Twilio number `+1…` or a
+    Messaging Service SID `MG…`), and recipients: `LEAD_SMS_TO` (shared, comma-separated)
+    and/or per-team `LEAD_SMS_SALES` / `LEAD_SMS_SUPPORT` / `LEAD_SMS_RECRUITING`.
+
+    **Twilio cost estimate (US, approximate — verify current rates at twilio.com/pricing):**
+    | Item | Cost |
+    |---|---|
+    | Local US phone number | ~$1.15 / month |
+    | A2P 10DLC brand registration | ~$4 one-time |
+    | A2P 10DLC campaign (low-volume standard) | ~$15 one-time vetting + ~$1.50–$2 / month |
+    | Outbound SMS (US, per segment ≤160 chars) | ~$0.0079 + ~$0.003 carrier ≈ **$0.011 / text** |
+
+    The callback SMS is one segment. So ongoing ≈ **$1.15 number + ~$2 campaign + ($0.011 ×
+    SMS/month)**. Examples: 200 callbacks/mo ≈ **$5/mo** total; 1,000/mo ≈ **$14/mo**; plus
+    ~$19 one-time 10DLC setup. (A2P 10DLC registration is required to send to US numbers at
+    scale; without it deliverability is throttled/blocked.)
   - **Real CRM** — `leads` is a lightweight stand-in. Point `createLead`/notification
     at the real CRM (HubSpot/Salesforce/etc.) or forward via webhook when chosen.
   - **Team inboxes** — all routed teams currently email `ADMIN_EMAILS`. Add per-team

@@ -1,6 +1,7 @@
 {
   "hosting": {
     "public": "website/dist",
+    "trailingSlash": false,
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -21,6 +22,12 @@
         "source": "/coaches.html",
         "destination": "/",
         "type": 301
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "/coaches/**",
+        "destination": "/coach-profile.html"
       }
     ]
   }

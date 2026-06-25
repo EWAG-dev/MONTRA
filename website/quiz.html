@@ -650,7 +650,7 @@
               ${coach.bio ? `<div class="text-xs text-gray-400 mb-3">${escapeHtml(coach.bio)}</div>` : ''}
               <div class="text-xs font-semibold text-gray-600 mb-2">Specialties: ${escapeHtml(specialties)}</div>
               ${renderAvailabilityChips(coach)}
-              <a href="coach-profile.html?id=${encodeURIComponent(coach.id)}" class="block w-full text-center bg-brand hover:bg-orange-700 text-white py-2.5 font-bold text-sm rounded-lg transition-colors">View Full Profile →</a>
+              <a href="${coach.slug ? '/coaches/' + encodeURIComponent(coach.slug) : 'coach-profile.html?id=' + encodeURIComponent(coach.id)}" class="block w-full text-center bg-brand hover:bg-orange-700 text-white py-2.5 font-bold text-sm rounded-lg transition-colors">View Full Profile →</a>
             </div>
           </div>
         </div>

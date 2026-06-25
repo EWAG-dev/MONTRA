@@ -883,7 +883,7 @@
             </div>
             <p class="text-gray-400 text-xs mb-4 truncate">${specialties}</p>
             <div class="mt-auto flex gap-2">
-              <a href="coach-profile.html?id=${encodeURIComponent(trainer.id)}" class="flex-1 text-center border border-gray-600 text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-gray-800 transition-colors">View Profile</a>
+              <a href="${trainer.slug ? '/coaches/' + encodeURIComponent(trainer.slug) : 'coach-profile.html?id=' + encodeURIComponent(trainer.id)}" class="flex-1 text-center border border-gray-600 text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-gray-800 transition-colors">View Profile</a>
               <a href="quiz.html" class="flex-1 text-center bg-brand text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-orange-700 transition-colors">Book Intro Session</a>
             </div>
           </div>

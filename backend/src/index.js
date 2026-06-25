@@ -10,6 +10,7 @@ import {
   evaluateTrainerApplication,
   getTrainerByAccountUid,
   getTrainer,
+  getTrainerBySlug,
   listTrainers,
   markOrientationCompleted,
   matchTrainers,
@@ -130,6 +131,47 @@ async function sendEmail(to, subject, html) {
     throw new Error(`Resend error ${res.status}: ${body}`);
   }
   console.log(`[Email] Sent successfully. Resend response: ${body}`);
+}
+
+// Sends a transactional SMS via Twilio's REST API (no SDK needed). No-ops if Twilio
+// isn't configured, mirroring sendEmail, so missing creds never break a request.
+async function sendSMS(to, body) {
+  const sid = process.env.TWILIO_ACCOUNT_SID;
+  const token = process.env.TWILIO_AUTH_TOKEN;
+  const from = process.env.TWILIO_FROM; // a Twilio number (+1...) or Messaging Service SID (MG...)
+  if (!sid || !token || !from || !to) {
+    console.warn(`[SMS skipped — Twilio not configured] To: ${to || "(none)"}`);
+    return;
+  }
+  const params = new URLSearchParams();
+  params.set("To", to);
+  if (from.startsWith("MG")) params.set("MessagingServiceSid", from);
+  else params.set("From", from);
+  params.set("Body", body);
+  const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
+    method: "POST",
+    headers: {
+      Authorization: "Basic " + Buffer.from(`${sid}:${token}`).toString("base64"),
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: params.toString(),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Twilio error ${res.status}: ${text}`);
+  }
+}
+
+// SMS recipients for a routed team: prefer a team-specific number, fall back to the
+// shared LEAD_SMS_TO list. Returns an array of E.164 numbers.
+function smsRecipientsForTeam(team) {
+  const perTeam = {
+    sales: process.env.LEAD_SMS_SALES,
+    support: process.env.LEAD_SMS_SUPPORT,
+    recruiting: process.env.LEAD_SMS_RECRUITING,
+  }[team];
+  const raw = perTeam || process.env.LEAD_SMS_TO || "";
+  return raw.split(",").map((n) => n.trim()).filter(Boolean);
 }
 
 function escapeHtml(value) {
@@ -1087,6 +1129,17 @@ app.get("/api/trainers/match", async (req, res) => {
   res.status(200).json({ trainers, filters });
 });
 
+// Resolve an SEO coach URL (/coaches/<slug>) to a trainer. Registered before the
+// generic :id route; "by-slug" is a literal first segment so there's no overlap.
+app.get("/api/trainers/by-slug/:slug", async (req, res) => {
+  const trainer = await getTrainerBySlug(req.params.slug);
+  if (!trainer) {
+    res.status(404).json({ error: "Trainer not found" });
+    return;
+  }
+  res.status(200).json({ trainer });
+});
+
 app.get("/api/trainers/:id", async (req, res) => {
   const trainer = await getTrainer(req.params.id);
   if (!trainer) {
@@ -1168,13 +1221,20 @@ async function notifyLeadTeam(lead) {
       ${ctxRows}
     </table>
     <p style="color:#888;font-size:12px">Call back within 10–15 minutes during business hours.</p>`;
-  await Promise.all(
-    adminEmails.map((to) =>
-      sendEmail(to, `📞 New callback request — ${lead.firstName} (${lead.team})`, html).catch((e) =>
-        console.error("lead email failed:", e.message)
-      )
+  const emailJobs = adminEmails.map((to) =>
+    sendEmail(to, `📞 New callback request — ${lead.firstName} (${lead.team})`, html).catch((e) =>
+      console.error("lead email failed:", e.message)
     )
   );
+
+  // SMS the assigned rep(s) so they can call back within the 10–15 min window.
+  const city = lead.context?.city ? ` · ${lead.context.city}` : "";
+  const smsBody = `MONTRA ${lead.team} callback: ${lead.firstName} ${lead.phone}${city}. From ${lead.source}. Call back within 10–15 min.`;
+  const smsJobs = smsRecipientsForTeam(lead.team).map((to) =>
+    sendSMS(to, smsBody).catch((e) => console.error("lead SMS failed:", e.message))
+  );
+
+  await Promise.all([...emailJobs, ...smsJobs]);
 }
 
 // Public: "Talk to a Human" callback request from the MONTRA Team chat widget.

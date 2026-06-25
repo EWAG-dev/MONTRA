@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <!-- Served at both /coach-profile.html and /coaches/<slug>; base keeps relative
+       links + assets resolving from the site root regardless of URL depth. -->
+  <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Coach Profile | Elite Home Fitness</title>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -992,21 +995,33 @@
     }
 
     async function loadCoachProfile() {
+      // Pretty URL: /coaches/<slug>. Fall back to the legacy ?id= query.
+      const slugMatch = window.location.pathname.match(/\/coaches\/([^/]+)\/?$/);
       const id = new URLSearchParams(window.location.search).get('id');
-      if (!id) { hide('loading-state'); show('not-found-state'); return; }
+      let endpoint;
+      if (slugMatch) endpoint = `${MONTRA_API_BASE}/api/trainers/by-slug/${encodeURIComponent(slugMatch[1])}`;
+      else if (id) endpoint = `${MONTRA_API_BASE}/api/trainers/${encodeURIComponent(id)}`;
+      else { hide('loading-state'); show('not-found-state'); return; }
       try {
-        const response = await fetch(`${MONTRA_API_BASE}/api/trainers/${encodeURIComponent(id)}`, { headers: { Accept: 'application/json' } });
+        const response = await fetch(endpoint, { headers: { Accept: 'application/json' } });
         if (!response.ok) throw new Error('Not found');
         const { trainer } = await response.json();
         if (!trainer || trainer.status !== 'approved' || trainer.isActive === false) throw new Error('Not available');
         renderProfile(trainer);
-        renderReviews(id);
-        renderInsights(id);
-        renderPackages(id);
+        renderReviews(trainer.id);
+        renderInsights(trainer.id);
+        renderPackages(trainer.id);
       } catch (error) {
         hide('loading-state'); show('not-found-state');
       }
     }
+
+    // With <base href="/"> a bare "#availability-section" would resolve to the home
+    // page, so scroll in-page via JS instead.
+    document.getElementById('side-availability')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('availability-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
 
     loadCoachProfile();
   </script>

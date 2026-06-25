@@ -44,6 +44,24 @@ function normalizeStatus(value) {
   return ["pending", "approved", "rejected"].includes(normalized) ? normalized : "pending";
 }
 
+// SEO-friendly slug. "Luis Mendonca" + ["Boston, MA"] -> "luis-mendonca-boston".
+function slugify(value) {
+  return String(value || "")
+    .normalize("NFKD")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+function primaryCity(locations) {
+  const loc = (Array.isArray(locations) && locations[0]) || "";
+  return String(loc).split(",")[0].trim();
+}
+export function trainerSlug(name, locations) {
+  const base = slugify(name);
+  const city = slugify(primaryCity(locations));
+  return city ? `${base}-${city}` : base;
+}
+
 function normalizeTrainerPayload(input, existingTrainer = null) {
   const name = normalizeString(input.name || existingTrainer?.name);
   const bio = normalizeString(input.bio || existingTrainer?.bio);
@@ -162,6 +180,7 @@ function serializeTrainer(doc) {
     references: Array.isArray(data.references) ? data.references : [],
     orientationCompleted: data.orientationCompleted === true,
     orientationCompletedAt: data.orientationCompletedAt || null,
+    slug: trainerSlug(data.name, data.locations),
     createdAt: data.createdAt || null,
     updatedAt: data.updatedAt || null,
   };
@@ -419,6 +438,16 @@ export async function getTrainer(id) {
 export async function getTrainerByAccountUid(accountUid) {
   const trainers = await listTrainers({ includeInactive: true });
   return trainers.find((trainer) => trainer.accountUid === accountUid) || null;
+}
+
+// Resolves a /coaches/<slug> URL to a trainer. First match wins on collisions
+// (rare; same name + city). Returns the trainer regardless of status — the public
+// profile page is responsible for only rendering approved/active coaches.
+export async function getTrainerBySlug(slug) {
+  const target = slugify(slug);
+  if (!target) return null;
+  const trainers = await listTrainers({ includeInactive: true });
+  return trainers.find((trainer) => trainer.slug === target) || null;
 }
 
 export async function createTrainer(input) {
