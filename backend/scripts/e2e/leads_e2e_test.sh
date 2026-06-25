@@ -54,6 +54,15 @@ HAS=$(curl -s "$BASE_URL/api/admin/leads" -H "Authorization: Bearer ${ADMIN_TOKE
   | jq --arg id "$TICKET" 'any(.leads[]; .id == $id)')
 [ "$HAS" = "true" ] && pass "admin leads list includes our lead" || fail "admin leads missing our lead"
 
+echo "== admin can update lead status =="
+ST=$(curl -s -X POST "$BASE_URL/api/admin/leads/${TICKET}/status" \
+  -H "Content-Type: application/json" -H "Authorization: Bearer ${ADMIN_TOKEN}" \
+  -d '{"status":"contacted"}' | jq -r '.lead.status')
+[ "$ST" = "contacted" ] && pass "lead marked contacted" || fail "status update ($ST)"
+BADST=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE_URL/api/admin/leads/${TICKET}/status" \
+  -H "Content-Type: application/json" -H "Authorization: Bearer ${ADMIN_TOKEN}" -d '{"status":"banana"}')
+[ "$BADST" = "400" ] && pass "invalid status -> 400" || fail "invalid status expected 400, got $BADST"
+
 echo "== non-admin cannot list leads (401/403) =="
 CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/api/admin/leads")
 { [ "$CODE" = "401" ] || [ "$CODE" = "403" ]; } && pass "unauth leads list rejected ($CODE)" || fail "expected 401/403, got $CODE"

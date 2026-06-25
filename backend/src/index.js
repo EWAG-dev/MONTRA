@@ -68,7 +68,7 @@ import {
 } from "./reviewStore.js";
 import { getTrainerInsights } from "./insightStore.js";
 import { getTrainerPackages } from "./packageStore.js";
-import { createLead, listLeads, deleteLeadsForPhone } from "./leadStore.js";
+import { createLead, listLeads, updateLeadStatus, deleteLeadsForPhone } from "./leadStore.js";
 
 // Safety net: Express 4 doesn't forward errors from async route handlers, so a
 // single rejecting request would otherwise become an unhandled rejection and crash
@@ -1201,6 +1201,19 @@ app.post("/api/leads/callback", async (req, res) => {
 app.get("/api/admin/leads", requireFirebaseAuth, requireAdmin, async (_req, res) => {
   const allLeads = await listLeads({ limit: 200 });
   res.status(200).json({ leads: allLeads });
+});
+
+app.post("/api/admin/leads/:id/status", requireFirebaseAuth, requireAdmin, async (req, res) => {
+  try {
+    const lead = await updateLeadStatus(req.params.id, req.body?.status);
+    if (!lead) {
+      res.status(404).json({ error: "Lead not found" });
+      return;
+    }
+    res.status(200).json({ lead });
+  } catch (err) {
+    res.status(err.code === "invalid" ? 400 : 500).json({ error: err.message || "Could not update lead" });
+  }
 });
 
 app.post("/api/client/match", requireFirebaseAuth, async (req, res) => {

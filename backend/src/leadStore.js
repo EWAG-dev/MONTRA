@@ -63,6 +63,21 @@ export async function listLeads({ limit = 200 } = {}) {
     .slice(0, limit);
 }
 
+const LEAD_STATUSES = ["new", "contacted", "closed"];
+
+export async function updateLeadStatus(id, status) {
+  const st = s(status).toLowerCase();
+  if (!LEAD_STATUSES.includes(st)) {
+    throw Object.assign(new Error(`status must be one of: ${LEAD_STATUSES.join(", ")}`), { code: "invalid" });
+  }
+  const ref = leads().doc(s(id));
+  const doc = await ref.get();
+  if (!doc.exists) return null;
+  await ref.set({ status: st, updatedAt: new Date().toISOString() }, { merge: true });
+  const updated = await ref.get();
+  return { id: updated.id, ...updated.data() };
+}
+
 // Dev cleanup so E2E callback leads don't pollute the real list.
 export async function deleteLeadsForPhone(phone) {
   const p = s(phone);

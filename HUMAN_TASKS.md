@@ -190,8 +190,14 @@ throughout (never "AI"/"bot").
     at the real CRM (HubSpot/Salesforce/etc.) or forward via webhook when chosen.
   - **Team inboxes** — all routed teams currently email `ADMIN_EMAILS`. Add per-team
     addresses (sales/support/recruiting) and pick by `lead.team`.
-  - **Maya avatar** — the widget uses an SVG avatar placeholder; drop a real Maya
-    headshot into `montra-chat.js` (`PERSON_SVG` / `.mtc-av img`) for the concierge look.
+  - **Maya avatar** — ships with a polished on-brand illustrated avatar at
+    `website/public/maya.svg` (deliberately NOT a stock photo of a real identifiable
+    person — that raises likeness/publicity-rights issues for a named "team member").
+    To use a licensed real headshot, drop it at `website/public/maya.jpg` and set
+    `MAYA_IMG` in `montra-chat.js` to `'/maya.jpg'`; it loads automatically (SVG glyph
+    is the fallback). The **admin leads view** is built — `/admin.html` → "Callback
+    Leads" tab lists every request with team routing, contact links, context, and
+    new/contacted/closed status controls (`POST /api/admin/leads/:id/status`).
   - **Business hours / urgent phone** — the confirmation says "call our main office";
     add the real phone number and (optionally) gate the 10–15 min ETA to business hours.
 

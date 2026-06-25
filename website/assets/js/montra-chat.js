@@ -29,6 +29,12 @@
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c]));
 
   const PERSON_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4 0-8 2-8 5v1h16v-1c0-3-4-5-8-5z"/></svg>';
+  // Maya's headshot. Lives in website/public/ so it's served verbatim at the root.
+  // Drop a licensed real photo at website/public/maya.jpg and point this at it
+  // ('/maya.jpg'); if the image fails to load we fall back to the SVG glyph.
+  const MAYA_IMG = '/maya.svg';
+  // Avatar inner content: real photo on top, glyph beneath as a graceful fallback.
+  const AV = `<img class="mtc-photo" src="${MAYA_IMG}" alt="Maya" onerror="this.remove()"/>${PERSON_SVG}`;
   const GUARANTEE = 'Every client is protected by the MONTRA Match Guarantee™. If your coach isn’t the right fit, MONTRA will work with you to identify another qualified coach who better aligns with your goals, preferences, and coaching needs.';
 
   // ---- Styles (self-contained, scoped with .mtc-) ----------------------------
@@ -39,7 +45,7 @@
   .mtc-launch.hide{display:none}
   .mtc-av{position:relative;border-radius:9999px;background:linear-gradient(135deg,#2a2a2e,#0b0b0c);border:2px solid #E85D04;color:#E85D04;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
   .mtc-av svg{width:62%;height:62%}
-  .mtc-av img{width:100%;height:100%;object-fit:cover}
+  .mtc-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .mtc-dot{position:absolute;right:-1px;bottom:-1px;width:10px;height:10px;border-radius:9999px;background:#22c55e;border:2px solid #0b0b0c}
   .mtc-panel{position:fixed;right:20px;bottom:20px;z-index:99999;width:374px;max-width:calc(100vw - 32px);height:600px;max-height:calc(100vh - 40px);background:#0b0b0c;border:1px solid #232327;border-radius:20px;display:none;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.5);font-family:Inter,system-ui,sans-serif;color:#fff}
   .mtc-panel.open{display:flex;animation:mtcIn .22s ease}
@@ -105,13 +111,13 @@
   const launch = document.createElement('button');
   launch.className = 'mtc-launch';
   launch.setAttribute('aria-label', 'Chat with the MONTRA Team');
-  launch.innerHTML = `<span class="mtc-av" style="width:34px;height:34px">${PERSON_SVG}<span class="mtc-dot"></span></span><span class="mtc-label">Chat With The MONTRA Team</span>`;
+  launch.innerHTML = `<span class="mtc-av" style="width:34px;height:34px">${AV}<span class="mtc-dot"></span></span><span class="mtc-label">Chat With The MONTRA Team</span>`;
 
   const panel = document.createElement('div');
   panel.className = 'mtc-panel';
   panel.innerHTML = `
     <div class="mtc-head">
-      <span class="mtc-av" style="width:42px;height:42px">${PERSON_SVG}<span class="mtc-dot"></span></span>
+      <span class="mtc-av" style="width:42px;height:42px">${AV}<span class="mtc-dot"></span></span>
       <div>
         <h4>MONTRA Team <span class="online"></span></h4>
         <div class="sub">We're here to help!</div>
@@ -142,7 +148,7 @@
 
   const scroll = () => { body.scrollTop = body.scrollHeight; };
 
-  function avatar(size) { return `<span class="mtc-av" style="width:${size}px;height:${size}px">${PERSON_SVG}</span>`; }
+  function avatar(size) { return `<span class="mtc-av" style="width:${size}px;height:${size}px">${AV}</span>`; }
 
   function maya(html) {
     const row = document.createElement('div');

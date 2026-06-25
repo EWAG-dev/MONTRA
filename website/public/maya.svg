@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Maya, MONTRA Team">
+  <defs>
+    <linearGradient id="mb" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFE9D6"/>
+      <stop offset="1" stop-color="#FFD3B0"/>
+    </linearGradient>
+    <linearGradient id="ms" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F4CBA2"/>
+      <stop offset="1" stop-color="#EBB988"/>
+    </linearGradient>
+    <clipPath id="mc"><circle cx="100" cy="100" r="100"/></clipPath>
+  </defs>
+  <g clip-path="url(#mc)">
+    <circle cx="100" cy="100" r="100" fill="url(#mb)"/>
+    <!-- back hair -->
+    <ellipse cx="100" cy="98" rx="58" ry="64" fill="#3b2a20"/>
+    <!-- shoulders / top -->
+    <path d="M22 200 C22 156 58 146 100 146 C142 146 178 156 178 200 Z" fill="#1f2733"/>
+    <path d="M84 150 L100 168 L116 150 L108 146 L92 146 Z" fill="#E85D04"/>
+    <!-- neck -->
+    <rect x="87" y="126" width="26" height="30" rx="12" fill="#E8B585"/>
+    <!-- face -->
+    <ellipse cx="100" cy="98" rx="40" ry="45" fill="url(#ms)"/>
+    <!-- ears -->
+    <circle cx="61" cy="100" r="7" fill="#E8B585"/>
+    <circle cx="139" cy="100" r="7" fill="#E8B585"/>
+    <!-- front hair: fringe + side locks -->
+    <path d="M56 92 Q58 52 100 52 Q142 52 144 92 Q124 70 100 70 Q76 70 56 92 Z" fill="#3b2a20"/>
+    <path d="M52 98 Q50 140 66 152 L70 100 Q60 86 52 98 Z" fill="#3b2a20"/>
+    <path d="M148 98 Q150 140 134 152 L130 100 Q140 86 148 98 Z" fill="#3b2a20"/>
+    <!-- brows -->
+    <path d="M77 87 Q86 82 95 87" stroke="#3b2a20" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M105 87 Q114 82 123 87" stroke="#3b2a20" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <!-- eyes -->
+    <ellipse cx="85" cy="96" rx="4.6" ry="6" fill="#2c2622"/>
+    <ellipse cx="115" cy="96" rx="4.6" ry="6" fill="#2c2622"/>
+    <circle cx="86.6" cy="94" r="1.4" fill="#fff"/>
+    <circle cx="116.6" cy="94" r="1.4" fill="#fff"/>
+    <!-- nose -->
+    <path d="M100 100 q-3 7 1 9" stroke="#DBA274" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <!-- blush -->
+    <ellipse cx="77" cy="111" rx="7" ry="4" fill="#F49A78" opacity=".45"/>
+    <ellipse cx="123" cy="111" rx="7" ry="4" fill="#F49A78" opacity=".45"/>
+    <!-- smile -->
+    <path d="M86 115 Q100 127 114 115 Q100 121 86 115 Z" fill="#C96B52"/>
+  </g>
+</svg>

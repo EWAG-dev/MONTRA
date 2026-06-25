@@ -46,6 +46,14 @@
 
   <!-- DASHBOARD -->
   <main id="dashboard" class="hidden max-w-5xl mx-auto px-6 py-10">
+    <!-- Tabs -->
+    <div class="flex gap-2 mb-6">
+      <button id="tab-verify" class="px-4 py-2 rounded-xl text-sm font-bold bg-gray-900 text-white">Coach Verification</button>
+      <button id="tab-leads" class="px-4 py-2 rounded-xl text-sm font-bold bg-white border border-gray-200 text-gray-600 hover:bg-gray-100">Callback Leads</button>
+    </div>
+
+    <!-- VERIFICATION VIEW -->
+    <section id="view-verification">
     <div class="flex items-center justify-between mb-4 gap-3 flex-wrap">
       <div>
         <h1 class="text-2xl font-black">Coach Verification</h1>
@@ -65,6 +73,34 @@
 
     <div id="loading" class="text-center text-gray-400 py-12 text-sm">Loading coaches…</div>
     <div id="trainer-list" class="space-y-3"></div>
+    </section>
+
+    <!-- LEADS VIEW -->
+    <section id="view-leads" class="hidden">
+      <div class="flex items-center justify-between mb-4 gap-3 flex-wrap">
+        <div>
+          <h1 class="text-2xl font-black">Callback Leads</h1>
+          <p class="text-sm text-gray-500">Requests from the MONTRA Team chat. Call back within 10–15 minutes during business hours.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <select id="lead-filter" class="border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:border-brand">
+            <option value="">All teams</option>
+            <option value="sales">Sales</option>
+            <option value="support">Support</option>
+            <option value="recruiting">Recruiting</option>
+          </select>
+          <button id="leads-refresh" class="border border-gray-300 rounded-xl px-3 py-2 text-sm font-semibold hover:bg-gray-100">Refresh</button>
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-3 mb-5 text-xs font-semibold text-gray-500">
+        <div class="bg-white border border-gray-200 rounded-xl px-4 py-3"><span id="lead-total" class="block text-xl font-black text-gray-900">—</span>Total</div>
+        <div class="bg-white border border-gray-200 rounded-xl px-4 py-3"><span id="lead-new" class="block text-xl font-black text-brand">—</span>New / uncontacted</div>
+        <div class="bg-white border border-gray-200 rounded-xl px-4 py-3"><span id="lead-today" class="block text-xl font-black text-green-600">—</span>Today</div>
+      </div>
+      <div id="leads-loading" class="text-center text-gray-400 py-12 text-sm">Loading leads…</div>
+      <div id="leads-list" class="space-y-3"></div>
+    </section>
+
     <p id="toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-lg"></p>
   </main>
 
@@ -208,6 +244,100 @@
       }
     }
 
+    // ───────────────────────── LEADS VIEW ─────────────────────────
+    let leads = [];
+    let leadsLoaded = false;
+    const TEAM_COLOR = { sales: 'text-blue-600 bg-blue-50', support: 'text-purple-600 bg-purple-50', recruiting: 'text-amber-600 bg-amber-50' };
+    const STATUS_COLOR = { new: 'text-brand bg-orange-50', contacted: 'text-green-600 bg-green-50', closed: 'text-gray-500 bg-gray-100' };
+
+    function relTime(iso) {
+      const t = Date.parse(iso); if (!Number.isFinite(t)) return '';
+      const m = Math.floor((Date.now() - t) / 60000);
+      if (m < 1) return 'just now'; if (m < 60) return `${m}m ago`;
+      const h = Math.floor(m / 60); if (h < 24) return `${h}h ago`;
+      return `${Math.floor(h / 24)}d ago`;
+    }
+    function isToday(iso) { const d = new Date(iso); const n = new Date(); return d.toDateString() === n.toDateString(); }
+
+    async function loadLeads() {
+      document.getElementById('leads-loading').classList.remove('hidden');
+      document.getElementById('leads-list').innerHTML = '';
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/admin/leads`, { headers: { Authorization: `Bearer ${idToken}` } });
+        if (res.status === 403) { toast('This account is not an admin.', false); return; }
+        if (!res.ok) throw new Error('load failed');
+        leads = (await res.json()).leads || [];
+        leadsLoaded = true;
+        renderLeads();
+      } catch (e) {
+        toast('Could not load leads.', false);
+      } finally {
+        document.getElementById('leads-loading').classList.add('hidden');
+      }
+    }
+
+    function renderLeads() {
+      const team = document.getElementById('lead-filter').value;
+      const list = leads.filter((l) => !team || l.team === team);
+      document.getElementById('lead-total').textContent = leads.length;
+      document.getElementById('lead-new').textContent = leads.filter((l) => (l.status || 'new') === 'new').length;
+      document.getElementById('lead-today').textContent = leads.filter((l) => isToday(l.createdAt)).length;
+
+      document.getElementById('leads-list').innerHTML = list.map((l) => {
+        const status = l.status || 'new';
+        const ctx = l.context && typeof l.context === 'object'
+          ? Object.entries(l.context).filter(([, v]) => v).map(([k, v]) => `<span class="text-gray-500">${esc(k)}:</span> ${esc(String(v))}`).join(' · ') : '';
+        const phoneDigits = String(l.phone || '').replace(/[^\d+]/g, '');
+        return `
+          <div class="bg-white border border-gray-200 rounded-2xl p-4">
+            <div class="flex items-start gap-3 flex-wrap">
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <p class="font-bold text-sm">${esc(l.firstName || 'Lead')}</p>
+                  <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${TEAM_COLOR[l.team] || 'text-gray-600 bg-gray-100'}">${esc(l.team)}</span>
+                  <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${STATUS_COLOR[status]}">${esc(status)}</span>
+                  <span class="text-[11px] text-gray-400">${relTime(l.createdAt)}</span>
+                </div>
+                <p class="text-sm mt-1"><a href="tel:${esc(phoneDigits)}" class="font-semibold text-brand hover:underline">${esc(l.phone)}</a>${l.email ? ` · <a href="mailto:${esc(l.email)}" class="text-gray-600 hover:underline">${esc(l.email)}</a>` : ''}</p>
+                ${l.message ? `<p class="text-xs text-gray-600 mt-1">“${esc(l.message)}”</p>` : ''}
+                ${ctx ? `<p class="text-[11px] text-gray-500 mt-1">${ctx}</p>` : ''}
+                <p class="text-[11px] text-gray-400 mt-1">from <b>${esc(l.source)}</b> ${l.sourcePath ? `(${esc(l.sourcePath)})` : ''}</p>
+              </div>
+              <div class="flex gap-1.5 flex-shrink-0">
+                ${status !== 'contacted' ? `<button data-lead="${esc(l.id)}" data-status="contacted" class="lead-act text-xs font-bold px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700">Mark contacted</button>` : ''}
+                ${status !== 'closed' ? `<button data-lead="${esc(l.id)}" data-status="closed" class="lead-act text-xs font-bold px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100">Close</button>` : ''}
+                ${status !== 'new' ? `<button data-lead="${esc(l.id)}" data-status="new" class="lead-act text-xs font-bold px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100">Reopen</button>` : ''}
+              </div>
+            </div>
+          </div>`;
+      }).join('') || '<p class="text-center text-gray-400 py-12 text-sm">No callback leads yet.</p>';
+    }
+
+    async function setLeadStatus(id, status, btn) {
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/admin/leads/${encodeURIComponent(id)}/status`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+          body: JSON.stringify({ status }),
+        });
+        if (!res.ok) throw new Error('failed');
+        const { lead } = await res.json();
+        const idx = leads.findIndex((l) => l.id === id);
+        if (idx >= 0) leads[idx] = lead;
+        renderLeads();
+        toast(`Lead marked ${status}`);
+      } catch (e) { toast('Could not update lead.', false); btn.disabled = false; }
+    }
+
+    function switchTab(tab) {
+      const onLeads = tab === 'leads';
+      document.getElementById('view-leads').classList.toggle('hidden', !onLeads);
+      document.getElementById('view-verification').classList.toggle('hidden', onLeads);
+      document.getElementById('tab-leads').className = `px-4 py-2 rounded-xl text-sm font-bold ${onLeads ? 'bg-gray-900 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'}`;
+      document.getElementById('tab-verify').className = `px-4 py-2 rounded-xl text-sm font-bold ${!onLeads ? 'bg-gray-900 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'}`;
+      if (onLeads && !leadsLoaded) loadLeads();
+    }
+
     // Event wiring
     document.getElementById('login-btn').addEventListener('click', login);
     document.getElementById('password').addEventListener('keydown', (e) => { if (e.key === 'Enter') login(); });
@@ -219,6 +349,14 @@
       if (!tgl || tgl.getAttribute('aria-disabled') === 'true') return;
       const next = tgl.getAttribute('data-on') !== 'true';
       setFlag(tgl.getAttribute('data-id'), tgl.getAttribute('data-flag'), next, tgl);
+    });
+    document.getElementById('tab-verify').addEventListener('click', () => switchTab('verify'));
+    document.getElementById('tab-leads').addEventListener('click', () => switchTab('leads'));
+    document.getElementById('leads-refresh').addEventListener('click', loadLeads);
+    document.getElementById('lead-filter').addEventListener('change', renderLeads);
+    document.getElementById('leads-list').addEventListener('click', (e) => {
+      const b = e.target.closest('.lead-act');
+      if (b) setLeadStatus(b.getAttribute('data-lead'), b.getAttribute('data-status'), b);
     });
 
     initFirebase().catch(() => toast('Could not reach the backend.', false));
