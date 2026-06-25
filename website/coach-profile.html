@@ -850,6 +850,7 @@
 
     // ---- Interactive "Choose Your Session Package" ----
     let pkgData = null;
+    let pageCoachSlug = '';
     let pkgSelectedIndex = 0;
     let pkgFreq = 2;
 
@@ -992,15 +993,20 @@
             <select data-cm="${idx}" class="cm-freq w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-semibold mb-3 outline-none focus:border-brand bg-white">${freqOpts}</select>
             <p class="text-[11px] text-gray-400">Starts at</p>
             <p class="mb-4"><span class="cm-price text-2xl font-black text-gray-900">${money(cmPrice(c, c.defaultFreq))}</span><span class="text-xs text-gray-400 font-medium"> /month</span></p>
-            <a href="quiz.html" class="block w-full ${cta} py-2.5 rounded-xl text-sm font-bold text-center transition-colors">View Program</a>
+            <a class="cm-view block w-full ${cta} py-2.5 rounded-xl text-sm font-bold text-center transition-colors"
+               href="/confirm-program.html?coach=${encodeURIComponent(pageCoachSlug)}&months=${c.months}&freq=${c.defaultFreq}">View Program</a>
           </div>`;
       }).join('');
 
       document.querySelectorAll('.cm-freq').forEach((sel) => {
         sel.addEventListener('change', () => {
           const c = list[Number(sel.dataset.cm)];
-          const priceEl = sel.parentElement.querySelector('.cm-price');
+          const card = sel.parentElement;
+          const priceEl = card.querySelector('.cm-price');
           if (c && priceEl) priceEl.textContent = money(cmPrice(c, Number(sel.value)));
+          // Keep the View Program link's frequency in sync with the picker.
+          const view = card.querySelector('.cm-view');
+          if (c && view) view.href = `/confirm-program.html?coach=${encodeURIComponent(pageCoachSlug)}&months=${c.months}&freq=${sel.value}`;
         });
       });
 
@@ -1049,6 +1055,7 @@
         if (!trainer || trainer.status !== 'approved' || trainer.isActive === false) throw new Error('Not available');
         currentCoachId = trainer.id;
         updateFavoriteButton();
+        pageCoachSlug = trainer.slug || '';
         renderProfile(trainer);
         renderReviews(trainer.id);
         renderInsights(trainer.id);

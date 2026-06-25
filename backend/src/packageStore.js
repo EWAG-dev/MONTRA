@@ -129,12 +129,22 @@ export async function getTrainerPackages(id) {
     frequencies: FREQUENCIES,
   }));
 
+  // The intro/consultation session — normally paid, but FREE when the client buys a
+  // full coaching program (drives the "$X → FREE" on the Confirm Program page).
+  const round10b = (v) => Math.round(v / 10) * 10;
+  const introSession = {
+    price: round10b(base * 1.35),
+    durationMin: 60,
+    freeWithProgram: true,
+  };
+
   return {
     currency: "USD",
     packages,
     frequencies,
     commitments,
     addOns,
+    introSession,
     guarantee: "MONTRA Match Guarantee™",
     derived: !hasRealRate,
   };

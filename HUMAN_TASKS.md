@@ -164,6 +164,30 @@ frequency picker and a live monthly price) and a compact À-La-Carte add-ons row
   UI shows an "indicative pricing — coach confirms final rate" note. Replace the base-rate
   derivation in `packageStore.js` with the real Storefront price to make it fully real.
 
+### Confirm Program flow (free intro w/ program) ⬜ (web shipped; checkout + iOS pending)
+`confirm-program.html` is the program purchase confirmation step (mockup Image #18):
+stepper, program + coach + "What's Included", **"INCLUDED FREE — Your First Intro
+Session" ($X → FREE)**, program summary sidebar, and a real reserve/enroll action.
+The commitment cards' "View Program" buttons on `coach-profile.html` link here with
+`?coach=<slug>&months=<3|6|12>&freq=<n>`; everything is backend-driven (coach via
+by-slug, program/pricing via `/packages`, which now returns `introSession {price,
+freeWithProgram:true}`; testimonial from a real review only).
+- **Business rule shipped:** buying a full program makes the intro session FREE
+  (the `$X → FREE` display + "schedule your FREE intro" messaging).
+- **"Continue to Checkout" → reserve lead, NOT card collection.** There is no payment
+  processor yet, so collecting card numbers would be unsafe/deceptive. Instead it opens
+  a reserve form that creates a routed lead via `/api/leads/callback` (program context
+  attached) so a specialist finalizes enrollment + schedules the free intro.
+- **HUMAN ACTIONS / follow-ups:**
+  - **Real checkout** — wire **Stripe** (Connect for coach payouts) to actually charge
+    the monthly program + apply the free-intro logic, replacing the reserve-lead step.
+    This is the same Storefront/Stripe effort below; the confirm page is built to slot a
+    real checkout in where "Continue to Checkout" is.
+  - **iOS version** — mockup Image #17 shows the same flow in-app (Program Summary →
+    Payment Plan → Checkout → You're Booked). Not built yet; needs the Stripe SDK / a
+    payment step. The commitment cards exist on web only today.
+  - Intro price is **derived** (≈1.35× the per-coach base) until real pricing exists.
+
 ### MONTRA Match™ — follow-ups
 All three original follow-ups (real reviews, budget step, trust-stack gating) are now
 shipped — see the sections above. Budget Fit becomes a true signal once Storefront
