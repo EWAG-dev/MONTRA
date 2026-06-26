@@ -28,6 +28,7 @@
 		37A77089AD4C7CCDD4A15F47 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0F9AFAE98C400E81F11FB1 /* ContentView.swift */; };
 		37B33B941F7EC823743A7A21 /* pre-receive.sample in Resources */ = {isa = PBXBuildFile; fileRef = 7E9CC2A40C7E466A62AB34CD /* pre-receive.sample */; };
 		3E8C0FBDBE7966A671DB7309 /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5742AE69821EC195A7939EDF /* SharedComponents.swift */; };
+		44006F816516B70821E278C7 /* CoachOnTheWayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04CE1EBA3457C9C66A51708C /* CoachOnTheWayView.swift */; };
 		4E3FE48D21C671F3C6341B8B /* TrainerDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67D422E9C092DB5545BAE4B0 /* TrainerDashboardView.swift */; };
 		55E476AFE9AFB57DCE388A99 /* pre-applypatch.sample in Resources */ = {isa = PBXBuildFile; fileRef = EB1E01761DE55693AA80F5A3 /* pre-applypatch.sample */; };
 		57F0FEAD5B53D80C84619BA4 /* applypatch-msg.sample in Resources */ = {isa = PBXBuildFile; fileRef = 9EA1A73E308C0CEB0199D1E3 /* applypatch-msg.sample */; };
@@ -38,6 +39,7 @@
 		6B2F0DD03D46904F07761151 /* ImpactSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5365DAED4EFEDA69153BA361 /* ImpactSummaryView.swift */; };
 		6F143A4FA58A2A01D6847DA4 /* OnboardingQuizView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C31E6B650BAA18062C8E862 /* OnboardingQuizView.swift */; };
 		70C6192DF40EF400FD8C689B /* ClientSchedulesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F223686D574CF3903786E95 /* ClientSchedulesView.swift */; };
+		89A45C0EFCE6FFFDA0551EF1 /* IntroBookingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D26DE9FCB186900DE9580B90 /* IntroBookingView.swift */; };
 		8A4A0DF89D00297F68849F65 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1AD8584BC907F0E9AAA1BBA /* AuthManager.swift */; };
 		903F65662D29CEB1671363A4 /* post-update.sample in Resources */ = {isa = PBXBuildFile; fileRef = 53DB80B15D682CD6F33D4C7B /* post-update.sample */; };
 		97515F6D3A0CFF1439585311 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 862A677FF5122F8C56A8F460 /* LoginView.swift */; };
@@ -51,6 +53,7 @@
 		BF2754ED2D13670673DC9566 /* ImpactAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DA5B8918DC55DFAB40F8F0F /* ImpactAPI.swift */; };
 		C02DB6CAC6197D6E2F438BAD /* MessagesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CE961CD047FDE66F2DF35D4 /* MessagesView.swift */; };
 		C171B7607A773B25DEDD8247 /* TrainerProgramsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 816B0C9B88470822F0525D2C /* TrainerProgramsView.swift */; };
+		C293968526165884FC106CDA /* StripePaymentSheet in Frameworks */ = {isa = PBXBuildFile; productRef = E4DD94AEEAA8C8CC006D9076 /* StripePaymentSheet */; };
 		C6832998D3807229704A9C5C /* DEPLOY_AND_TEST_TODAY.md in Resources */ = {isa = PBXBuildFile; fileRef = DE75BD7B6699467727C56640 /* DEPLOY_AND_TEST_TODAY.md */; };
 		C9EEAE61062BDAF481CC63C9 /* MONTRA_AND_WEBSITE_ARCHITECTURE_GUIDE.md in Resources */ = {isa = PBXBuildFile; fileRef = E46D8EFBF31AD9B88C19818C /* MONTRA_AND_WEBSITE_ARCHITECTURE_GUIDE.md */; };
 		CC86F46ED705CEBFEBA3B8B2 /* ImpactFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80AC1616F4DE38D6801C39E /* ImpactFlowView.swift */; };
@@ -58,6 +61,7 @@
 		E01365D9DA74131BB7E653FC /* BookingAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 524ED06C69FDA48EFBC34169 /* BookingAPI.swift */; };
 		E0F07D4671B3E4F48A57722A /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = E84CC16AD8615D0E9C50AEDE /* FirebaseMessaging */; };
 		E239D9139198325DF1471065 /* PushNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C64F7A5CE5A64B30BF464B3 /* PushNotificationManager.swift */; };
+		E7176CE486798E6F189DF222 /* ProgramCheckoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B8176D1350265581CBF093C /* ProgramCheckoutView.swift */; };
 		E81191F04DD6C64F6C42619D /* NotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F506439AA346F5E43B5C4C /* NotificationsView.swift */; };
 		ED0F611749CCC6B20EFEBBEC /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67A4AFFCD3600FC75FB826A8 /* Theme.swift */; };
 		EE451267036BB5E07BBF1E1D /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 0CA30C01512DEA2A9B503157 /* FirebaseAuth */; };
@@ -70,6 +74,7 @@
 		03FAD7E27E38B9C3C55CD9F2 /* 495cde677729bf6cc5dcb7217f6db5223195aa */ = {isa = PBXFileReference; path = 495cde677729bf6cc5dcb7217f6db5223195aa; sourceTree = "<group>"; };
 		0449CB318D119D0E9BC37F03 /* 71ef50a70b0cf1ec148b51414df60d7ac321af */ = {isa = PBXFileReference; path = 71ef50a70b0cf1ec148b51414df60d7ac321af; sourceTree = "<group>"; };
 		0483BD1462AD46A7726EB72E /* main */ = {isa = PBXFileReference; path = main; sourceTree = "<group>"; };
+		04CE1EBA3457C9C66A51708C /* CoachOnTheWayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachOnTheWayView.swift; sourceTree = "<group>"; };
 		05B38B2D378528C405C6177D /* a9c0b4e071a29911c32e417e4b7c5ddec52457 */ = {isa = PBXFileReference; path = a9c0b4e071a29911c32e417e4b7c5ddec52457; sourceTree = "<group>"; };
 		082E03EFC3D7BA45DDA27ACA /* 2d580fed10e2edc7a5de646182fb7472a075b4 */ = {isa = PBXFileReference; path = 2d580fed10e2edc7a5de646182fb7472a075b4; sourceTree = "<group>"; };
 		08AADEE16F91AF0AEA642F6F /* 916457ab7257a2e31d0027bd3ed12e3356a86f */ = {isa = PBXFileReference; path = 916457ab7257a2e31d0027bd3ed12e3356a86f; sourceTree = "<group>"; };
@@ -100,6 +105,7 @@
 		49C1747AB14811CAFAC6BD65 /* TrainerInboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainerInboxView.swift; sourceTree = "<group>"; };
 		49F76DDDF85C481759AF2377 /* update.sample */ = {isa = PBXFileReference; path = update.sample; sourceTree = "<group>"; };
 		4AACB3380CA4C0DD2FC3E065 /* e060040e356f17878e39bbde9e4e3da5400806 */ = {isa = PBXFileReference; path = e060040e356f17878e39bbde9e4e3da5400806; sourceTree = "<group>"; };
+		4B8176D1350265581CBF093C /* ProgramCheckoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramCheckoutView.swift; sourceTree = "<group>"; };
 		4C64F7A5CE5A64B30BF464B3 /* PushNotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationManager.swift; sourceTree = "<group>"; };
 		4CB2F152A8928645AD9B22D9 /* TrainerAgreementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainerAgreementView.swift; sourceTree = "<group>"; };
 		4CBC903BB6A14299AF9D0B1A /* config */ = {isa = PBXFileReference; path = config; sourceTree = "<group>"; };
@@ -177,6 +183,7 @@
 		CF31AFC30C8CE4F651820006 /* ProgressProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressProfileView.swift; sourceTree = "<group>"; };
 		CFF2CA164011DB75958EE7A5 /* c2d714630b116087954201c8bac45f7f7e3a60 */ = {isa = PBXFileReference; path = c2d714630b116087954201c8bac45f7f7e3a60; sourceTree = "<group>"; };
 		D0696D37CD6435085BB621DC /* d82f032cca477106ea66539c30df32f4783827 */ = {isa = PBXFileReference; path = d82f032cca477106ea66539c30df32f4783827; sourceTree = "<group>"; };
+		D26DE9FCB186900DE9580B90 /* IntroBookingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroBookingView.swift; sourceTree = "<group>"; };
 		D31BE062775B58933AB7002F /* df642da6495dfdbfc6f1e36f805c989d32d2c5 */ = {isa = PBXFileReference; path = df642da6495dfdbfc6f1e36f805c989d32d2c5; sourceTree = "<group>"; };
 		D4BEB5320F6B0C87D46A23D4 /* 67de29ba122c7fbd50080694d9de3838967d26 */ = {isa = PBXFileReference; path = 67de29ba122c7fbd50080694d9de3838967d26; sourceTree = "<group>"; };
 		D5CCB3B25FA2C23184BFF418 /* index */ = {isa = PBXFileReference; path = index; sourceTree = "<group>"; };
@@ -213,6 +220,7 @@
 			files = (
 				EE451267036BB5E07BBF1E1D /* FirebaseAuth in Frameworks */,
 				E0F07D4671B3E4F48A57722A /* FirebaseMessaging in Frameworks */,
+				C293968526165884FC106CDA /* StripePaymentSheet in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -848,6 +856,7 @@
 				524ED06C69FDA48EFBC34169 /* BookingAPI.swift */,
 				5CC67B1970619EB52F6B6AA0 /* ChatModels.swift */,
 				9F223686D574CF3903786E95 /* ClientSchedulesView.swift */,
+				04CE1EBA3457C9C66A51708C /* CoachOnTheWayView.swift */,
 				CD0F9AFAE98C400E81F11FB1 /* ContentView.swift */,
 				29AFF0C6AFD11FE7FCF767AF /* DashboardView.swift */,
 				DE75BD7B6699467727C56640 /* DEPLOY_AND_TEST_TODAY.md */,
@@ -856,6 +865,7 @@
 				F80AC1616F4DE38D6801C39E /* ImpactFlowView.swift */,
 				5365DAED4EFEDA69153BA361 /* ImpactSummaryView.swift */,
 				8CD8FCDB2943F6D915C973C5 /* Info.plist */,
+				D26DE9FCB186900DE9580B90 /* IntroBookingView.swift */,
 				B59670A1295AC6C55956DD37 /* LiveDataConnectivity.swift */,
 				862A677FF5122F8C56A8F460 /* LoginView.swift */,
 				6CE961CD047FDE66F2DF35D4 /* MessagesView.swift */,
@@ -868,6 +878,7 @@
 				58248E8AFB62D6F27B3C82F4 /* ProfileMenuSheet.swift */,
 				B01DF3D987C06D7A6A5A21CA /* ProgramAPI.swift */,
 				E73A8B77569BB0833A79EC39 /* ProgramBuilderSheet.swift */,
+				4B8176D1350265581CBF093C /* ProgramCheckoutView.swift */,
 				DFC499BDAAD49D0E28B63F35 /* ProgressAPI.swift */,
 				CF31AFC30C8CE4F651820006 /* ProgressProfileView.swift */,
 				22FC335F43503AFBD39D9B67 /* ProgressView.swift */,
@@ -997,6 +1008,7 @@
 			packageProductDependencies = (
 				0CA30C01512DEA2A9B503157 /* FirebaseAuth */,
 				E84CC16AD8615D0E9C50AEDE /* FirebaseMessaging */,
+				E4DD94AEEAA8C8CC006D9076 /* StripePaymentSheet */,
 			);
 			productName = MONTRA;
 			productReference = FC14FA3CEE2D2EC1C1FE7336 /* MONTRA.app */;
@@ -1028,6 +1040,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				F8B82E658239FF74FFF3AF72 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				9C94903CC880F3914F7AF4B9 /* XCRemoteSwiftPackageReference "stripe-ios-spm" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 00D4DE441EC637693F3928D9 /* Products */;
@@ -1078,11 +1091,13 @@
 				E01365D9DA74131BB7E653FC /* BookingAPI.swift in Sources */,
 				67E4B5630E736DE0E234F6D7 /* ChatModels.swift in Sources */,
 				70C6192DF40EF400FD8C689B /* ClientSchedulesView.swift in Sources */,
+				44006F816516B70821E278C7 /* CoachOnTheWayView.swift in Sources */,
 				37A77089AD4C7CCDD4A15F47 /* ContentView.swift in Sources */,
 				1D33D267C4BDCC61461C8EEA /* DashboardView.swift in Sources */,
 				BF2754ED2D13670673DC9566 /* ImpactAPI.swift in Sources */,
 				CC86F46ED705CEBFEBA3B8B2 /* ImpactFlowView.swift in Sources */,
 				6B2F0DD03D46904F07761151 /* ImpactSummaryView.swift in Sources */,
+				89A45C0EFCE6FFFDA0551EF1 /* IntroBookingView.swift in Sources */,
 				A1862D4BE4E2E5201565D94C /* LiveDataConnectivity.swift in Sources */,
 				97515F6D3A0CFF1439585311 /* LoginView.swift in Sources */,
 				013E5BBCA0F00499D645A757 /* MONTRAApp.swift in Sources */,
@@ -1093,6 +1108,7 @@
 				11B32CB05329DE0D5B193684 /* ProfileMenuSheet.swift in Sources */,
 				BB29FA7D141A1C63C3449F1D /* ProgramAPI.swift in Sources */,
 				AF0EE205986532BE38E998A0 /* ProgramBuilderSheet.swift in Sources */,
+				E7176CE486798E6F189DF222 /* ProgramCheckoutView.swift in Sources */,
 				5838CC21C85899EDB9974297 /* ProgressAPI.swift in Sources */,
 				0CB25A3063729E0FCFA7307F /* ProgressProfileView.swift in Sources */,
 				A454CD533725A1DCDF1B5452 /* ProgressView.swift in Sources */,
@@ -1312,6 +1328,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		9C94903CC880F3914F7AF4B9 /* XCRemoteSwiftPackageReference "stripe-ios-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/stripe/stripe-ios-spm.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 23.0.0;
+			};
+		};
 		F8B82E658239FF74FFF3AF72 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
@@ -1327,6 +1351,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = F8B82E658239FF74FFF3AF72 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseAuth;
+		};
+		E4DD94AEEAA8C8CC006D9076 /* StripePaymentSheet */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9C94903CC880F3914F7AF4B9 /* XCRemoteSwiftPackageReference "stripe-ios-spm" */;
+			productName = StripePaymentSheet;
 		};
 		E84CC16AD8615D0E9C50AEDE /* FirebaseMessaging */ = {
 			isa = XCSwiftPackageProductDependency;
