@@ -9,10 +9,7 @@ struct DashboardView: View {
     @Environment(\.colorScheme) private var colorScheme
     @State private var showProfileSheet = false
     @State private var showNotifications = false
-    @State private var mapButtonOffset: CGSize = .zero
-    @State private var mapButtonDragOffset: CGSize = .zero
-    @State private var mapButtonDidDrag = false
-    @State private var showFloatingMap = false
+    @State private var showCoachTracking = false
     @AppStorage("dashboardProfileImageData") private var profileImageData: Data = Data()
     @State private var selectedGoalsStorage: String = "Build Strength"
     @State private var currentWeight: String = ""
@@ -136,6 +133,16 @@ struct DashboardView: View {
                                 RoundedRectangle(cornerRadius: 12)
                                     .stroke(Color.montraOrange, lineWidth: 1.5)
                             )
+                    }
+                }
+
+                // ── Coach on the Way pill (Uber-style) ───────────────
+                if let eta = coachETA, let next = nextSession {
+                    CoachOnTheWayPill(
+                        trainerName: next.trainer,
+                        etaMinutes: eta
+                    ) {
+                        showCoachTracking = true
                     }
                 }
 
@@ -313,84 +320,11 @@ struct DashboardView: View {
             .padding(.horizontal, 20)
         }
         .background(Color.montraBackground)
-        .overlay {
-            if nextSession != nil {
-            GeometryReader { proxy in
-                let buttonSize = CGSize(width: 86, height: 40)
-                let baseX = proxy.size.width - 22 - (buttonSize.width / 2)
-                let baseBottomInset = max(140, proxy.safeAreaInsets.bottom + 110)
-                let baseY = proxy.size.height - baseBottomInset - (buttonSize.height / 2)
-                let rawX = baseX + mapButtonOffset.width + mapButtonDragOffset.width
-                let rawY = baseY + mapButtonOffset.height + mapButtonDragOffset.height
-
-                let minX = buttonSize.width / 2 + 12
-                let maxX = proxy.size.width - (buttonSize.width / 2) - 12
-                let minY = buttonSize.height / 2 + 72
-                let maxY = proxy.size.height - (buttonSize.height / 2) - 96
-
-                Button {
-                    if !mapButtonDidDrag {
-                        showFloatingMap = true
-                    }
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "map.fill")
-                            .font(.system(size: 14, weight: .bold))
-                        Text("Map")
-                            .font(.system(size: 13, weight: .semibold))
-                    }
-                    .foregroundColor(colorScheme == .light ? .montraPrimaryButtonText : .black)
-                    .frame(width: buttonSize.width, height: buttonSize.height)
-                    .background(colorScheme == .light ? Color.montraFrostedOrangeFill : Color.montraOrange)
-                    .overlay(
-                        Capsule()
-                            .stroke(
-                                colorScheme == .light ? Color.montraFrostedOrangeStroke : Color.clear,
-                                lineWidth: colorScheme == .light ? 1 : 0
-                            )
-                    )
-                    .clipShape(Capsule())
-                    .shadow(color: Color.black.opacity(0.22), radius: 8, x: 0, y: 4)
-                }
-                .buttonStyle(.plain)
-                .position(
-                    x: min(max(rawX, minX), maxX),
-                    y: min(max(rawY, minY), maxY)
-                )
-                .simultaneousGesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { value in
-                            mapButtonDragOffset = value.translation
-                            let dragDistance = hypot(value.translation.width, value.translation.height)
-                            if dragDistance > 8 {
-                                mapButtonDidDrag = true
-                            }
-                        }
-                        .onEnded { value in
-                            let proposed = CGSize(
-                                width: mapButtonOffset.width + value.translation.width,
-                                height: mapButtonOffset.height + value.translation.height
-                            )
-
-                            let clampedX = min(max(baseX + proposed.width, minX), maxX) - baseX
-                            let clampedY = min(max(baseY + proposed.height, minY), maxY) - baseY
-
-                            mapButtonOffset = CGSize(width: clampedX, height: clampedY)
-                            mapButtonDragOffset = .zero
-                            DispatchQueue.main.async {
-                                mapButtonDidDrag = false
-                            }
-                        }
-                )
-            }
-            }
-        }
-        .navigationDestination(isPresented: $showFloatingMap) {
-            if let next = nextSession {
-                SessionDetailView(
-                    session: next,
-                    onOpenCoachChat: onOpenCoachChat
-                )
+        .sheet(isPresented: $showCoachTracking) {
+            if let next = nextSession, let eta = coachETA {
+                CoachOnTheWayView(session: next, initialETA: eta)
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.hidden)
             }
         }
         .sheet(isPresented: $showNotifications) {
@@ -522,6 +456,15 @@ struct DashboardView: View {
         performanceMonthlyTarget = remote.performanceMonthlyTarget
         consistencyPercentTarget = remote.consistencyPercentTarget
         selectedGoalsStorage = remote.selectedGoals.isEmpty ? "Build Strength" : remote.selectedGoals.joined(separator: ",")
+    }
+
+    /// Returns the ETA in minutes when the coach is realistically en route (0–90 min window).
+    /// Nil when the session is too far away or already started.
+    private var coachETA: Int? {
+        guard let date = nextBookedDate else { return nil }
+        let mins = Int(date.timeIntervalSinceNow / 60)
+        guard mins > 0 && mins <= 90 else { return nil }
+        return mins
     }
 
     private var nextBookedDate: Date? {
