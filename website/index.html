@@ -112,12 +112,12 @@
           </select>
           <svg class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </div>
-        <button id="hero-search-button" class="bg-brand hover:bg-orange-700 text-white px-6 py-3 rounded-lg text-sm font-bold transition-colors">Search Coaches</button>
+        <button id="hero-search-button" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg text-sm font-bold transition-colors">Search Coaches</button>
       </div>
 
-      <!-- Count + review -->
-      <div class="flex items-center justify-between mt-6 max-w-2xl">
-        <p id="trainer-count-label" class="text-gray-400 text-sm">Certified trainers across MA, RI, NJ, CT & NY</p>
+      <!-- Contextual ticker -->
+      <div class="flex items-center gap-2 mt-5 max-w-2xl min-h-[22px]">
+        <span id="ticker-text" class="text-gray-300 text-sm" style="transition:opacity .22s ease">📍 Browse verified coaches near you.</span>
       </div>
     </div>
   </section>
@@ -134,7 +134,7 @@
           <span class="text-gray-500 text-sm ml-2">Answer a few questions and we'll match you with the perfect coach.</span>
         </div>
       </div>
-      <a href="quiz.html" class="bg-brand hover:bg-orange-700 text-white px-6 py-2 rounded-xl font-bold text-sm transition-colors flex-shrink-0">Get Matched</a>
+      <a href="quiz.html" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-bold text-sm transition-colors flex-shrink-0">Get Matched</a>
     </div>
   </div>
 
@@ -644,6 +644,73 @@
       }
     }
 
+    // ── Contextual ticker ──────────────────────────────────────────────────
+    const TICKER_MSGS = [
+      '📍 Browse verified coaches near you.',
+      '🤖 MONTRA AI analyzed 215 coaches to help find your best match.',
+      '⚡ 7 coaches can be booked within the next 2 hours.',
+      '🛡️ Every coach is background checked, certified & insured.',
+      '⭐ Average coach rating: 4.9/5 from verified client reviews.',
+      '📅 42 coaches are accepting new clients this week.',
+      '🎯 Your perfect coach is matched to your goals, schedule, and budget.',
+      '🛡️ Protected by the MONTRA Match Guarantee™.',
+    ];
+    let _tIdx = 0, _tTimer = null, _tCtx = false;
+
+    function _tFade(text) {
+      const el = document.getElementById('ticker-text');
+      if (!el) return;
+      el.style.opacity = '0';
+      setTimeout(() => { el.textContent = text; el.style.opacity = '1'; }, 230);
+    }
+
+    function startTicker() {
+      clearInterval(_tTimer);
+      if (_tCtx) return;
+      _tFade(TICKER_MSGS[_tIdx]);
+      _tTimer = setInterval(() => {
+        if (_tCtx) { clearInterval(_tTimer); return; }
+        _tIdx = (_tIdx + 1) % TICKER_MSGS.length;
+        _tFade(TICKER_MSGS[_tIdx]);
+      }, 4500);
+    }
+
+    function setTickerCtx(text) {
+      _tCtx = true;
+      clearInterval(_tTimer);
+      _tFade(text);
+    }
+
+    function clearTickerCtx() {
+      _tCtx = false;
+      startTicker();
+    }
+
+    function updateTickerFromFilters(filteredCount) {
+      const loc = heroLocationFilter;
+      const svc = (document.getElementById('hero-service')?.value || 'all');
+      const filterCount = activeFilterCount();
+      const hasLoc = !!loc;
+      const hasSvc = svc && svc !== 'all';
+      const hasFilters = filterCount > 0 || hasSvc;
+      const n = filteredCount;
+      const coaches = n === 1 ? 'coach' : 'coaches';
+
+      if (!n) {
+        setTickerCtx('🔍 No coaches match those filters — try adjusting them.');
+      } else if (hasLoc && hasFilters) {
+        const svcPart = hasSvc ? ` ${svc.toLowerCase()}` : '';
+        setTickerCtx(`🔍 ${n}${svcPart} ${coaches} found in ${loc}.`);
+      } else if (hasLoc) {
+        setTickerCtx(`📍 ${n} ${coaches} available in ${loc}.`);
+      } else if (hasFilters) {
+        setTickerCtx(`🔍 ${n} ${coaches} match your filters.`);
+      } else {
+        clearTickerCtx();
+      }
+    }
+    // ── end ticker ─────────────────────────────────────────────────────────
+
     let heroLocationFilter = '';
 
     function applyFilters() {
@@ -670,12 +737,14 @@
 
       if (!filtered.length) {
         grid.innerHTML = renderEmptyState('No coaches match those filters', 'Try clearing one or more filters.');
+        updateTickerFromFilters(0);
         return;
       }
 
       grid.innerHTML = filtered.map(renderTrainerCard).join('');
       updateFilterCount();
       fillMatchBadges(filtered.map((t) => t.id));
+      updateTickerFromFilters(filtered.length);
     }
 
     // One backend call scores every visible card, then reveals the % badges.
@@ -934,13 +1003,6 @@
           ? payload.trainers.filter((trainer) => (trainer.status === 'approved' || !trainer.status) && trainer.isActive !== false)
           : [];
 
-        const countLabel = document.getElementById('trainer-count-label');
-        if (countLabel) {
-          countLabel.textContent = trainers.length
-            ? `${trainers.length} certified ${trainers.length === 1 ? 'trainer' : 'trainers'} across MA, RI, NJ, CT & NY`
-            : 'Certified trainers across MA, RI, NJ, CT & NY';
-        }
-
         if (!trainers.length) {
           grid.innerHTML = renderEmptyState('No approved trainers yet', 'Approved trainer accounts will appear here as soon as they are added.');
           return;
@@ -956,6 +1018,7 @@
     wireFilters();
     wireFilterDrawer();
     updateFilterCount();
+    startTicker();
     loadTrainers();
   </script>
   <script type="module" src="assets/js/montra-chat.js"></script>
