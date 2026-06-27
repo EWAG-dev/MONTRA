@@ -356,10 +356,9 @@
             Filters
             <span id="filter-count" class="hidden ml-0.5 bg-brand text-white text-[11px] font-bold rounded-full min-w-[1.25rem] h-5 px-1 items-center justify-center"></span>
           </button>
-          <a href="/#all-coaches" class="hidden lg:inline text-brand text-sm font-semibold hover:underline">View all coaches →</a>
         </div>
 
-        <div id="coach-grid" class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div id="coach-grid" class="grid grid-cols-[repeat(auto-fill,minmax(280px,360px))] gap-6 justify-center">
           <div class="col-span-full flex flex-col items-center justify-center py-20 text-center">
             <div class="w-16 h-16 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center mb-4">
               <svg class="w-7 h-7 text-gray-300 animate-pulse" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -893,7 +892,7 @@
         if (!el) return;
         el.querySelector('.match-pct').textContent = `${res.overall}%`;
         el.classList.remove('hidden');
-        el.classList.add('flex');
+        el.classList.add('inline-flex');
       });
     }
 
@@ -1087,8 +1086,8 @@
 
       // Score filled in asynchronously by fillMatchBadges() (one backend call for all cards).
       const matchBadge = `
-            <span data-match-id="${escapeHtml(trainer.id)}" class="hidden absolute top-12 right-3 items-center gap-1 bg-white/95 text-gray-900 text-[11px] font-black px-2 py-0.5 rounded-full shadow">
-              <span class="match-pct text-blue-700"></span><span class="text-gray-500 font-bold">Match</span>
+            <span data-match-id="${escapeHtml(trainer.id)}" class="hidden absolute top-12 right-3 bg-white/95 text-[11px] font-black px-2.5 py-0.5 rounded-full shadow whitespace-nowrap leading-none">
+              <span class="match-pct text-blue-700"></span><span class="text-gray-500 font-bold"> Match</span>
             </span>`;
 
       const isUnavailable = statusMeta.key === 'currently-unavailable';
