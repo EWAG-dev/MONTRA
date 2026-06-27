@@ -10,6 +10,7 @@ struct DashboardView: View {
     @State private var showProfileSheet = false
     @State private var showNotifications = false
     @State private var showCoachTracking = false
+    @State private var showIntroBooking = false
     @AppStorage("dashboardProfileImageData") private var profileImageData: Data = Data()
     @State private var selectedGoalsStorage: String = "Build Strength"
     @State private var currentWeight: String = ""
@@ -97,9 +98,9 @@ struct DashboardView: View {
 
                 // ── CTA Buttons ───────────────────────────────────────
                 HStack(spacing: 10) {
-                    Button { selectedTab = .sessions } label: {
+                    Button { showIntroBooking = true } label: {
                         HStack(spacing: 6) {
-                            Text("Book a Session")
+                            Text("Book Intro Session")
                                 .font(.system(size: 14, weight: .semibold))
                             Image(systemName: "chevron.right")
                                 .font(.system(size: 12, weight: .semibold))
@@ -262,8 +263,8 @@ struct DashboardView: View {
                         Text("Book a session to see it here.")
                             .font(.system(size: 13))
                             .foregroundColor(.montraTextSecondary)
-                        Button { selectedTab = .sessions } label: {
-                            Text("Book a Session")
+                        Button { showIntroBooking = true } label: {
+                            Text("Book Intro Session")
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundColor(.montraOrange)
                         }
@@ -320,6 +321,9 @@ struct DashboardView: View {
             .padding(.horizontal, 20)
         }
         .background(Color.montraBackground)
+        .sheet(isPresented: $showIntroBooking) {
+            IntroBookingView()
+        }
         .sheet(isPresented: $showCoachTracking) {
             if let next = nextSession, let eta = coachETA {
                 CoachOnTheWayView(session: next, initialETA: eta)

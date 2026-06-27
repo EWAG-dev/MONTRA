@@ -41,7 +41,7 @@ targets:
     entitlements:
       path: MONTRA/MONTRA.entitlements
       properties:
-        com.apple.developer.aps-environment: development
+        com.apple.developer.aps-environment: production
     dependencies:
       - package: firebase-ios-sdk
         product: FirebaseAuth

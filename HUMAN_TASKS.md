@@ -5,104 +5,86 @@
 
 ---
 
-## 1. Railway — Environment Variables ⬜
+## 1. Railway — Set Stripe Keys ⬜
 
-Add these in Railway → backend service → Variables:
+You have Railway open. You need the **Stripe dashboard** open alongside it to get the keys.
 
-**Stripe (required for payments to go live):**
-- `STRIPE_SECRET_KEY` — Stripe Dashboard → Developers → API Keys → Secret key
-- `STRIPE_PUBLISHABLE_KEY` — same page, Publishable key
-- `STRIPE_WEBHOOK_SECRET` — Stripe Dashboard → Webhooks → Add endpoint → `https://montra-production.up.railway.app/api/stripe/webhook` → copy signing secret
-  - Enable events: `payment_intent.succeeded`, `payment_intent.payment_failed`
+In Railway → backend service → Variables, add:
 
-**Twilio (required for SMS lead alerts to fire):**
-- `TWILIO_ACCOUNT_SID`
-- `TWILIO_AUTH_TOKEN`
-- `TWILIO_FROM` — a Twilio number (`+1…`) or Messaging Service SID (`MG…`)
-- `LEAD_SMS_TO` — comma-separated recipient numbers (shared fallback)
-- Optional per-team routing: `LEAD_SMS_SALES`, `LEAD_SMS_SUPPORT`, `LEAD_SMS_RECRUITING`
+| Variable | Where to get it |
+|---|---|
+| `STRIPE_SECRET_KEY` | Stripe → Developers → API Keys → Secret key |
+| `STRIPE_PUBLISHABLE_KEY` | same page, Publishable key |
+| `STRIPE_WEBHOOK_SECRET` | Stripe → Webhooks → Add endpoint → `https://montra-production.up.railway.app/api/stripe/webhook` → copy signing secret |
+
+For the webhook, enable events: `payment_intent.succeeded`, `payment_intent.payment_failed`
 
 ---
 
-## 2. Xcode — Run xcodegen (Stripe iOS SDK) ⬜
+## 2. Railway — Set Twilio Keys (SMS lead alerts) ⬜
 
-Stripe iOS SPM was added to `project.yml`. Before building:
+Same Railway service, once you have a Twilio account:
+
+| Variable | Value |
+|---|---|
+| `TWILIO_ACCOUNT_SID` | Twilio Console → Account Info |
+| `TWILIO_AUTH_TOKEN` | same page |
+| `TWILIO_FROM` | Your Twilio phone number (`+1…`) |
+| `LEAD_SMS_TO` | Your number(s), comma-separated |
+
+---
+
+## 3. Xcode — Resolve Stripe iOS Package ✅ (code done, one Xcode step)
+
+`xcodegen generate` has been run. Open Xcode and let it resolve the Stripe package:
 
 ```bash
-cd /Users/taylorolsen-vogt/MONTRA
-xcodegen generate
-open MONTRA.xcodeproj
+open /Users/taylorolsen-vogt/MONTRA/MONTRA.xcodeproj
 ```
 
-Xcode will resolve the `stripe-ios-spm` package on first open (may take a few minutes). Then build normally (Cmd-R).
+Xcode will show "Resolving package dependencies" on first open — wait for that to finish, then build (Cmd-R).
 
 ---
 
-## 3. iOS — Wire Checkout Views into Navigation ⬜
+## 4. TestFlight — Archive & Upload ⬜
 
-`IntroBookingView` and `ProgramCheckoutView` are built but not yet reachable in the app. Suggested entry points:
+APNs entitlement is already set to `production` in `project.yml`. In Xcode:
 
-- **Dashboard or Sessions** → "Book Intro Session" button → `IntroBookingView(preselectedTrainer: nil)`
-- **Coach card / match result** → "Book Intro" → `IntroBookingView(preselectedTrainer: trainer)`
-- **Commit card "View Program"** → `ProgramCheckoutView(trainer: trainer, preselectedMonths: months)`
-
----
-
-## 4. APNs — Switch to Production Entitlement Before App Store ⬜
-
-Before archiving for TestFlight or App Store, in `project.yml` change:
-```yaml
-com.apple.developer.aps-environment: development
-```
-to:
-```yaml
-com.apple.developer.aps-environment: production
-```
-Then `xcodegen generate` before archiving.
+1. Select **Any iOS Device** as the run destination (not a simulator)
+2. **Product → Archive**
+3. In the Organizer: **Distribute App → App Store Connect → Upload**
+4. Once processed in App Store Connect, add yourself as a TestFlight tester
 
 ---
 
-## 5. App Store / TestFlight ⬜
+## 5. Trust-Stack Badges — Turn On Per Coach ⬜
 
-- Archive via **Product → Archive** in Xcode
-- Upload to TestFlight for real-device push notification testing (simulator cannot receive push)
-
----
-
-## 6. Trust-Stack Badges — Turn On Per Coach ⬜
-
-Badges (ID Verified / Background Checked / MONTRA Certified™) are off by default. Turn each on once the real check clears:
-
-Go to **`/admin.html`** → find the coach → toggle the badge.
-
-Or call directly: `POST /api/admin/trainers/:id/verification` with e.g. `{ "idVerified": true }`.
+Go to **`https://montra-27532.web.app/admin.html`** → find the coach → toggle the badges once the real checks clear (ID Verified, Background Checked, MONTRA Certified™).
 
 ---
 
-## 7. SEO — Set Custom Domain ⬜
+## 6. SEO — Set Custom Domain ⬜
 
-Once the real domain is connected in Firebase Hosting:
+Blocked on connecting a real domain to Firebase Hosting. Once that's done:
 
-1. Set the `SITE_ORIGIN` **GitHub repo variable** (Settings → Variables) to e.g. `https://montra.com`
-2. Submit `/sitemap.xml` in **Google Search Console**
-
-The nightly CI deploy runs `build:seo` automatically so coach pages will pick up the correct domain going forward.
+1. Set `SITE_ORIGIN` GitHub repo variable → `https://your-domain.com`
+2. Submit `/sitemap.xml` to Google Search Console
 
 ---
 
-## 8. Resend — Upgrade Plan When Volume Grows ⬜
+## 7. Resend — Upgrade When Volume Grows ⬜
 
-Free tier is 100 emails/day. No code change needed — upgrade at resend.com when transactional volume demands it.
+Free tier = 100 emails/day. Upgrade at resend.com when needed. No code change required.
 
 ---
 
-## Future Features (design / product decision required first)
+## Future Features (product decision required first)
 
 ### Trainer Storefront & Pricing
-Requires Stripe Connect for trainer payouts + new backend schema (`sessionPriceMin/Max`, `stripeAccountId`). Unlocks: Budget Fit becoming a real match signal; package and intro pricing becoming exact (both currently use a derived per-coach estimate).
+Stripe Connect for trainer payouts + `sessionPriceMin/Max` schema. Unlocks real Budget Fit scoring and exact package/intro pricing.
 
 ### In-App Support Chat
-`MessagesView` has MONTRA Team and Support tabs showing a mailto link. Needs a product decision: real support Firebase account vs. third-party tool (Intercom, etc.).
+MessagesView MONTRA Team / Support tabs currently show mailto. Needs decision: real support Firebase account vs. Intercom/similar.
 
 ### Coach Profile Derived Placeholders
-`GET /api/trainers/:id/insights` returns some `derived: true` values (responsiveness %, "Top X% match", Top Client Results stats). These are deterministic estimates. Swap with real tracked data before using in marketing or legal copy.
+`GET /api/trainers/:id/insights` has `derived: true` values (responsiveness %, Top X% match, Top Client Results). Replace with real data before using in marketing copy.
