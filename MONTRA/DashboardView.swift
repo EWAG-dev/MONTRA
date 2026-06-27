@@ -122,6 +122,7 @@ struct DashboardView: View {
                     Button {
                         requestedTrainerId = ""
                         requestedTrainerName = ""
+                        UserDefaults.standard.set(1, forKey: "quiz.step")
                         onboardingCompleted = false
                     } label: {
                         Text("Rematch")

@@ -1051,7 +1051,10 @@ struct OnboardingQuizView: View {
 
     private func advance(by delta: Int) {
         forward = delta > 0
-        withAnimation { step = max(1, step + delta) }
+        var next = max(1, step + delta)
+        // Already authenticated users don't need the account-creation gate
+        if next == 7 && auth.user != nil { next = 8 }
+        withAnimation { step = next }
     }
 
     private var canCloseQuiz: Bool {
