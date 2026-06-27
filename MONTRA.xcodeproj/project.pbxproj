@@ -1061,20 +1061,6 @@
 				C6832998D3807229704A9C5C /* DEPLOY_AND_TEST_TODAY.md in Resources */,
 				0B5B368675D96420F05FF3D1 /* GoogleService-Info.plist in Resources */,
 				C9EEAE61062BDAF481CC63C9 /* MONTRA_AND_WEBSITE_ARCHITECTURE_GUIDE.md in Resources */,
-				57F0FEAD5B53D80C84619BA4 /* applypatch-msg.sample in Resources */,
-				65C287B71B95833E31482196 /* commit-msg.sample in Resources */,
-				31876AD7E2E86DB0552AC5E1 /* fsmonitor-watchman.sample in Resources */,
-				903F65662D29CEB1671363A4 /* post-update.sample in Resources */,
-				55E476AFE9AFB57DCE388A99 /* pre-applypatch.sample in Resources */,
-				02602240CE260C0294DCAD66 /* pre-commit.sample in Resources */,
-				333F49C677BDC09E783F4AB1 /* pre-merge-commit.sample in Resources */,
-				6448CD38C3D6DEA656B130A2 /* pre-push.sample in Resources */,
-				0C56F5120935726FF202898A /* pre-rebase.sample in Resources */,
-				37B33B941F7EC823743A7A21 /* pre-receive.sample in Resources */,
-				2C1B5C694A69FF81D572F4E3 /* prepare-commit-msg.sample in Resources */,
-				010AE14551C427E810ABDFAC /* push-to-checkout.sample in Resources */,
-				DF9B4E6EB22956E2AF54909C /* sendemail-validate.sample in Resources */,
-				174A32808C6C69C23A3E8F6F /* update.sample in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

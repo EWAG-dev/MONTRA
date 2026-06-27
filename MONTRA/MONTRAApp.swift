@@ -94,6 +94,7 @@ struct RootView: View {
             await syncOrientationStatusFromBackend()
         }
         .task(id: auth.user?.uid) {
+            hydrateTrainerProgressFromScopedStorage()
             if auth.user != nil {
                 // Request APNs permission when the user signs in.
                 PushNotificationManager.shared.requestPermissionAndRegister()
@@ -126,6 +127,26 @@ struct RootView: View {
 
         if payload.trainer.orientationCompleted == true {
             trainerOrientationCompleted = true
+            if let uid = auth.user?.uid {
+                UserDefaults.standard.set(true, forKey: "trainer.orientationCompleted.\(uid)")
+            }
+        }
+    }
+
+    private func hydrateTrainerProgressFromScopedStorage() {
+        guard let uid = auth.user?.uid else { return }
+
+        let defaults = UserDefaults.standard
+        if let scopedAgreement = defaults.object(forKey: "trainer.agreementSigned.\(uid)") as? Bool {
+            trainerAgreementSigned = scopedAgreement
+        } else if trainerAgreementSigned {
+            defaults.set(true, forKey: "trainer.agreementSigned.\(uid)")
+        }
+
+        if let scopedOrientation = defaults.object(forKey: "trainer.orientationCompleted.\(uid)") as? Bool {
+            trainerOrientationCompleted = scopedOrientation
+        } else if trainerOrientationCompleted {
+            defaults.set(true, forKey: "trainer.orientationCompleted.\(uid)")
         }
     }
 }

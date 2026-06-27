@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct TrainerAgreementView: View {
+    @EnvironmentObject private var auth: AuthManager
     @AppStorage("trainer.agreementSigned") private var agreementSigned = false
     @State private var hasScrolledToBottom = false
     @State private var agreed = false
@@ -84,6 +85,9 @@ struct TrainerAgreementView: View {
                     Button {
                         guard agreed else { return }
                         agreementSigned = true
+                        if let uid = auth.user?.uid {
+                            UserDefaults.standard.set(true, forKey: "trainer.agreementSigned.\(uid)")
+                        }
                     } label: {
                         Text(agreed ? "Accept & Continue" : hasScrolledToBottom ? "Check the box above to continue" : "Read the full agreement to continue")
                             .font(.system(size: 16, weight: .bold))
@@ -170,4 +174,5 @@ struct TrainerAgreementView: View {
 
 #Preview {
     TrainerAgreementView()
+        .environmentObject(AuthManager())
 }

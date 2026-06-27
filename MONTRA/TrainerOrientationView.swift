@@ -54,6 +54,9 @@ struct TrainerOrientationView: View {
                 closeButton
             }
         }
+        .task(id: auth.user?.uid) {
+            loadWatchedState()
+        }
     }
 
     private var closeButton: some View {
@@ -132,6 +135,7 @@ struct TrainerOrientationView: View {
                     isWatched: watched.contains(i)
                 ) {
                     watched.insert(i)
+                    persistWatchedState()
                 }
             }
         }
@@ -159,7 +163,7 @@ struct TrainerOrientationView: View {
         let bg: Color = allWatched ? .montraOrange : Color.white.opacity(0.08)
         return Button {
             guard allWatched else { return }
-            orientationCompleted = true
+            markOrientationCompleted()
             Task { await syncOrientationCompletion() }
         } label: {
             Text(label)
@@ -172,6 +176,39 @@ struct TrainerOrientationView: View {
         }
         .disabled(!allWatched)
         .animation(Animation.easeInOut(duration: 0.2), value: allWatched)
+    }
+
+    private func markOrientationCompleted() {
+        orientationCompleted = true
+        guard let uid = auth.user?.uid else { return }
+        UserDefaults.standard.set(true, forKey: "trainer.orientationCompleted.\(uid)")
+        UserDefaults.standard.removeObject(forKey: "trainer.orientationWatched.\(uid)")
+    }
+
+    private func loadWatchedState() {
+        guard let uid = auth.user?.uid else {
+            watched = []
+            return
+        }
+
+        let key = "trainer.orientationWatched.\(uid)"
+        guard let raw = UserDefaults.standard.string(forKey: key), !raw.isEmpty else {
+            watched = []
+            return
+        }
+
+        let values = raw
+            .split(separator: ",")
+            .compactMap { Int($0) }
+            .filter { $0 >= 0 && $0 < videos.count }
+        watched = Set(values)
+    }
+
+    private func persistWatchedState() {
+        guard let uid = auth.user?.uid else { return }
+        let key = "trainer.orientationWatched.\(uid)"
+        let raw = watched.sorted().map(String.init).joined(separator: ",")
+        UserDefaults.standard.set(raw, forKey: key)
     }
 
     private func syncOrientationCompletion() async {
