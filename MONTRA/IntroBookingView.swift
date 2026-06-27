@@ -379,24 +379,8 @@ struct IntroBookingView: View {
                     .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 4)
 
                 ForEach(addressTypes, id: \.self) { type in
-                    let selected = addressType == type
-                    HStack(spacing: 12) {
-                        Text(typeEmoji(type)).font(.system(size: 22))
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(type).font(.system(size: 14, weight: .semibold)).foregroundColor(.montraTextPrimary)
-                            Text(typeSubtitle(type)).font(.system(size: 12)).foregroundColor(.montraTextSecondary)
-                        }
-                        Spacer()
-                        ZStack {
-                            Circle().stroke(selected ? Color.montraOrange : Color.white.opacity(0.3), lineWidth: 2).frame(width: 20, height: 20)
-                            if selected { Circle().fill(Color.montraOrange).frame(width: 11, height: 11) }
-                        }
-                    }
-                    .padding(14)
-                    .background(selected ? Color.montraOrange.opacity(0.08) : Color.white.opacity(0.04))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(selected ? Color.montraOrange.opacity(0.5) : Color.white.opacity(0.1), lineWidth: 1))
-                    .onTapGesture { addressType = type }
+                    addressTypeRow(type: type, selected: addressType == type)
+                        .onTapGesture { addressType = type }
                 }
                 Text("🔒 Your address is securely shared with your coach only.").font(.system(size: 11)).foregroundColor(.montraTextSecondary)
                     .frame(maxWidth: .infinity, alignment: .center).padding(.top, 4)
@@ -568,6 +552,25 @@ struct IntroBookingView: View {
         }
     }
 
+    private func addressTypeRow(type: String, selected: Bool) -> some View {
+        HStack(spacing: 12) {
+            Text(typeEmoji(type)).font(.system(size: 22))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(type).font(.system(size: 14, weight: .semibold)).foregroundColor(.montraTextPrimary)
+                Text(typeSubtitle(type)).font(.system(size: 12)).foregroundColor(.montraTextSecondary)
+            }
+            Spacer()
+            ZStack {
+                Circle().stroke(selected ? Color.montraOrange : Color.white.opacity(0.3), lineWidth: 2).frame(width: 20, height: 20)
+                if selected { Circle().fill(Color.montraOrange).frame(width: 11, height: 11) }
+            }
+        }
+        .padding(14)
+        .background(selected ? Color.montraOrange.opacity(0.08) : Color.white.opacity(0.04))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(selected ? Color.montraOrange.opacity(0.5) : Color.white.opacity(0.1), lineWidth: 1))
+    }
+
     @ViewBuilder
     private func trainerAvatar(_ t: OnboardingTrainer, size: CGFloat) -> some View {
         if !t.photoDataUrl.isEmpty,
@@ -576,7 +579,7 @@ struct IntroBookingView: View {
             Image(uiImage: img).resizable().scaledToFill().frame(width: size, height: size).clipShape(RoundedRectangle(cornerRadius: size * 0.28))
         } else {
             ZStack {
-                RoundedRectangle(cornerRadius: size * 0.28).fill(Color(hex: t.accentHex) ?? .montraOrange)
+                RoundedRectangle(cornerRadius: size * 0.28).fill(Color(hex: t.accentHex))
                 Text(t.initials).font(.system(size: size * 0.34, weight: .black)).foregroundColor(.white)
             }
             .frame(width: size, height: size)

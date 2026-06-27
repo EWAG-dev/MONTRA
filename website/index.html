@@ -17,6 +17,39 @@
     body { font-family: 'Inter', sans-serif; }
     .coach-card { transition: all 0.2s ease; }
     .coach-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.10); transform: translateY(-2px); }
+    .coach-card-neon {
+      position: relative;
+      border-radius: 1rem;
+      overflow: hidden;
+      background: radial-gradient(120% 100% at 50% 0%, #121726 0%, #06080f 72%);
+      box-shadow: 0 16px 30px rgba(0, 0, 0, 0.45);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .coach-card-neon::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(160deg, color-mix(in srgb, var(--status-color, #3b82f6) 80%, #ffffff 20%), rgba(255,255,255,0.08));
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      mask-composite: exclude;
+      pointer-events: none;
+      opacity: 0.95;
+    }
+    .coach-card-neon:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 22px 36px rgba(0, 0, 0, 0.55), 0 0 26px color-mix(in srgb, var(--status-color, #3b82f6) 40%, transparent);
+    }
+    .coach-card-neon .coach-image {
+      transform: scale(1.01);
+      transition: transform 0.45s ease;
+    }
+    .coach-card-neon:hover .coach-image {
+      transform: scale(1.08);
+    }
     input[type=range] { accent-color: #E85D04; }
     .active-nav {
       color: #E85D04 !important;
@@ -567,6 +600,110 @@
       return Number.isFinite(value) ? value : null;
     }
 
+    function deterministicStatusSeed(value) {
+      const source = String(value || 'coach');
+      let hash = 0;
+      for (let idx = 0; idx < source.length; idx += 1) {
+        hash = (hash * 31 + source.charCodeAt(idx)) % 997;
+      }
+      return hash;
+    }
+
+    function statusMetaForTrainer(trainer) {
+      const statusCatalog = [
+        {
+          key: 'available-now',
+          label: 'AVAILABLE NOW',
+          color: '#3b82f6',
+          dotClass: 'bg-blue-500',
+          tagClass: 'text-blue-100 bg-blue-600/35 border border-blue-400/45',
+          iconClass: 'text-blue-300',
+          lineOne: 'Immediate booking available',
+          lineTwo: 'Can start within the next 2 hours',
+          icon: '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 2L4 14h7l-1 8 10-13h-7l0-7z"/></svg>'
+        },
+        {
+          key: 'accepting-new-clients',
+          label: 'ACCEPTING NEW CLIENTS',
+          color: '#22c55e',
+          dotClass: 'bg-lime-400',
+          tagClass: 'text-green-100 bg-green-600/30 border border-green-400/45',
+          iconClass: 'text-green-300',
+          lineOne: 'Open for new long-term clients',
+          lineTwo: 'Best fit for ongoing coaching plans',
+          icon: '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>'
+        },
+        {
+          key: 'available-this-week',
+          label: 'AVAILABLE THIS WEEK',
+          color: '#0ea5e9',
+          dotClass: 'bg-sky-400',
+          tagClass: 'text-sky-100 bg-sky-600/30 border border-sky-400/45',
+          iconClass: 'text-sky-300',
+          lineOne: 'Next opening is within 7 days',
+          lineTwo: 'Book now to lock in this week',
+          icon: '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>'
+        },
+        {
+          key: 'limited-availability',
+          label: 'LIMITED AVAILABILITY',
+          color: '#f59e0b',
+          dotClass: 'bg-amber-400',
+          tagClass: 'text-amber-100 bg-amber-500/25 border border-amber-400/45',
+          iconClass: 'text-amber-300',
+          lineOne: 'Only a few openings remain',
+          lineTwo: 'Secure your preferred time soon',
+          icon: '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+        },
+        {
+          key: 'currently-unavailable',
+          label: 'CURRENTLY UNAVAILABLE',
+          color: '#ef4444',
+          dotClass: 'bg-red-500',
+          tagClass: 'text-red-100 bg-red-600/28 border border-red-400/45',
+          iconClass: 'text-red-300',
+          lineOne: 'Currently unavailable',
+          lineTwo: 'Join waitlist for the next opening',
+          icon: '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.172 16.172a4 4 0 015.656 0M8 9a4 4 0 118 0c0 2.21-1.79 4-4 4s-4-1.79-4-4zm4 11a9 9 0 100-18 9 9 0 000 18z"/></svg>'
+        }
+      ];
+
+      const legacyStatusAlias = {
+        'accepting-clients': 'accepting-new-clients',
+        'limited-openings': 'limited-availability',
+        'fully-booked': 'currently-unavailable',
+        'high-demand': 'limited-availability'
+      };
+
+      const override = String(trainer.statusLabel || trainer.cardStatus || '').trim().toLowerCase();
+      const normalizedOverride = legacyStatusAlias[override] || override;
+      const forced = statusCatalog.find((status) => status.key === normalizedOverride || status.label.toLowerCase() === normalizedOverride);
+      if (forced) return forced;
+
+      const seed = deterministicStatusSeed(trainer.id || trainer.name);
+      return statusCatalog[seed % statusCatalog.length];
+    }
+
+    function injectShowcaseTrainer(trainers) {
+      const hasShowcaseName = trainers.some((trainer) => /aaron|taylor/i.test(String(trainer.name || '')));
+      if (hasShowcaseName) return trainers;
+
+      const showcaseTrainer = {
+        id: 'showcase-aaron-taylor',
+        name: 'Aaron Taylor',
+        certification: 'Elite Performance Specialist',
+        specialties: ['Strength & Performance', 'Mobility', 'Athletic Conditioning'],
+        locations: ['Boston, MA'],
+        rating: 5.0,
+        reviewCount: 128,
+        sessionPrice: 165,
+        isActive: true,
+        status: 'approved',
+        statusLabel: 'available-now'
+      };
+      return [showcaseTrainer, ...trainers];
+    }
+
     function normalizeSet(values) {
       return new Set((values || []).map((value) => String(value || '').trim().toLowerCase()).filter(Boolean));
     }
@@ -941,33 +1078,53 @@
       const location = escapeHtml(formatLocation(trainer));
       const specialties = escapeHtml(formatSpecialties(trainer));
       const initials = escapeHtml((trainer.initials || name.slice(0, 2)).slice(0, 2).toUpperCase());
-      const accent = escapeHtml(trainer.accentHex || '#E85D04');
-      const photo = trainer.photoDataUrl ? `<img src="${escapeHtml(trainer.photoDataUrl)}" alt="${name}" class="h-full w-full object-cover">` : `<div class="h-full w-full flex items-center justify-center"><span class="text-brand font-black text-3xl">${initials}</span></div>`;
+      const statusMeta = statusMetaForTrainer(trainer);
+      const accent = escapeHtml(trainer.accentHex || statusMeta.color || '#E85D04');
+      const photoUrl = trainer.photoDataUrl || trainer.photoUrl || trainer.imageUrl || '';
+      const photo = photoUrl
+        ? `<img src="${escapeHtml(photoUrl)}" alt="${name}" class="coach-image h-full w-full object-cover">`
+        : `<div class="coach-image h-full w-full flex items-center justify-center bg-gradient-to-br from-[#12192f] to-[#06080f]"><span class="text-white/90 font-black text-4xl tracking-wide">${initials}</span></div>`;
 
       // Score filled in asynchronously by fillMatchBadges() (one backend call for all cards).
       const matchBadge = `
-            <span data-match-id="${escapeHtml(trainer.id)}" class="hidden absolute top-3 right-3 items-center gap-1 bg-white text-gray-900 text-[11px] font-black px-2 py-0.5 rounded-full shadow">
-              <span class="match-pct text-blue-600"></span><span class="text-gray-500 font-bold">Match</span>
+            <span data-match-id="${escapeHtml(trainer.id)}" class="hidden absolute top-12 right-3 items-center gap-1 bg-white/95 text-gray-900 text-[11px] font-black px-2 py-0.5 rounded-full shadow">
+              <span class="match-pct text-blue-700"></span><span class="text-gray-500 font-bold">Match</span>
             </span>`;
 
+      const isUnavailable = statusMeta.key === 'currently-unavailable';
+      const ctaText = isUnavailable ? 'Join Waitlist' : 'Book Intro';
+      const ctaHref = isUnavailable ? 'quiz.html?flow=waitlist' : 'quiz.html';
+
       return `
-        <article class="bg-[#111] rounded-2xl overflow-hidden border border-white/10 flex flex-col transition hover:-translate-y-0.5">
-          <div class="relative h-36 overflow-hidden" style="background:${accent}12;">
+        <article class="coach-card-neon flex flex-col" style="--status-color:${accent};">
+          <div class="relative h-56 overflow-hidden" style="background:${accent}10;">
             ${photo}
-            <span class="absolute top-3 left-3 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">Approved</span>
+            <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/15"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-black/45 via-transparent to-transparent"></div>
+            <span class="absolute top-3 left-3 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide ${statusMeta.tagClass}">${escapeHtml(statusMeta.label)}</span>
+            <span class="absolute top-3 right-3 w-3 h-3 rounded-full ${statusMeta.dotClass} shadow-[0_0_14px_rgba(255,255,255,0.5)]"></span>
             ${matchBadge}
+            <div class="absolute left-4 right-4 bottom-3">
+              <p class="text-white font-extrabold text-3xl leading-tight drop-shadow">${name}</p>
+              <p class="text-white/85 text-sm leading-tight">${certification}</p>
+            </div>
           </div>
-          <div class="p-4 flex-1 flex flex-col">
-            <p class="text-white font-bold text-sm">${name}</p>
-            <p class="text-gray-400 text-xs mb-2">${certification}</p>
-            <div class="flex items-center justify-between text-xs text-gray-400 mb-3 gap-2">
-              <span class="text-yellow-400 font-bold">★ ${rating} <span class="text-gray-500 font-normal">(${reviewCount})</span></span>
-              <span>${location}</span>
+          <div class="p-4 flex-1 flex flex-col bg-[#05070d]">
+            <div class="flex items-center justify-between text-xs text-gray-300 mb-3 gap-2">
+              <span class="text-yellow-300 font-bold">★ ${rating} <span class="text-gray-500 font-normal">(${reviewCount})</span></span>
+              <span class="truncate">${location}</span>
             </div>
             <p class="text-gray-400 text-xs mb-4 truncate">${specialties}</p>
+            <div class="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 mb-4">
+              <div class="flex items-center gap-2 ${statusMeta.iconClass} text-sm font-semibold">
+                ${statusMeta.icon}
+                <span>${escapeHtml(statusMeta.lineOne)}</span>
+              </div>
+              <p class="text-gray-400 text-sm mt-1">${escapeHtml(statusMeta.lineTwo)}</p>
+            </div>
             <div class="mt-auto flex gap-2">
-              <a href="${trainer.slug ? '/coaches/' + encodeURIComponent(trainer.slug) : 'coach-profile.html?id=' + encodeURIComponent(trainer.id)}" class="flex-1 text-center border border-gray-600 text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-gray-800 transition-colors">View Profile</a>
-              <a href="quiz.html" class="flex-1 text-center bg-brand text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-orange-700 transition-colors">Book Intro Session</a>
+              <a href="${trainer.slug ? '/coaches/' + encodeURIComponent(trainer.slug) : 'coach-profile.html?id=' + encodeURIComponent(trainer.id)}" class="flex-1 text-center border border-gray-500/70 text-white text-xs font-semibold py-2 rounded-lg hover:bg-gray-800 transition-colors">View Profile</a>
+              <a href="${ctaHref}" class="flex-1 text-center bg-brand text-white text-xs font-semibold py-2 rounded-lg hover:bg-orange-700 transition-colors">${ctaText}</a>
             </div>
           </div>
         </article>
@@ -1003,12 +1160,14 @@
           ? payload.trainers.filter((trainer) => (trainer.status === 'approved' || !trainer.status) && trainer.isActive !== false)
           : [];
 
-        if (!trainers.length) {
+        const trainersWithShowcase = injectShowcaseTrainer(trainers);
+
+        if (!trainersWithShowcase.length) {
           grid.innerHTML = renderEmptyState('No approved trainers yet', 'Approved trainer accounts will appear here as soon as they are added.');
           return;
         }
 
-        allTrainers = trainers;
+        allTrainers = trainersWithShowcase;
         applyFilters();
       } catch (error) {
         grid.innerHTML = renderEmptyState('Unable to load trainers', 'Please try again in a moment.');

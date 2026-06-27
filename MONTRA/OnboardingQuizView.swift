@@ -2194,6 +2194,36 @@ struct MatchScoreCard: View {
     private func ring(_ pct: Int) -> some View {
         ZStack {
             Circle().stroke(Color.montraBlue.opacity(0.15), lineWidth: 9)
+            Circle()
+                .trim(from: 0, to: CGFloat(pct) / 100)
+                .stroke(
+                    LinearGradient(colors: [Color.montraBlueLight, Color.montraBlue], startPoint: .topLeading, endPoint: .bottomTrailing),
+                    style: StrokeStyle(lineWidth: 9, lineCap: .round)
+                )
+                .rotationEffect(.degrees(-90))
+            VStack(spacing: 1) {
+                Text("\(pct)%").font(.system(size: 22, weight: .black)).foregroundColor(.montraTextPrimary)
+                Text(result?.quality ?? "")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundColor(.montraBlue)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .frame(width: 96, height: 96)
+    }
+
+    private func bar(_ pct: Int) -> some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.montraBlue.opacity(0.12)).frame(height: 6)
+                Capsule()
+                    .fill(LinearGradient(colors: [Color.montraBlue, Color.montraBlueLight], startPoint: .leading, endPoint: .trailing))
+                    .frame(width: max(6, geo.size.width * CGFloat(pct) / 100), height: 6)
+            }
+        }
+        .frame(height: 6)
+    }
+}
 
 struct MatchRecommendationCard: View {
     let title: String
@@ -2226,36 +2256,6 @@ struct MatchRecommendationCard: View {
             RoundedRectangle(cornerRadius: 16)
                 .stroke(Color.montraBlue.opacity(0.18), lineWidth: 1)
         )
-    }
-}
-            Circle()
-                .trim(from: 0, to: CGFloat(pct) / 100)
-                .stroke(
-                    LinearGradient(colors: [Color.montraBlueLight, Color.montraBlue], startPoint: .topLeading, endPoint: .bottomTrailing),
-                    style: StrokeStyle(lineWidth: 9, lineCap: .round)
-                )
-                .rotationEffect(.degrees(-90))
-            VStack(spacing: 1) {
-                Text("\(pct)%").font(.system(size: 22, weight: .black)).foregroundColor(.montraTextPrimary)
-                Text(result?.quality ?? "")
-                    .font(.system(size: 9, weight: .bold))
-                    .foregroundColor(.montraBlue)
-                    .multilineTextAlignment(.center)
-            }
-        }
-        .frame(width: 96, height: 96)
-    }
-
-    private func bar(_ pct: Int) -> some View {
-        GeometryReader { geo in
-            ZStack(alignment: .leading) {
-                Capsule().fill(Color.montraBlue.opacity(0.12)).frame(height: 6)
-                Capsule()
-                    .fill(LinearGradient(colors: [Color.montraBlue, Color.montraBlueLight], startPoint: .leading, endPoint: .trailing))
-                    .frame(width: max(6, geo.size.width * CGFloat(pct) / 100), height: 6)
-            }
-        }
-        .frame(height: 6)
     }
 }
 

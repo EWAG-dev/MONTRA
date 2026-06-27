@@ -427,7 +427,7 @@ struct ProgramCheckoutView: View {
             Image(uiImage: uiImg).resizable().scaledToFill().frame(width: size, height: size).clipShape(RoundedRectangle(cornerRadius: cornerRadius))
         } else {
             ZStack {
-                RoundedRectangle(cornerRadius: cornerRadius).fill(Color(hex: trainer.accentHex) ?? .montraOrange)
+                RoundedRectangle(cornerRadius: cornerRadius).fill(Color(hex: trainer.accentHex))
                 Text(trainer.initials).font(.system(size: size * 0.36, weight: .black)).foregroundColor(.white)
             }
             .frame(width: size, height: size)
