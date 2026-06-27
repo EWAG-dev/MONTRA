@@ -52,6 +52,7 @@
 		BCEF887FD807991C87F9152C /* TrainerAgreementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CB2F152A8928645AD9B22D9 /* TrainerAgreementView.swift */; };
 		BF2754ED2D13670673DC9566 /* ImpactAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DA5B8918DC55DFAB40F8F0F /* ImpactAPI.swift */; };
 		C02DB6CAC6197D6E2F438BAD /* MessagesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CE961CD047FDE66F2DF35D4 /* MessagesView.swift */; };
+		C04724021DC24758771D90EC /* SessionPreviewCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A181511D8758965229F87EF /* SessionPreviewCard.swift */; };
 		C171B7607A773B25DEDD8247 /* TrainerProgramsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 816B0C9B88470822F0525D2C /* TrainerProgramsView.swift */; };
 		C293968526165884FC106CDA /* StripePaymentSheet in Frameworks */ = {isa = PBXBuildFile; productRef = E4DD94AEEAA8C8CC006D9076 /* StripePaymentSheet */; };
 		C6832998D3807229704A9C5C /* DEPLOY_AND_TEST_TODAY.md in Resources */ = {isa = PBXBuildFile; fileRef = DE75BD7B6699467727C56640 /* DEPLOY_AND_TEST_TODAY.md */; };
@@ -121,6 +122,7 @@
 		58248E8AFB62D6F27B3C82F4 /* ProfileMenuSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileMenuSheet.swift; sourceTree = "<group>"; };
 		587C8EBCC394ED69881B9150 /* 52031137c05df355704b6743fb39139eebb32b */ = {isa = PBXFileReference; path = 52031137c05df355704b6743fb39139eebb32b; sourceTree = "<group>"; };
 		5997E6F0D46AE53D585DB2A1 /* AssignedProgramCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssignedProgramCard.swift; sourceTree = "<group>"; };
+		5A181511D8758965229F87EF /* SessionPreviewCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionPreviewCard.swift; sourceTree = "<group>"; };
 		5B31506E8787BE0CC7638830 /* 88a6a7b04f6983c3ebae06ddfb8cc546b6eb93 */ = {isa = PBXFileReference; path = 88a6a7b04f6983c3ebae06ddfb8cc546b6eb93; sourceTree = "<group>"; };
 		5CC67B1970619EB52F6B6AA0 /* ChatModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatModels.swift; sourceTree = "<group>"; };
 		6117A5980096AA4713DE4C8F /* 7d4422692186afd9560dd1ba734eb31080c115 */ = {isa = PBXFileReference; path = 7d4422692186afd9560dd1ba734eb31080c115; sourceTree = "<group>"; };
@@ -884,6 +886,7 @@
 				22FC335F43503AFBD39D9B67 /* ProgressView.swift */,
 				4C64F7A5CE5A64B30BF464B3 /* PushNotificationManager.swift */,
 				4EEE315C5993F668C5E4C689 /* SessionDetailView.swift */,
+				5A181511D8758965229F87EF /* SessionPreviewCard.swift */,
 				9D5593F7A430E689CBF764A2 /* SessionsView.swift */,
 				5742AE69821EC195A7939EDF /* SharedComponents.swift */,
 				67A4AFFCD3600FC75FB826A8 /* Theme.swift */,
@@ -1061,6 +1064,20 @@
 				C6832998D3807229704A9C5C /* DEPLOY_AND_TEST_TODAY.md in Resources */,
 				0B5B368675D96420F05FF3D1 /* GoogleService-Info.plist in Resources */,
 				C9EEAE61062BDAF481CC63C9 /* MONTRA_AND_WEBSITE_ARCHITECTURE_GUIDE.md in Resources */,
+				57F0FEAD5B53D80C84619BA4 /* applypatch-msg.sample in Resources */,
+				65C287B71B95833E31482196 /* commit-msg.sample in Resources */,
+				31876AD7E2E86DB0552AC5E1 /* fsmonitor-watchman.sample in Resources */,
+				903F65662D29CEB1671363A4 /* post-update.sample in Resources */,
+				55E476AFE9AFB57DCE388A99 /* pre-applypatch.sample in Resources */,
+				02602240CE260C0294DCAD66 /* pre-commit.sample in Resources */,
+				333F49C677BDC09E783F4AB1 /* pre-merge-commit.sample in Resources */,
+				6448CD38C3D6DEA656B130A2 /* pre-push.sample in Resources */,
+				0C56F5120935726FF202898A /* pre-rebase.sample in Resources */,
+				37B33B941F7EC823743A7A21 /* pre-receive.sample in Resources */,
+				2C1B5C694A69FF81D572F4E3 /* prepare-commit-msg.sample in Resources */,
+				010AE14551C427E810ABDFAC /* push-to-checkout.sample in Resources */,
+				DF9B4E6EB22956E2AF54909C /* sendemail-validate.sample in Resources */,
+				174A32808C6C69C23A3E8F6F /* update.sample in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1100,6 +1117,7 @@
 				A454CD533725A1DCDF1B5452 /* ProgressView.swift in Sources */,
 				E239D9139198325DF1471065 /* PushNotificationManager.swift in Sources */,
 				FA9B9432855047FE5B58306F /* SessionDetailView.swift in Sources */,
+				C04724021DC24758771D90EC /* SessionPreviewCard.swift in Sources */,
 				270A8621D6698C7795B1DB6D /* SessionsView.swift in Sources */,
 				3E8C0FBDBE7966A671DB7309 /* SharedComponents.swift in Sources */,
 				ED0F611749CCC6B20EFEBBEC /* Theme.swift in Sources */,

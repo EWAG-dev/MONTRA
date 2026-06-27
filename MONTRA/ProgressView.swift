@@ -58,6 +58,9 @@ struct WorkoutProgressView: View {
     // Programs assigned to this client by their trainer (immutable snapshots).
     @State private var assignedPrograms: [AssignedProgram] = []
 
+    // Coach-prepared session preview for the next upcoming session.
+    @State private var sessionPreview: SessionPreview?
+
     private var trainerProgress: TrainerProgressSnapshot {
         let now = Date()
         let records: [TrainerSessionRecord] = bookedSessions.compactMap { session in
@@ -594,7 +597,14 @@ struct WorkoutProgressView: View {
             await loadProgress()
             await loadSessions()
             await loadAssignedPrograms()
+            await loadSessionPreview()
         }
+    }
+
+    private func loadSessionPreview() async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false) else { return }
+        sessionPreview = try? await SessionPreviewAPI.fetch(token: tokenResult.token)
     }
 
     private func loadAssignedPrograms() async {
@@ -948,6 +958,25 @@ struct WorkoutProgressView: View {
             }
             .padding(18)
             .montraCard(radius: 16)
+
+            if let preview = sessionPreview {
+                SessionPreviewCard(
+                    preview: preview,
+                    onMessageCoach: { /* switch to CoachChat tab */ },
+                    onViewFullPlan: { selectedTab = 1 },
+                    onRespond: { response in
+                        Task {
+                            guard let user = auth.user,
+                                  let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false) else { return }
+                            try? await SessionPreviewAPI.respond(
+                                sessionId: preview.sessionId,
+                                response: response,
+                                token: tokenResult.token
+                            )
+                        }
+                    }
+                )
+            }
 
             VStack(alignment: .leading, spacing: 12) {
                 Text("PREVIOUS WORKOUTS")

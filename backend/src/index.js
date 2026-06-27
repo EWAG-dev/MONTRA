@@ -1002,6 +1002,73 @@ app.post("/api/trainers/sessions/:id/complete", requireFirebaseAuth, async (req,
   res.status(200).json({ session });
 });
 
+// Trainer pushes a session preview to the client before the session
+app.post("/api/trainers/sessions/:id/preview", requireFirebaseAuth, async (req, res) => {
+  const trainer = await getTrainerByAccountUid(req.user.uid);
+  const existing = await getBookedSession(req.params.id);
+  if (!existing) { res.status(404).json({ error: "Session not found" }); return; }
+  if (!trainer || existing.trainerId !== trainer.id) { res.status(403).json({ error: "Not your session" }); return; }
+
+  const { title, durationMin, equipment, focusAreas, notes } = req.body;
+  if (!title) { res.status(400).json({ error: "title is required" }); return; }
+
+  const preview = {
+    title,
+    durationMin: Number(durationMin) || 60,
+    equipment: Array.isArray(equipment) ? equipment : [],
+    focusAreas: Array.isArray(focusAreas) ? focusAreas : [],
+    notes: notes || null,
+    trainerName: trainer.name,
+    trainerId: trainer.id,
+    preparedAt: new Date().toISOString(),
+    clientResponse: null,
+  };
+
+  const db = getFirestore();
+  await db.collection("bookedSessions").doc(req.params.id).update({ preview });
+
+  sendPushToUid(existing.clientUid, {
+    title: "Your coach prepared your session 🏋️",
+    body: `${trainer.name} has your ${title} session ready. Tap to review.`,
+    data: { category: "session_preview", sessionId: req.params.id },
+  }).catch(() => {});
+
+  res.status(200).json({ preview });
+});
+
+// Client acknowledges or requests changes to a session preview
+app.post("/api/client/sessions/:id/preview/respond", requireFirebaseAuth, async (req, res) => {
+  const { response } = req.body; // "approved" | "customize"
+  if (!["approved", "customize"].includes(response)) { res.status(400).json({ error: "response must be approved or customize" }); return; }
+  const existing = await getBookedSession(req.params.id);
+  if (!existing) { res.status(404).json({ error: "Session not found" }); return; }
+  if (existing.clientUid !== req.user.uid) { res.status(403).json({ error: "Not your session" }); return; }
+  if (!existing.preview) { res.status(409).json({ error: "No preview to respond to" }); return; }
+
+  const db = getFirestore();
+  await db.collection("bookedSessions").doc(req.params.id).update({ "preview.clientResponse": response });
+  res.status(200).json({ ok: true });
+});
+
+// Client fetches their latest upcoming session that has a coach-prepared preview
+app.get("/api/client/session-preview", requireFirebaseAuth, async (req, res) => {
+  const db = getFirestore();
+  const now = new Date().toISOString();
+  const snap = await db.collection("bookedSessions")
+    .where("clientUid", "==", req.user.uid)
+    .where("status", "==", "confirmed")
+    .orderBy("startTime", "asc")
+    .get();
+
+  const withPreview = snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .filter(s => s.startTime > now && s.preview);
+
+  if (!withPreview.length) { res.status(200).json({ preview: null }); return; }
+  const session = withPreview[0];
+  res.status(200).json({ preview: { ...session.preview, sessionId: session.id, startTime: session.startTime } });
+});
+
 app.post("/api/trainers/matches/:requestId/accept", requireFirebaseAuth, async (req, res) => {
   const trainer = await getTrainerByAccountUid(req.user.uid);
   if (!trainer) {
