@@ -30,8 +30,8 @@ struct SessionPreview: Decodable, Equatable {
 
 enum SessionPreviewAPI {
     static func fetch(token: String) async throws -> SessionPreview? {
-        let base = LiveDataConnectivity.backendBaseURL
-        var req = URLRequest(url: URL(string: "\(base)/api/client/session-preview")!)
+        guard let url = MontraAPIConfig.url(for: "/api/client/session-preview") else { return nil }
+        var req = URLRequest(url: url)
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         let (data, _) = try await URLSession.shared.data(for: req)
         let resp = try JSONDecoder().decode([String: SessionPreview?].self, from: data)
@@ -39,8 +39,8 @@ enum SessionPreviewAPI {
     }
 
     static func respond(sessionId: String, response: String, token: String) async throws {
-        let base = LiveDataConnectivity.backendBaseURL
-        var req = URLRequest(url: URL(string: "\(base)/api/client/sessions/\(sessionId)/preview/respond")!)
+        guard let url = MontraAPIConfig.url(for: "/api/client/sessions/\(sessionId)/preview/respond") else { return }
+        var req = URLRequest(url: url)
         req.httpMethod = "POST"
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
