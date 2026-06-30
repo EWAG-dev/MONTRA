@@ -21,6 +21,7 @@ struct ProfileMenuSheet: View {
     @State private var showDeleteConfirm     = false
     @State private var deleteError: String?  = nil
     @State private var showTrainerOrientation = false
+    @State private var showMyPlan            = false
     @State private var comingSoonFeature: String? = nil
 
     private var displayName: String {
@@ -117,12 +118,12 @@ struct ProfileMenuSheet: View {
                             }
                             .buttonStyle(.plain)
                             rowDivider
-                            Button { comingSoonFeature = "Payment Methods" } label: {
-                                ProfileRow(icon: "creditcard.fill", label: "Payment Methods")
-                            }
-                            .buttonStyle(.plain)
-                            rowDivider
                             if isClient {
+                                Button { showMyPlan = true } label: {
+                                    ProfileRow(icon: "creditcard.fill", label: "My Plan & Billing")
+                                }
+                                .buttonStyle(.plain)
+                                rowDivider
                                 Button { comingSoonFeature = "Addresses" } label: {
                                     ProfileRow(icon: "location.fill", label: "Addresses")
                                 }
@@ -225,6 +226,7 @@ struct ProfileMenuSheet: View {
         .sheet(isPresented: $showNotificationPrefs) { NotificationPrefsSheet() }
         .sheet(isPresented: $showAppearanceSheet)   { AppearanceSettingsSheet() }
         .sheet(isPresented: $showTrainerOrientation) { TrainerOrientationView(isReplay: true) }
+        .sheet(isPresented: $showMyPlan)            { SubscriptionManagementView().environmentObject(auth) }
         .sheet(isPresented: $showGiftShareSheet) {
             ShareSheet(activityItems: [
                 "I gifted you a MONTRA personal training session. Redeem here: https://elitehomefitness.com"

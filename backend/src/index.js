@@ -1054,15 +1054,15 @@ app.post("/api/client/sessions/:id/preview/respond", requireFirebaseAuth, async 
 app.get("/api/client/session-preview", requireFirebaseAuth, async (req, res) => {
   const db = getFirestore();
   const now = new Date().toISOString();
+  // Single-field filter only — sort in JS to avoid needing a composite index
   const snap = await db.collection("bookedSessions")
     .where("clientUid", "==", req.user.uid)
-    .where("status", "==", "confirmed")
-    .orderBy("startTime", "asc")
     .get();
 
   const withPreview = snap.docs
     .map(d => ({ id: d.id, ...d.data() }))
-    .filter(s => s.startTime > now && s.preview);
+    .filter(s => s.status === "confirmed" && s.startTime > now && s.preview)
+    .sort((a, b) => a.startTime.localeCompare(b.startTime));
 
   if (!withPreview.length) { res.status(200).json({ preview: null }); return; }
   const session = withPreview[0];
@@ -2273,12 +2273,15 @@ app.post("/api/payments/program", async (req, res) => {
 // List active subscriptions for the authenticated client
 app.get("/api/client/subscriptions", requireFirebaseAuth, async (req, res) => {
   const db = getFirestore();
+  // Single-field filter only — filter + sort in JS to avoid a composite index
   const snap = await db.collection("subscriptions")
     .where("clientUid", "==", req.user.uid)
-    .where("status", "in", ["pending", "active", "past_due"])
-    .orderBy("createdAt", "desc")
     .get();
-  res.json({ subscriptions: snap.docs.map((d) => ({ id: d.id, ...d.data() })) });
+  const active = snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .filter((s) => ["pending", "active", "past_due"].includes(s.status))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  res.json({ subscriptions: active });
 });
 
 // Cancel a subscription at end of current billing period
