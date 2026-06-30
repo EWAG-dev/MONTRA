@@ -512,21 +512,28 @@ struct ProgramCheckoutView: View {
                 return
             }
 
-            // Create PaymentIntent
+            // Create Subscription (returns clientSecret from first invoice PaymentIntent)
             guard let piURL = MontraAPIConfig.url(for: "/api/payments/program") else { throw URLError(.badURL) }
             var req = URLRequest(url: piURL)
             req.httpMethod = "POST"
             req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            // Attach auth token so the subscription is linked to this client's uid
+            if let tokenResult = try? await auth.user?.getIDTokenResult(forcingRefresh: false) {
+                req.setValue("Bearer \(tokenResult.token)", forHTTPHeaderField: "Authorization")
+            }
             req.httpBody = try JSONSerialization.data(withJSONObject: [
                 "trainerId": trainer.id,
                 "months": commitment.months,
-                "freqPerWeek": freq
+                "freqPerWeek": freq,
+                "customerEmail": auth.user?.email ?? "",
+                "customerName": auth.user?.displayName ?? "",
             ])
             let (piData, _) = try await URLSession.shared.data(for: req)
-            struct PIResponse: Decodable { let clientSecret: String }
+            struct PIResponse: Decodable { let clientSecret: String; let subscriptionId: String? }
             let pi = try JSONDecoder().decode(PIResponse.self, from: piData)
 
-            // Configure Stripe
+            // Configure Stripe — PaymentSheet works identically whether the
+            // clientSecret is from a standalone PaymentIntent or a subscription invoice.
             STPAPIClient.shared.publishableKey = pk
             var config = PaymentSheet.Configuration()
             config.merchantDisplayName = "Elite Home Fitness / MONTRA"

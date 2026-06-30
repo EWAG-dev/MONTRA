@@ -71,7 +71,7 @@ import { getTrainerInsights } from "./insightStore.js";
 import { getTrainerPackages } from "./packageStore.js";
 import { computeMatch, normalizePrefs } from "./matchScore.js";
 import { createLead, listLeads, updateLeadStatus, deleteLeadsForPhone } from "./leadStore.js";
-import { createIntroSessionIntent, createProgramIntent, constructWebhookEvent, getPublishableKey } from "./stripeStore.js";
+import { createIntroSessionIntent, createProgramSubscription, cancelSubscription, constructWebhookEvent, getPublishableKey } from "./stripeStore.js";
 
 // Safety net: Express 4 doesn't forward errors from async route handlers, so a
 // single rejecting request would otherwise become an unhandled rejection and crash
@@ -2082,24 +2082,83 @@ app.post(
       res.status(400).send(`Webhook Error: ${err.message}`);
       return;
     }
-    // Handle confirmed payments — record in Firestore as needed
+    const db = getFirestore();
+
+    // One-time intro session confirmed
     if (event.type === "payment_intent.succeeded") {
       const pi = event.data.object;
-      const { type, trainerId, trainerName, programTitle, months, freqPerWeek, freeIntro } = pi.metadata;
-      const db = getFirestore();
-      const record = {
-        stripePaymentIntentId: pi.id,
-        amountCents: pi.amount,
-        currency: pi.currency,
-        status: "paid",
-        paidAt: new Date().toISOString(),
-        trainerId, trainerName, type,
-      };
-      if (type === "program_purchase") {
-        Object.assign(record, { programTitle, months: Number(months), freqPerWeek: Number(freqPerWeek), freeIntro: freeIntro === "true" });
+      const { type, trainerId, trainerName } = pi.metadata;
+      if (type === "intro_session") {
+        db.collection("payments").add({
+          stripePaymentIntentId: pi.id,
+          amountCents: pi.amount,
+          currency: pi.currency,
+          type: "intro_session",
+          status: "paid",
+          paidAt: new Date().toISOString(),
+          trainerId, trainerName,
+        }).catch((e) => console.error("payment record:", e.message));
       }
-      db.collection("payments").add(record).catch((e) => console.error("payment record:", e.message));
     }
+
+    // Subscription invoice paid — first payment or monthly renewal
+    if (event.type === "invoice.paid") {
+      const invoice = event.data.object;
+      const subId = invoice.subscription;
+      if (!subId) { res.json({ received: true }); return; }
+
+      // Find our Firestore subscription record and mark active
+      const subSnap = await db.collection("subscriptions")
+        .where("stripeSubscriptionId", "==", subId).limit(1).get();
+
+      const now = new Date().toISOString();
+      const periodEnd = invoice.lines?.data?.[0]?.period?.end
+        ? new Date(invoice.lines.data[0].period.end * 1000).toISOString()
+        : null;
+
+      if (!subSnap.empty) {
+        subSnap.docs[0].ref.update({ status: "active", currentPeriodEnd: periodEnd, lastPaidAt: now })
+          .catch((e) => console.error("sub update:", e.message));
+      }
+
+      // Record each invoice payment
+      db.collection("payments").add({
+        stripeInvoiceId: invoice.id,
+        stripeSubscriptionId: subId,
+        amountCents: invoice.amount_paid,
+        currency: invoice.currency,
+        type: "program_subscription_payment",
+        status: "paid",
+        paidAt: now,
+        periodEnd,
+      }).catch((e) => console.error("invoice payment record:", e.message));
+    }
+
+    // Subscription invoice payment failed — mark past_due
+    if (event.type === "invoice.payment_failed") {
+      const invoice = event.data.object;
+      const subId = invoice.subscription;
+      if (subId) {
+        const subSnap = await db.collection("subscriptions")
+          .where("stripeSubscriptionId", "==", subId).limit(1).get();
+        if (!subSnap.empty) {
+          subSnap.docs[0].ref.update({ status: "past_due" })
+            .catch((e) => console.error("sub past_due:", e.message));
+        }
+      }
+    }
+
+    // Subscription deleted (cancelled or lapsed after failed payments)
+    if (event.type === "customer.subscription.deleted") {
+      const sub = event.data.object;
+      const subSnap = await db.collection("subscriptions")
+        .where("stripeSubscriptionId", "==", sub.id).limit(1).get();
+      if (!subSnap.empty) {
+        subSnap.docs[0].ref.update({ status: "cancelled", cancelledAt: new Date().toISOString() })
+          .catch((e) => console.error("sub cancelled:", e.message));
+      }
+    }
+
     res.json({ received: true });
   }
 );
@@ -2138,20 +2197,36 @@ app.post("/api/payments/intro-session", async (req, res) => {
   }
 });
 
-// Create a PaymentIntent for a full program purchase (intro session included free)
+// Create a recurring Stripe Subscription for a coaching program purchase.
+// The returned clientSecret is from the subscription's first invoice PaymentIntent
+// and works identically with Stripe PaymentSheet / Payment Element on iOS + web.
 app.post("/api/payments/program", async (req, res) => {
   try {
-    const { trainerId, months, freqPerWeek, customerEmail } = req.body;
+    const { trainerId, months, freqPerWeek, customerEmail, customerName } = req.body;
     if (!trainerId || !months) { res.status(400).json({ error: "trainerId + months required" }); return; }
+    if (!customerEmail) { res.status(400).json({ error: "customerEmail required for subscriptions" }); return; }
+
     const pkg = await getTrainerPackages(trainerId);
     if (!pkg) { res.status(404).json({ error: "Trainer not found" }); return; }
     const commitment = (pkg.commitments || []).find((c) => c.months === Number(months));
     if (!commitment) { res.status(400).json({ error: "Invalid program tier" }); return; }
+
     const freq = Number(freqPerWeek) || commitment.defaultFreq;
     const monthly = commitment.monthlyFrom + Math.max(0, freq - 1) * commitment.freqStep;
     const amountCents = Math.round(monthly * 100);
     const t = await (await import("./trainerStore.js")).getTrainer(trainerId);
-    const result = await createProgramIntent({
+
+    // Try to get the authenticated client's uid (optional — web may be unauthenticated)
+    let clientUid = null;
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith("Bearer ")) {
+      try {
+        const decoded = await getAuth().verifyIdToken(authHeader.slice(7));
+        clientUid = decoded.uid;
+      } catch { /* unauthenticated web client — ok */ }
+    }
+
+    const result = await createProgramSubscription({
       trainerId,
       trainerName: t?.name || "",
       programTitle: commitment.title,
@@ -2160,12 +2235,67 @@ app.post("/api/payments/program", async (req, res) => {
       amountCents,
       freeIntro: true,
       customerEmail,
+      customerName: customerName || "",
     });
-    res.json({ ...result, monthly, programTitle: commitment.title, freeIntro: true, introSessionPrice: pkg.introSession?.price });
+
+    // Create Firestore subscription record (status=pending until invoice.paid fires)
+    const db = getFirestore();
+    await db.collection("subscriptions").add({
+      stripeSubscriptionId: result.subscriptionId,
+      stripeCustomerId: result.customerId,
+      clientUid,
+      customerEmail,
+      trainerId,
+      trainerName: t?.name || "",
+      programTitle: commitment.title,
+      months: Number(months),
+      freqPerWeek: freq,
+      monthlyAmountCents: amountCents,
+      freeIntro: true,
+      status: "pending",
+      createdAt: new Date().toISOString(),
+      currentPeriodEnd: null,
+    });
+
+    res.json({
+      ...result,
+      monthly,
+      programTitle: commitment.title,
+      freeIntro: true,
+      introSessionPrice: pkg.introSession?.price,
+    });
   } catch (err) {
-    console.error("program intent:", err.message);
+    console.error("program subscription:", err.message);
     res.status(500).json({ error: err.message });
   }
+});
+
+// List active subscriptions for the authenticated client
+app.get("/api/client/subscriptions", requireFirebaseAuth, async (req, res) => {
+  const db = getFirestore();
+  const snap = await db.collection("subscriptions")
+    .where("clientUid", "==", req.user.uid)
+    .where("status", "in", ["pending", "active", "past_due"])
+    .orderBy("createdAt", "desc")
+    .get();
+  res.json({ subscriptions: snap.docs.map((d) => ({ id: d.id, ...d.data() })) });
+});
+
+// Cancel a subscription at end of current billing period
+app.delete("/api/client/subscriptions/:subscriptionId", requireFirebaseAuth, async (req, res) => {
+  const db = getFirestore();
+  const snap = await db.collection("subscriptions")
+    .where("stripeSubscriptionId", "==", req.params.subscriptionId)
+    .where("clientUid", "==", req.user.uid)
+    .limit(1).get();
+
+  if (snap.empty) { res.status(404).json({ error: "Subscription not found or not yours" }); return; }
+  const sub = snap.docs[0].data();
+  if (sub.status === "cancelled") { res.status(409).json({ error: "Already cancelled" }); return; }
+
+  await cancelSubscription(req.params.subscriptionId);
+  await snap.docs[0].ref.update({ cancelAtPeriodEnd: true });
+  res.json({ ok: true, message: "Subscription will cancel at end of current billing period" });
 });
 
 // ─── SESSION BOOKING ──────────────────────────────────────────────────────────
