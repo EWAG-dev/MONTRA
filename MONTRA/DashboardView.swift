@@ -323,7 +323,7 @@ struct DashboardView: View {
         }
         .background(Color.montraBackground)
         .sheet(isPresented: $showIntroBooking) {
-            IntroBookingView()
+            IntroBookingView(preselectedTrainer: nil)
         }
         .sheet(isPresented: $showCoachTracking) {
             if let next = nextSession, let eta = coachETA {
