@@ -24,6 +24,8 @@ struct Achievement: Identifiable {
 // MARK: - Main View
 
 struct WorkoutProgressView: View {
+    var onOpenCoachChat: (() -> Void)? = nil
+
     private struct MealDayPlan: Identifiable {
         let id: String
         let breakfast: String
@@ -962,7 +964,7 @@ struct WorkoutProgressView: View {
             if let preview = sessionPreview {
                 SessionPreviewCard(
                     preview: preview,
-                    onMessageCoach: { /* switch to CoachChat tab */ },
+                    onMessageCoach: { onOpenCoachChat?() },
                     onViewFullPlan: { selectedTab = 1 },
                     onRespond: { response in
                         Task {

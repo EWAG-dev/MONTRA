@@ -23,7 +23,7 @@ struct ContentView: View {
                     SessionsView(onOpenCoachChat: { selectedTab = .messages })
                         .tag(Tab.sessions)
 
-                    WorkoutProgressView()
+                    WorkoutProgressView(onOpenCoachChat: { selectedTab = .messages })
                         .tag(Tab.progress)
 
                     CoachChatSheet()
