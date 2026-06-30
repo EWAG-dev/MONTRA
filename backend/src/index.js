@@ -508,6 +508,16 @@ app.post("/api/trainers/apply", requireFirebaseAuth, async (req, res) => {
   }
 });
 
+// DEV ONLY — one-shot email patch; remove after use
+app.post("/api/dev/patch-trainer-email", async (req, res) => {
+  if (!process.env.ALLOW_DEV_ENDPOINTS) return res.status(404).json({ error: "Not found" });
+  const { trainerId, email } = req.body;
+  if (!trainerId || !email) return res.status(400).json({ error: "trainerId + email required" });
+  const trainer = await updateTrainer(trainerId, { email });
+  if (!trainer) return res.status(404).json({ error: "Trainer not found" });
+  res.json({ ok: true, trainerId, email: trainer.email });
+});
+
 // DEV ONLY — remove after testing
 app.post("/api/dev/create-test-trainer", async (req, res) => {
   if (!process.env.ALLOW_DEV_ENDPOINTS) {
