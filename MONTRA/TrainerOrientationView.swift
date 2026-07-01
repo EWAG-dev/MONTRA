@@ -3,7 +3,6 @@ import SwiftUI
 struct TrainerOrientationView: View {
     var isReplay: Bool = false
     @EnvironmentObject private var auth: AuthManager
-    @AppStorage("trainer.orientationCompleted") private var orientationCompleted = false
     @Environment(\.dismiss) private var dismiss
     @State private var watched: Set<Int> = []
 
@@ -179,10 +178,10 @@ struct TrainerOrientationView: View {
     }
 
     private func markOrientationCompleted() {
-        orientationCompleted = true
-        guard let uid = auth.user?.uid else { return }
-        UserDefaults.standard.set(true, forKey: "trainer.orientationCompleted.\(uid)")
-        UserDefaults.standard.removeObject(forKey: "trainer.orientationWatched.\(uid)")
+        auth.markOrientationCompleted()
+        if let uid = auth.user?.uid {
+            UserDefaults.standard.removeObject(forKey: "trainer.orientationWatched.\(uid)")
+        }
     }
 
     private func loadWatchedState() {

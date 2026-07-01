@@ -10,6 +10,12 @@ final class AuthManager: ObservableObject {
      @Published private(set) var userRole: UserRole = .unknown
      @Published private(set) var isCheckingAuth = true   // true only on cold start
 
+     // Trainer-only gate flags. Populated during refreshRole so they are always
+     // authoritative by the time the splash exits. RootView reads these directly
+     // instead of relying on local UserDefaults (which don't survive reinstalls).
+     @Published private(set) var trainerAgreementSigned = false
+     @Published private(set) var trainerOrientationCompleted = false
+
      enum UserRole {
          case unknown
          case user
@@ -28,6 +34,8 @@ final class AuthManager: ObservableObject {
                      await self.refreshRole(for: firebaseUser)
                   } else {
                      self.userRole = .unknown
+                     self.trainerAgreementSigned = false
+                     self.trainerOrientationCompleted = false
                      self.isCheckingAuth = false
                   }
               }
@@ -47,10 +55,70 @@ final class AuthManager: ObservableObject {
             let result = try await user.getIDTokenResult(forcingRefresh: false)
             let role = result.claims["role"] as? String
             userRole = role == "trainer" ? .trainer : .user
+
+            if userRole == .trainer {
+                // Sync gate flags from the backend BEFORE isCheckingAuth goes false.
+                // This guarantees the splash never exits until we know whether to show
+                // the agreement / orientation screens.
+                await syncTrainerGates(user: user, token: result.token)
+            }
         } catch {
             userRole = .user
         }
         isCheckingAuth = false
+    }
+
+    // Fetches the trainer profile and updates gate flags. Failures are silent
+    // (flags stay false → gates show, which is the safe fallback).
+    private func syncTrainerGates(user: FirebaseAuth.User, token: String) async {
+        guard let url = MontraAPIConfig.url(for: "/api/trainers/my-profile") else { return }
+        var req = URLRequest(url: url)
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        struct Response: Decodable {
+            struct Trainer: Decodable {
+                let agreementSigned: Bool?
+                let orientationCompleted: Bool?
+            }
+            let trainer: Trainer
+        }
+
+        guard let (data, resp) = try? await URLSession.shared.data(for: req),
+              let http = resp as? HTTPURLResponse, (200...299).contains(http.statusCode),
+              let payload = try? JSONDecoder().decode(Response.self, from: data) else { return }
+
+        trainerAgreementSigned = payload.trainer.agreementSigned == true
+        trainerOrientationCompleted = payload.trainer.orientationCompleted == true
+
+        // Mirror to UserDefaults so TrainerAgreementView / TrainerOrientationView
+        // can read the values via their existing @AppStorage bindings.
+        let uid = user.uid
+        if trainerAgreementSigned {
+            UserDefaults.standard.set(true, forKey: "trainer.agreementSigned")
+            UserDefaults.standard.set(true, forKey: "trainer.agreementSigned.\(uid)")
+        }
+        if trainerOrientationCompleted {
+            UserDefaults.standard.set(true, forKey: "trainer.orientationCompleted")
+            UserDefaults.standard.set(true, forKey: "trainer.orientationCompleted.\(uid)")
+        }
+    }
+
+    // Called by TrainerAgreementView after the trainer accepts.
+    func markAgreementSigned() {
+        trainerAgreementSigned = true
+        if let uid = user?.uid {
+            UserDefaults.standard.set(true, forKey: "trainer.agreementSigned")
+            UserDefaults.standard.set(true, forKey: "trainer.agreementSigned.\(uid)")
+        }
+    }
+
+    // Called by TrainerOrientationView after the trainer finishes all videos.
+    func markOrientationCompleted() {
+        trainerOrientationCompleted = true
+        if let uid = user?.uid {
+            UserDefaults.standard.set(true, forKey: "trainer.orientationCompleted")
+            UserDefaults.standard.set(true, forKey: "trainer.orientationCompleted.\(uid)")
+        }
     }
 
     // MARK: - Auth Actions
