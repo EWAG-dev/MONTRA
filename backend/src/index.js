@@ -13,6 +13,7 @@ import {
   getTrainerBySlug,
   listTrainers,
   markOrientationCompleted,
+  markAgreementSigned,
   matchTrainers,
   rejectTrainer,
   upsertTrainerForAccount,
@@ -767,11 +768,13 @@ app.get("/api/trainers/my-profile", requireFirebaseAuth, async (req, res) => {
 
 app.post("/api/trainers/my-profile/orientation-complete", requireFirebaseAuth, async (req, res) => {
   const trainer = await markOrientationCompleted(req.user.uid);
-  if (!trainer) {
-    res.status(404).json({ error: "Trainer profile not found" });
-    return;
-  }
+  if (!trainer) { res.status(404).json({ error: "Trainer profile not found" }); return; }
+  res.status(200).json({ trainer });
+});
 
+app.post("/api/trainers/my-profile/agreement-signed", requireFirebaseAuth, async (req, res) => {
+  const trainer = await markAgreementSigned(req.user.uid);
+  if (!trainer) { res.status(404).json({ error: "Trainer profile not found" }); return; }
   res.status(200).json({ trainer });
 });
 

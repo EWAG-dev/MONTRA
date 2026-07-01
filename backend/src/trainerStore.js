@@ -180,6 +180,8 @@ function serializeTrainer(doc) {
     references: Array.isArray(data.references) ? data.references : [],
     orientationCompleted: data.orientationCompleted === true,
     orientationCompletedAt: data.orientationCompletedAt || null,
+    agreementSigned: data.agreementSigned === true,
+    agreementSignedAt: data.agreementSignedAt || null,
     slug: trainerSlug(data.name, data.locations),
     createdAt: data.createdAt || null,
     updatedAt: data.updatedAt || null,
@@ -568,6 +570,16 @@ export async function markOrientationCompleted(accountUid) {
     { merge: true }
   );
 
+  return getTrainer(trainer.id);
+}
+
+export async function markAgreementSigned(accountUid) {
+  const trainer = await getTrainerByAccountUid(accountUid);
+  if (!trainer) return null;
+  await trainersCollection().doc(trainer.id).set(
+    { agreementSigned: true, agreementSignedAt: new Date().toISOString() },
+    { merge: true }
+  );
   return getTrainer(trainer.id);
 }
 

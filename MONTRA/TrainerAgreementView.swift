@@ -88,6 +88,7 @@ struct TrainerAgreementView: View {
                         if let uid = auth.user?.uid {
                             UserDefaults.standard.set(true, forKey: "trainer.agreementSigned.\(uid)")
                         }
+                        Task { await saveAgreementToBackend() }
                     } label: {
                         Text(agreed ? "Accept & Continue" : hasScrolledToBottom ? "Check the box above to continue" : "Read the full agreement to continue")
                             .font(.system(size: 16, weight: .bold))
@@ -153,6 +154,17 @@ struct TrainerAgreementView: View {
         agreementSection("19. Dispute Resolution & Arbitration", body: "The parties agree to first attempt to resolve disputes informally. If unresolved, disputes shall be resolved through binding arbitration in the Commonwealth of Massachusetts. Provider waives jury trial rights, class action participation, and consolidated proceedings except where prohibited by law.")
 
         agreementSection("20–23. Governing Law, Modifications & Entire Agreement", body: "This Agreement shall be governed by the laws of the Commonwealth of Massachusetts. MONTRA reserves the right to modify this Agreement at any time. Continued use of the Platform following updates constitutes acceptance of revised terms.\n\nThis Agreement constitutes the complete agreement between the parties regarding Provider participation on the Platform.\n\nElite Home Fitness Solution LLC · 745 Atlantic Ave · Boston, Massachusetts")
+    }
+
+    // Persist agreement acceptance to the backend so it survives reinstalls/new devices.
+    private func saveAgreementToBackend() async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
+              let url = MontraAPIConfig.url(for: "/api/trainers/my-profile/agreement-signed") else { return }
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("Bearer \(tokenResult.token)", forHTTPHeaderField: "Authorization")
+        _ = try? await URLSession.shared.data(for: req)
     }
 
     private func agreementSection(_ heading: String, body: String) -> some View {
