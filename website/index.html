@@ -1130,42 +1130,56 @@
       }
 
       // No coaches modal
-      document.getElementById('no-coaches-close')?.addEventListener('click', () => {
-        document.getElementById('no-coaches-modal')?.classList.add('hidden');
-      });
-      document.getElementById('no-coaches-modal')?.addEventListener('click', (e) => {
-        if (e.target === document.getElementById('no-coaches-modal')) {
-          document.getElementById('no-coaches-modal').classList.add('hidden');
-        }
-      });
-      document.getElementById('no-coaches-waitlist-form')?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const form = e.target;
-        const email = form.querySelector('input[type="email"]').value;
-        const location = document.getElementById('no-coaches-location-input').value;
-        const btn = form.querySelector('button[type="submit"]');
-        const original = btn.textContent;
-        try {
-          btn.disabled = true;
-          btn.textContent = 'Saving...';
-          const res = await fetch('https://montra-production.up.railway.app/api/coach-waitlist', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, location }),
-          });
-          if (!res.ok) throw new Error((await res.json()).error || 'Failed');
-          btn.textContent = "✓ You're on the list!";
-          setTimeout(() => {
-            document.getElementById('no-coaches-modal').classList.add('hidden');
-            btn.textContent = original;
+      function wireNoCoachesModal() {
+        const modal = document.getElementById('no-coaches-modal');
+        const closeBtn = document.getElementById('no-coaches-close');
+        const form = document.getElementById('no-coaches-waitlist-form');
+        if (!modal || !closeBtn || !form) return;
+
+        closeBtn.addEventListener('click', () => {
+          modal.classList.add('hidden');
+        });
+
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            modal.classList.add('hidden');
+          }
+        });
+
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const email = form.querySelector('input[type="email"]').value;
+          const location = document.getElementById('no-coaches-location-input').value;
+          const btn = form.querySelector('button[type="submit"]');
+          const original = btn.textContent;
+          try {
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+            const res = await fetch('https://montra-production.up.railway.app/api/coach-waitlist', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, location }),
+            });
+            if (!res.ok) throw new Error((await res.json()).error || 'Failed');
+            btn.textContent = "✓ You're on the list!";
+            setTimeout(() => {
+              modal.classList.add('hidden');
+              btn.textContent = original;
+              btn.disabled = false;
+              form.reset();
+            }, 2000);
+          } catch (err) {
+            btn.textContent = 'Try again';
             btn.disabled = false;
-            form.reset();
-          }, 2000);
-        } catch (err) {
-          btn.textContent = 'Try again';
-          btn.disabled = false;
-        }
-      });
+          }
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', wireNoCoachesModal, { once: true });
+      } else {
+        wireNoCoachesModal();
+      }
     }
 
     function renderTrainerCard(trainer) {
