@@ -2,6 +2,14 @@ import Foundation
 import FirebaseAuth
 import FirebaseCore
 
+private func decodedImageData(from dataUrl: String?) -> Data {
+    let trimmed = (dataUrl ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmed.isEmpty else { return Data() }
+
+    let base64 = trimmed.components(separatedBy: ",").last ?? trimmed
+    return Data(base64Encoded: base64) ?? Data()
+}
+
 @MainActor
 final class AuthManager: ObservableObject {
 
@@ -79,6 +87,7 @@ final class AuthManager: ObservableObject {
             struct Trainer: Decodable {
                 let agreementSigned: Bool?
                 let orientationCompleted: Bool?
+                let photoDataUrl: String?
             }
             let trainer: Trainer
         }
@@ -89,6 +98,7 @@ final class AuthManager: ObservableObject {
 
         trainerAgreementSigned = payload.trainer.agreementSigned == true
         trainerOrientationCompleted = payload.trainer.orientationCompleted == true
+    UserDefaults.standard.set(decodedImageData(from: payload.trainer.photoDataUrl), forKey: "trainerProfileImageData")
 
         // Mirror to UserDefaults so TrainerAgreementView / TrainerOrientationView
         // can read the values via their existing @AppStorage bindings.
@@ -241,6 +251,7 @@ final class AuthManager: ObservableObject {
             "quiz.requestedTrainerName",
             "quiz.matchChecklistShown",
             "dashboardProfileImageData",
+            "trainerProfileImageData",
             "onboarding.completed",
             "notif.unreadCount"
         ]

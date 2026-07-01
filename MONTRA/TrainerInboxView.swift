@@ -8,7 +8,7 @@ struct TrainerInboxView: View {
     @State private var selectedSegment: Segment = .requests
     @State private var messageText = ""
     @State private var showTrainerMenu = false
-    @AppStorage("trainer.profileImageData") private var trainerProfileImageData: Data = Data()
+    @AppStorage("trainerProfileImageData") private var trainerProfileImageData: Data = Data()
     @State private var matchRequests: [TrainerMatchRequest] = []
     @State private var requestsLoading = false
     @State private var requestActionError: String? = nil
