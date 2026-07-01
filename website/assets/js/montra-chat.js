@@ -28,32 +28,30 @@
 
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c]));
 
-  const PERSON_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4 0-8 2-8 5v1h16v-1c0-3-4-5-8-5z"/></svg>';
-  // Maya's headshot. Lives in website/public/ so it's served verbatim at the root.
-  // Drop a licensed real photo at website/public/maya.jpg and point this at it
-  // ('/maya.jpg'); if the image fails to load we fall back to the SVG glyph.
-  const MAYA_IMG = '/maya.svg';
-  // Avatar inner content: real photo on top, glyph beneath as a graceful fallback.
-  const AV = `<img class="mtc-photo" src="${MAYA_IMG}" alt="Maya" onerror="this.remove()"/>${PERSON_SVG}`;
+  const MONTRA_BOT_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="11" fill="#0f1419" stroke="#FF6B35" stroke-width="1.5"/><path d="M9 10 Q9 8 10 8 Q11 8 11 10" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M13 10 Q13 8 14 8 Q15 8 15 10" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M9 14 Q12 16 15 14" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>';
+  const MONTRA_AI_IMG = '/montra-ai.png?v=3';
+  // Avatar inner content: MONTRA AI robot on top, fallback glyph beneath
+  const AV = `<img class="mtc-photo" src="${MONTRA_AI_IMG}" alt="MONTRA AI" onerror="this.remove()"/>${MONTRA_BOT_SVG}`;
   const GUARANTEE = 'Every client is protected by the MONTRA Match Guarantee™. If your coach isn’t the right fit, MONTRA will work with you to identify another qualified coach who better aligns with your goals, preferences, and coaching needs.';
 
   // ---- Styles (self-contained, scoped with .mtc-) ----------------------------
   const style = document.createElement('style');
   style.textContent = `
   .mtc-launch{position:fixed;right:20px;bottom:20px;z-index:99998;display:flex;align-items:center;gap:10px;background:#0b0b0c;color:#fff;border:1.5px solid #E85D04;border-radius:9999px;padding:9px 18px 9px 9px;font:600 14px/1 Inter,system-ui,sans-serif;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.35);transition:transform .15s,box-shadow .15s}
+  .mtc-launch::before{content:'';position:absolute;width:14px;height:14px;border-radius:9999px;background:#22c55e;bottom:2px;right:2px;box-shadow:0 0 6px rgba(34,197,94,.5)}
   .mtc-launch:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(232,93,4,.35)}
   .mtc-launch.hide{display:none}
-  .mtc-av{position:relative;border-radius:9999px;background:linear-gradient(135deg,#2a2a2e,#0b0b0c);border:2px solid #E85D04;color:#E85D04;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+  .mtc-av{position:relative;border-radius:9999px;background:linear-gradient(135deg,#2a2a2e,#0b0b0c);border:none;color:#E85D04;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
   .mtc-av svg{width:62%;height:62%}
   .mtc-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-  .mtc-dot{position:absolute;right:-1px;bottom:-1px;width:10px;height:10px;border-radius:9999px;background:#22c55e;border:2px solid #0b0b0c}
+  .mtc-dot{display:none}
   .mtc-panel{position:fixed;right:20px;bottom:20px;z-index:99999;width:374px;max-width:calc(100vw - 32px);height:600px;max-height:calc(100vh - 40px);background:#0b0b0c;border:1px solid #232327;border-radius:20px;display:none;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.5);font-family:Inter,system-ui,sans-serif;color:#fff}
   .mtc-panel.open{display:flex;animation:mtcIn .22s ease}
   @keyframes mtcIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
   .mtc-head{display:flex;align-items:center;gap:11px;padding:14px 16px;background:#0b0b0c;border-bottom:1px solid #1c1c20}
   .mtc-head .mtc-av{width:42px;height:42px}
   .mtc-head h4{margin:0;font-size:15px;font-weight:800;display:flex;align-items:center;gap:6px}
-  .mtc-head .sub{font-size:11px;color:#9aa0a6;margin-top:1px}
+  .mtc-head .sub{font-size:11px;color:#9aa0a6;margin-top:6px}
   .mtc-head .online{width:7px;height:7px;border-radius:9999px;background:#22c55e;display:inline-block}
   .mtc-x{margin-left:auto;background:none;border:none;color:#9aa0a6;font-size:20px;cursor:pointer;line-height:1;padding:4px}
   .mtc-x:hover{color:#fff}
@@ -69,8 +67,9 @@
   .mtc-qa-card{display:flex;gap:9px;align-items:flex-start;text-align:left;background:#141417;border:1px solid #232327;border-radius:12px;padding:10px;cursor:pointer;transition:border-color .15s,background .15s}
   .mtc-qa-card:hover{border-color:#E85D04;background:#1a1a1d}
   .mtc-qa-card .ic{font-size:16px;line-height:1}
-  .mtc-qa-card .t{font-size:12px;font-weight:800;color:#fff}
-  .mtc-qa-card .d{font-size:10.5px;color:#9aa0a6;margin-top:1px}
+  .mtc-qa-card > span:last-child{display:flex;flex-direction:column;gap:3px;flex:1}
+  .mtc-qa-card .t{font-size:12px;font-weight:800;color:#fff;margin:0}
+  .mtc-qa-card .d{font-size:10.5px;color:#9aa0a6;margin:0}
   .mtc-opts{display:flex;flex-wrap:wrap;gap:7px;margin-top:2px}
   .mtc-chip{background:#141417;border:1px solid #2f2f34;color:#e9eaeb;border-radius:9999px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s}
   .mtc-chip:hover{border-color:#E85D04;color:#fff}
@@ -111,7 +110,7 @@
   const launch = document.createElement('button');
   launch.className = 'mtc-launch';
   launch.setAttribute('aria-label', 'Chat with the MONTRA Team');
-  launch.innerHTML = `<span class="mtc-av" style="width:34px;height:34px">${AV}<span class="mtc-dot"></span></span><span class="mtc-label">Chat With The MONTRA Team</span>`;
+  launch.innerHTML = `<span class="mtc-av" style="width:48px;height:48px">${AV}<span class="mtc-dot"></span></span><span class="mtc-label">Chat With The MONTRA Team</span>`;
 
   const panel = document.createElement('div');
   panel.className = 'mtc-panel';
@@ -137,6 +136,25 @@
 
   document.body.appendChild(launch);
   document.body.appendChild(panel);
+
+  // Collapse the label after 2.5 seconds
+  const labelEl = launch.querySelector('.mtc-label');
+  if (labelEl) {
+    labelEl.style.transition = 'opacity 0.4s ease, max-width 0.4s ease, margin 0.4s ease';
+    launch.style.transition = 'transform .15s, box-shadow .15s, padding 0.4s ease, width 0.4s ease, height 0.4s ease, gap 0.4s ease';
+    setTimeout(() => {
+      labelEl.style.opacity = '0';
+      labelEl.style.maxWidth = '0';
+      labelEl.style.overflow = 'hidden';
+      labelEl.style.margin = '0';
+      launch.style.gap = '0';
+      launch.style.padding = '0';
+      launch.style.width = '72px';
+      launch.style.height = '72px';
+      launch.style.justifyContent = 'center';
+      launch.style.alignItems = 'center';
+    }, 2500);
+  }
 
   const body = panel.querySelector('#mtc-body');
   const input = panel.querySelector('#mtc-input');

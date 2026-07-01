@@ -72,6 +72,7 @@ import { getTrainerInsights } from "./insightStore.js";
 import { getTrainerPackages } from "./packageStore.js";
 import { computeMatch, normalizePrefs } from "./matchScore.js";
 import { createLead, listLeads, updateLeadStatus, deleteLeadsForPhone } from "./leadStore.js";
+import { addToWaitlist, getWaitlistForLocation, markNotified } from "./coachWaitlistStore.js";
 import { createIntroSessionIntent, createProgramSubscription, cancelSubscription, constructWebhookEvent, getPublishableKey } from "./stripeStore.js";
 
 // Safety net: Express 4 doesn't forward errors from async route handlers, so a
@@ -1499,6 +1500,16 @@ app.post("/api/admin/leads/:id/status", requireFirebaseAuth, requireAdmin, async
     res.status(200).json({ lead });
   } catch (err) {
     res.status(err.code === "invalid" ? 400 : 500).json({ error: err.message || "Could not update lead" });
+  }
+});
+
+app.post("/api/coach-waitlist", async (req, res) => {
+  try {
+    const waitlistEntry = await addToWaitlist(req.body?.email, req.body?.location);
+    res.status(201).json({ ok: true, message: "You've been added to the waitlist", email: waitlistEntry.email, location: waitlistEntry.location });
+  } catch (err) {
+    const status = err.code === "invalid" ? 400 : 500;
+    res.status(status).json({ error: err.message || "Could not add to waitlist" });
   }
 });
 

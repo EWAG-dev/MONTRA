@@ -93,11 +93,25 @@
 
       <!-- Search bar -->
       <div class="flex gap-3 flex-wrap max-w-2xl">
-        <div class="flex bg-white rounded-lg overflow-hidden flex-1 min-w-[200px]">
-          <div class="flex items-center pl-4">
-            <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+        <!-- Location Search Input -->
+        <div class="relative flex-1 min-w-[200px]">
+          <div class="flex bg-white rounded-lg overflow-hidden">
+            <div class="flex items-center pl-4">
+              <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+            </div>
+            <input type="text" id="location-search" placeholder="Search location..." class="flex-1 px-3 py-3 text-gray-800 text-sm outline-none" autocomplete="off"/>
           </div>
-          <input type="text" placeholder="Boston, MA" class="flex-1 px-3 py-3 text-gray-800 text-sm outline-none"/>
+          <!-- Location suggestions dropdown -->
+          <div id="location-suggestions" class="absolute top-full left-0 right-0 bg-white rounded-lg shadow-lg mt-2 max-h-48 overflow-y-auto z-10 hidden">
+            <div class="p-3 space-y-2">
+              <button class="location-suggestion w-full text-left px-3 py-2 hover:bg-gray-50 rounded text-sm text-gray-700" data-location="Boston, MA">Boston, MA</button>
+              <button class="location-suggestion w-full text-left px-3 py-2 hover:bg-gray-50 rounded text-sm text-gray-700" data-location="New York, NY">New York, NY</button>
+              <button class="location-suggestion w-full text-left px-3 py-2 hover:bg-gray-50 rounded text-sm text-gray-700" data-location="Los Angeles, CA">Los Angeles, CA</button>
+              <button class="location-suggestion w-full text-left px-3 py-2 hover:bg-gray-50 rounded text-sm text-gray-700" data-location="Chicago, IL">Chicago, IL</button>
+              <button class="location-suggestion w-full text-left px-3 py-2 hover:bg-gray-50 rounded text-sm text-gray-700" data-location="Houston, TX">Houston, TX</button>
+              <button class="location-suggestion w-full text-left px-3 py-2 hover:bg-gray-50 rounded text-sm text-gray-700" data-location="Miami, FL">Miami, FL</button>
+            </div>
+          </div>
         </div>
         <select class="bg-white text-gray-700 text-sm rounded-lg px-4 py-3 outline-none border-0 min-w-[160px]">
           <option>All Services</option>
@@ -108,7 +122,7 @@
           <option>Strength & Conditioning</option>
           <option>Nutrition Coaching</option>
         </select>
-        <button class="bg-brand hover:bg-orange-700 text-white px-6 py-3 rounded-lg text-sm font-bold transition-colors">Search Coaches</button>
+        <button id="search-button" class="bg-brand hover:bg-orange-700 text-white px-6 py-3 rounded-lg text-sm font-bold transition-colors">Search Coaches</button>
       </div>
 
       <!-- Count + review -->
@@ -379,6 +393,26 @@
     </div>
   </section>
 
+  <!-- NO COACHES AVAILABLE MODAL -->
+  <div id="no-coaches-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full overflow-hidden">
+      <div class="p-8 text-center">
+        <div class="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <h3 class="text-xl font-bold mb-2">No coaches yet in <span id="modal-location">your area</span></h3>
+        <p class="text-gray-600 text-sm mb-6">We're expanding to more locations. Enter your email and we'll notify you as soon as a coach becomes available.</p>
+        
+        <form id="waitlist-form" class="space-y-3 mb-4">
+          <input type="email" placeholder="Your email address" required class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm outline-none focus:border-brand focus:ring-1 focus:ring-brand"/>
+          <input type="hidden" id="waitlist-location" name="location"/>
+          <button type="submit" class="w-full bg-brand hover:bg-orange-700 text-white py-3 rounded-lg font-bold text-sm transition-colors">Notify Me</button>
+        </form>
+        <p class="text-xs text-gray-500">We'll email you when coaches are available in <span id="modal-location-name">your area</span>.</p>
+      </div>
+    </div>
+  </div>
+
   <!-- FOOTER -->
   <footer class="bg-[#0a0a0a] text-white pt-16 pb-8 border-t border-gray-800">
     <div class="max-w-7xl mx-auto px-6 lg:px-8">
@@ -459,7 +493,11 @@
     </div>
   </footer>
   <script>
+    // Mock data: locations that have coaches available
+    const LOCATIONS_WITH_COACHES = ['Boston, MA', 'New York, NY', 'Los Angeles, CA', 'Chicago, IL'];
+    
     document.addEventListener('DOMContentLoaded', function() {
+      // Navigation highlighting
       const currentPage = window.location.pathname.split('/').pop() || 'index.html';
       const navLinks = document.querySelectorAll('a[href$=".html"]');
       navLinks.forEach(link => {
@@ -468,7 +506,142 @@
           link.classList.add('active-nav');
         }
       });
+
+      // Location search functionality
+      const locationInput = document.getElementById('location-search');
+      const suggestionsDropdown = document.getElementById('location-suggestions');
+      const locationSuggestions = document.querySelectorAll('.location-suggestion');
+      const searchButton = document.getElementById('search-button');
+      const noCoachesModal = document.getElementById('no-coaches-modal');
+      const waitlistForm = document.getElementById('waitlist-form');
+      const waitlistLocation = document.getElementById('waitlist-location');
+      const modalLocation = document.getElementById('modal-location');
+      const modalLocationName = document.getElementById('modal-location-name');
+
+      // Show suggestions dropdown on input focus
+      locationInput?.addEventListener('focus', () => {
+        suggestionsDropdown.classList.remove('hidden');
+      });
+
+      // Filter and show suggestions on input
+      locationInput?.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const allSuggestions = document.querySelectorAll('.location-suggestion');
+        suggestionsDropdown.classList.remove('hidden');
+        
+        allSuggestions.forEach(suggestion => {
+          const location = suggestion.textContent.toLowerCase();
+          if (location.includes(searchTerm) || searchTerm === '') {
+            suggestion.style.display = 'block';
+          } else {
+            suggestion.style.display = 'none';
+          }
+        });
+      });
+
+      // Click on suggestion to select it
+      locationSuggestions.forEach(button => {
+        button.addEventListener('click', (e) => {
+          e.preventDefault();
+          const location = button.getAttribute('data-location');
+          locationInput.value = location;
+          suggestionsDropdown.classList.add('hidden');
+        });
+      });
+
+      // Close suggestions when clicking outside
+      document.addEventListener('click', (e) => {
+        if (e.target !== locationInput && e.target !== suggestionsDropdown) {
+          suggestionsDropdown.classList.add('hidden');
+        }
+      });
+
+      // Handle search button click
+      searchButton?.addEventListener('click', (e) => {
+        e.preventDefault();
+        const selectedLocation = locationInput.value.trim();
+        
+        if (!selectedLocation) {
+          alert('Please enter or select a location');
+          return;
+        }
+
+        // Check if coaches are available in this location
+        if (LOCATIONS_WITH_COACHES.includes(selectedLocation)) {
+          // Coaches available - could filter the page or navigate
+          console.log('Coaches found in ' + selectedLocation);
+          alert('Showing coaches in ' + selectedLocation);
+        } else {
+          // No coaches available - show modal with email signup
+          showNoCoachesModal(selectedLocation);
+        }
+      });
+
+      function showNoCoachesModal(location) {
+        modalLocation.textContent = location;
+        modalLocationName.textContent = location;
+        waitlistLocation.value = location;
+        noCoachesModal.classList.remove('hidden');
+      }
+
+      function hideNoCoachesModal() {
+        noCoachesModal.classList.add('hidden');
+      }
+
+      // Close modal when clicking outside the modal content
+      noCoachesModal?.addEventListener('click', (e) => {
+        if (e.target === noCoachesModal) {
+          hideNoCoachesModal();
+        }
+      });
+
+      // Handle waitlist form submission
+      waitlistForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = waitlistForm.querySelector('input[type="email"]').value;
+        const location = waitlistLocation.value;
+        const btn = waitlistForm.querySelector('button[type="submit"]');
+        const originalText = btn.textContent;
+        
+        try {
+          btn.disabled = true;
+          btn.textContent = 'Adding you to waitlist...';
+          
+          // Send to backend
+          const response = await fetch('https://montra-production.up.railway.app/api/coach-waitlist', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, location }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to join waitlist');
+          }
+
+          // Show success message
+          btn.textContent = '✓ Thanks! We\'ll be in touch';
+          btn.classList.add('opacity-75');
+          
+          setTimeout(() => {
+            hideNoCoachesModal();
+            btn.textContent = originalText;
+            btn.disabled = false;
+            btn.classList.remove('opacity-75');
+            waitlistForm.reset();
+          }, 2000);
+        } catch (err) {
+          btn.textContent = 'Try again';
+          btn.disabled = false;
+          alert('Error: ' + err.message);
+          console.error('Waitlist signup error:', err);
+        }
+      });
     });
   </script>
+
+  <script type="module" src="assets/js/montra-chat.js"></script>
 </body>
 </html>

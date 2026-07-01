@@ -274,7 +274,6 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					A63E3E4F48678A0DAB5BD5CA = {
-						DevelopmentTeam = X29HP9D526;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -528,10 +527,7 @@
 		341EEBECA858ACD17E9D9AFC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = (
-					AppIconDark,
-					AppIconLight,
-				);
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIconDark AppIconLight";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGNING_ALLOWED = YES;
 				CODE_SIGNING_REQUIRED = YES;
@@ -555,10 +551,7 @@
 		4BB76E4DB64141B4DFFDA5D4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = (
-					AppIconDark,
-					AppIconLight,
-				);
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIconDark AppIconLight";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGNING_ALLOWED = YES;
 				CODE_SIGNING_REQUIRED = YES;

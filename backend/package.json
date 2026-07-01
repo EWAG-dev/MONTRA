@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch src/index.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -13,5 +15,8 @@
     "express": "^4.21.2",
     "firebase-admin": "^12.6.0",
     "stripe": "^22.3.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.9"
   }
 }
