@@ -328,6 +328,91 @@ function sessionBookedEmailHtml(trainerName, clientName, startTimeDisplay) {
 </div></body></html>`;
 }
 
+function normalizeLocationToken(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function trainerProfileUrl(trainer) {
+  const base = String(process.env.WEBSITE_URL || "https://montra-27532.web.app").replace(/\/$/, "");
+  if (trainer?.slug) {
+    return `${base}/coaches/${encodeURIComponent(trainer.slug)}`;
+  }
+  return `${base}/coach-profile.html?id=${encodeURIComponent(String(trainer?.id || ""))}`;
+}
+
+function trainerNowAvailableEmailHtml(waitlistLocation, trainer) {
+  const trainerName = escapeHtml(trainer?.name || "A MONTRA trainer");
+  const location = escapeHtml(waitlistLocation || "your area");
+  const certification = escapeHtml(trainer?.certification || "Certified Personal Trainer");
+  const specialties = Array.isArray(trainer?.specialties) && trainer.specialties.length
+    ? escapeHtml(trainer.specialties.slice(0, 3).join(" • "))
+    : "General fitness coaching";
+  const profileUrl = trainerProfileUrl(trainer);
+
+  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+<div style="max-width:560px;margin:0 auto;padding:48px 24px">
+  <p style="color:#FF6820;font-size:11px;font-weight:700;letter-spacing:2px;margin:0 0 32px">MONTRA</p>
+  <h1 style="color:#fff;font-size:24px;font-weight:900;margin:0 0 16px">A trainer is now available in ${location}</h1>
+  <p style="font-size:15px;line-height:1.7;color:#ccc">Good news. A trainer just became available in the area you requested.</p>
+  <div style="background:#151515;border-radius:10px;padding:18px;margin:24px 0;border:1px solid #222;color:#bbb;font-size:14px;line-height:1.7">
+    <strong style="color:#fff">${trainerName}</strong><br>
+    ${certification}<br>
+    ${specialties}
+  </div>
+  <a href="${profileUrl}" style="display:inline-block;background:#FF6820;color:#000;font-size:15px;font-weight:700;padding:14px 28px;border-radius:12px;text-decoration:none">View Trainer Profile &rarr;</a>
+  <p style="color:#777;font-size:14px;line-height:1.6;margin-top:20px">You are receiving this because you asked to be notified about trainer availability in your area.</p>
+  <hr style="border:none;border-top:1px solid #222;margin:40px 0">
+  <p style="color:#555;font-size:11px">MONTRA &middot; Powered by Elite Home Fitness</p>
+</div></body></html>`;
+}
+
+async function notifyWaitlistForTrainerAvailability(trainer, context = "waitlist-notify") {
+  if (!trainer || trainer.status !== "approved") {
+    return;
+  }
+
+  const locations = Array.isArray(trainer.locations)
+    ? trainer.locations.map((loc) => String(loc || "").trim()).filter(Boolean)
+    : [];
+  if (!locations.length) {
+    return;
+  }
+
+  const seenLocationTokens = new Set();
+  for (const location of locations) {
+    const locationToken = normalizeLocationToken(location);
+    if (!locationToken || seenLocationTokens.has(locationToken)) continue;
+    seenLocationTokens.add(locationToken);
+
+    let waitlisted = [];
+    try {
+      waitlisted = await getWaitlistForLocation(location);
+    } catch (error) {
+      console.error(`[${context}] Failed to load waitlist for location \"${location}\":`, error?.message || error);
+      continue;
+    }
+
+    for (const entry of waitlisted) {
+      const recipientEmail = String(entry?.email || "").trim().toLowerCase();
+      if (!recipientEmail) continue;
+
+      try {
+        await sendEmail(
+          recipientEmail,
+          `A MONTRA trainer is now available in ${location}`,
+          trainerNowAvailableEmailHtml(entry?.location || location, trainer)
+        );
+        await markNotified(recipientEmail, entry?.location || location);
+      } catch (error) {
+        console.error(
+          `[${context}] Failed to notify waitlisted email ${recipientEmail} for ${location}:`,
+          error?.message || error
+        );
+      }
+    }
+  }
+}
+
 async function finalizeTrainerApproval(trainer, context = "approval") {
   if (!trainer) {
     return null;
@@ -547,6 +632,12 @@ app.post("/api/trainers/apply", requireFirebaseAuth, async (req, res) => {
 
     const status = trainer?.status || "pending";
 
+    if (status === "approved") {
+      notifyWaitlistForTrainerAvailability(trainer, "trainers-apply").catch((error) => {
+        console.error("[trainers-apply] Waitlist notification failed:", error?.message || error);
+      });
+    }
+
     res.status(200).json({
       trainer,
       hiringEvaluation: evaluation,
@@ -738,6 +829,9 @@ app.post("/api/dev/approve-trainer", async (req, res) => {
   if (!trainer) return res.status(404).json({ error: "Trainer not found" });
 
   await finalizeTrainerApproval(trainer, "dev-approve-trainer");
+  notifyWaitlistForTrainerAvailability(trainer, "dev-approve-trainer").catch((error) => {
+    console.error("[dev-approve-trainer] Waitlist notification failed:", error?.message || error);
+  });
 
   res.json({ ok: true, trainerId, email: trainer.email });
 });
@@ -796,6 +890,9 @@ app.post("/api/trainers/provision", async (req, res) => {
     if (autoApproveTrainers) {
       trainer = await approveTrainer(trainer.id);
       await finalizeTrainerApproval(trainer, "public-provision-auto-approve");
+      notifyWaitlistForTrainerAvailability(trainer, "public-provision-auto-approve").catch((error) => {
+        console.error("[public-provision-auto-approve] Waitlist notification failed:", error?.message || error);
+      });
     }
 
     res.status(201).json({
@@ -2035,6 +2132,9 @@ app.post("/api/admin/trainers/:id/approve", requireFirebaseAuth, requireAdmin, a
   }
 
   await finalizeTrainerApproval(trainer, "admin-approve-trainer");
+  notifyWaitlistForTrainerAvailability(trainer, "admin-approve-trainer").catch((error) => {
+    console.error("[admin-approve-trainer] Waitlist notification failed:", error?.message || error);
+  });
 
   res.status(200).json({ trainer });
 });
@@ -2085,11 +2185,21 @@ app.post("/api/admin/trainers", requireFirebaseAuth, requireAdmin, async (req, r
 
 app.put("/api/admin/trainers/:id", requireFirebaseAuth, requireAdmin, async (req, res) => {
   try {
+    const previous = await getTrainer(req.params.id);
     const trainer = await updateTrainer(req.params.id, req.body || {});
     if (!trainer) {
       res.status(404).json({ error: "Trainer not found" });
       return;
     }
+
+    const locationsTouched = Object.prototype.hasOwnProperty.call(req.body || {}, "locations");
+    const becameApproved = previous?.status !== "approved" && trainer.status === "approved";
+    if (trainer.status === "approved" && (locationsTouched || becameApproved)) {
+      notifyWaitlistForTrainerAvailability(trainer, "admin-update-trainer").catch((error) => {
+        console.error("[admin-update-trainer] Waitlist notification failed:", error?.message || error);
+      });
+    }
+
     res.status(200).json({ trainer });
   } catch (error) {
     res.status(400).json({ error: error.message || "Unable to update trainer" });

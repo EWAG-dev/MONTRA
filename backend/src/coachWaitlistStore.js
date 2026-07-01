@@ -12,9 +12,14 @@ function s(v) {
   return String(v ?? "").trim();
 }
 
+function normalizeLocationToken(value) {
+  return s(value).toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
 export async function addToWaitlist(email, location) {
   const emailTrimmed = s(email).toLowerCase();
   const locationTrimmed = s(location);
+  const normalizedLocation = normalizeLocationToken(locationTrimmed);
 
   if (!emailTrimmed || !emailTrimmed.includes("@")) {
     throw Object.assign(new Error("Valid email address required"), { code: "invalid" });
@@ -23,12 +28,13 @@ export async function addToWaitlist(email, location) {
     throw Object.assign(new Error("Location is required"), { code: "invalid" });
   }
 
-  // Create a document with email+location as a composite key to prevent duplicates
-  const docId = `${emailTrimmed}:${locationTrimmed}`;
+  // Composite key on normalized location dedupes variants like "Boston, MA" vs "boston ma".
+  const docId = `${emailTrimmed}:${normalizedLocation}`;
   
   const payload = {
     email: emailTrimmed,
     location: locationTrimmed,
+    normalizedLocation,
     signedUpAt: new Date().toISOString(),
     notified: false, // Set to true when we send the notification
   };
@@ -39,20 +45,47 @@ export async function addToWaitlist(email, location) {
 
 export async function getWaitlistForLocation(location) {
   const locationTrimmed = s(location);
+  const normalizedLocation = normalizeLocationToken(locationTrimmed);
   if (!locationTrimmed) return [];
 
-  const snapshot = await waitlist()
-    .where("location", "==", locationTrimmed)
-    .where("notified", "==", false)
-    .get();
+  const [normalizedSnapshot, legacySnapshot] = await Promise.all([
+    waitlist()
+      .where("normalizedLocation", "==", normalizedLocation)
+      .where("notified", "==", false)
+      .get(),
+    // Backward compatibility for records written before normalizedLocation existed.
+    waitlist()
+      .where("location", "==", locationTrimmed)
+      .where("notified", "==", false)
+      .get(),
+  ]);
 
-  return snapshot.docs.map((doc) => doc.data());
+  const unique = new Map();
+  for (const doc of [...normalizedSnapshot.docs, ...legacySnapshot.docs]) {
+    const data = doc.data();
+    const key = `${s(data.email).toLowerCase()}:${normalizeLocationToken(data.location)}`;
+    if (!unique.has(key)) unique.set(key, data);
+  }
+
+  return [...unique.values()];
 }
 
 export async function markNotified(email, location) {
   const emailTrimmed = s(email).toLowerCase();
   const locationTrimmed = s(location);
-  const docId = `${emailTrimmed}:${locationTrimmed}`;
+  const normalizedLocation = normalizeLocationToken(locationTrimmed);
+  const normalizedDocId = `${emailTrimmed}:${normalizedLocation}`;
+  const legacyDocId = `${emailTrimmed}:${locationTrimmed}`;
 
-  await waitlist().doc(docId).update({ notified: true, notifiedAt: new Date().toISOString() });
+  try {
+    await waitlist().doc(normalizedDocId).update({ notified: true, notifiedAt: new Date().toISOString() });
+    return;
+  } catch (error) {
+    // Firestore NOT_FOUND code
+    if (error?.code !== 5) {
+      throw error;
+    }
+  }
+
+  await waitlist().doc(legacyDocId).update({ notified: true, notifiedAt: new Date().toISOString() });
 }
