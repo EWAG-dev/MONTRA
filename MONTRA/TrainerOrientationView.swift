@@ -1,3 +1,4 @@
+import AVKit
 import SwiftUI
 
 struct TrainerOrientationView: View {
@@ -5,6 +6,7 @@ struct TrainerOrientationView: View {
     @EnvironmentObject private var auth: AuthManager
     @Environment(\.dismiss) private var dismiss
     @State private var watched: Set<Int> = []
+    @State private var activeVideo: OrientationVideoSelection?
 
     private let videos: [(title: String, description: String, url: String)] = [
         (
@@ -55,6 +57,15 @@ struct TrainerOrientationView: View {
         }
         .task(id: auth.user?.uid) {
             loadWatchedState()
+        }
+        .sheet(item: $activeVideo) { selection in
+            OrientationVideoPlayerSheet(
+                title: selection.title,
+                urlString: selection.url
+            ) {
+                watched.insert(selection.index)
+                persistWatchedState()
+            }
         }
     }
 
@@ -133,8 +144,11 @@ struct TrainerOrientationView: View {
                     url: videos[i].url,
                     isWatched: watched.contains(i)
                 ) {
-                    watched.insert(i)
-                    persistWatchedState()
+                    activeVideo = OrientationVideoSelection(
+                        index: i,
+                        title: videos[i].title,
+                        url: videos[i].url
+                    )
                 }
             }
         }
@@ -230,9 +244,7 @@ private struct OrientationVideoCard: View {
     let description: String
     let url: String
     let isWatched: Bool
-    let onWatch: () -> Void
-
-    @Environment(\.openURL) private var openURL
+    let onPlay: () -> Void
 
     var body: some View {
         HStack(spacing: 16) {
@@ -283,12 +295,11 @@ private struct OrientationVideoCard: View {
 
     private var watchButton: some View {
         let icon: String = isWatched ? "checkmark" : "play.fill"
-        let label: String = isWatched ? "Done" : "Watch"
+        let label: String = isWatched ? "Done" : "Play"
         let fg: Color = isWatched ? .montraOrange : .black
         let bg: Color = isWatched ? Color.montraOrange.opacity(0.12) : .montraOrange
         return Button {
-            if let videoURL = URL(string: url) { openURL(videoURL) }
-            onWatch()
+            onPlay()
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: icon).font(.system(size: 10, weight: .bold))
@@ -301,6 +312,157 @@ private struct OrientationVideoCard: View {
             .clipShape(Capsule())
         }
         .buttonStyle(.plain)
+    }
+}
+
+private struct OrientationVideoSelection: Identifiable {
+    let id = UUID()
+    let index: Int
+    let title: String
+    let url: String
+}
+
+private struct OrientationVideoPlayerSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let title: String
+    let urlString: String
+    let onComplete: () -> Void
+
+    @State private var player: AVPlayer?
+    @State private var loadError: String?
+    @State private var didComplete = false
+
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+
+            VStack(spacing: 20) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("MONTRA")
+                            .font(.system(size: 11, weight: .black))
+                            .kerning(1.8)
+                            .foregroundColor(.montraOrange)
+                        Text(title)
+                            .font(.system(size: 22, weight: .black))
+                            .foregroundColor(.white)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Spacer()
+
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(width: 34, height: 34)
+                            .background(Color.white.opacity(0.12))
+                            .clipShape(Circle())
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                Group {
+                    if let player {
+                        VideoPlayer(player: player)
+                            .clipShape(RoundedRectangle(cornerRadius: 18))
+                    } else if let loadError {
+                        VStack(spacing: 12) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.system(size: 28, weight: .bold))
+                                .foregroundColor(.montraOrange)
+                            Text(loadError)
+                                .font(.system(size: 14))
+                                .foregroundColor(.white.opacity(0.85))
+                                .multilineTextAlignment(.center)
+                        }
+                        .frame(maxWidth: .infinity, minHeight: 220)
+                        .padding(24)
+                        .background(Color.white.opacity(0.06))
+                        .clipShape(RoundedRectangle(cornerRadius: 18))
+                    } else {
+                        ProgressView()
+                            .tint(.montraOrange)
+                            .frame(maxWidth: .infinity, minHeight: 220)
+                            .background(Color.white.opacity(0.06))
+                            .clipShape(RoundedRectangle(cornerRadius: 18))
+                    }
+                }
+                .frame(maxWidth: .infinity)
+
+                Text("Play this orientation video inside MONTRA. You'll be marked complete when it finishes.")
+                    .font(.system(size: 13))
+                    .foregroundColor(.white.opacity(0.7))
+                    .multilineTextAlignment(.center)
+
+                Button {
+                    dismiss()
+                } label: {
+                    Text("Close")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Color.montraOrange)
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(24)
+        }
+        .onAppear {
+            loadPlayer()
+        }
+        .onDisappear {
+            player?.pause()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)) { notification in
+            guard !didComplete,
+                  let currentItem = player?.currentItem,
+                  let finishedItem = notification.object as? AVPlayerItem,
+                  finishedItem == currentItem else { return }
+            didComplete = true
+            onComplete()
+            dismiss()
+        }
+    }
+
+    private func loadPlayer() {
+        guard let resolvedURL = resolvedVideoURL() else {
+            loadError = "This video link could not be opened in-app."
+            return
+        }
+
+        let player = AVPlayer(url: resolvedURL)
+        self.player = player
+        player.play()
+    }
+
+    private func resolvedVideoURL() -> URL? {
+        guard let url = URL(string: urlString) else { return nil }
+        guard url.host?.contains("drive.google.com") == true,
+              let fileID = driveFileID(from: url) else {
+            return url
+        }
+
+        return URL(string: "https://drive.google.com/uc?export=download&id=\(fileID)")
+    }
+
+    private func driveFileID(from url: URL) -> String? {
+        let path = url.path
+        if let fileRange = path.range(of: "/file/d/") {
+            let remainder = path[fileRange.upperBound...]
+            if let endIndex = remainder.firstIndex(of: "/") {
+                return String(remainder[..<endIndex])
+            }
+            return String(remainder)
+        }
+
+        let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        return components?.queryItems?.first(where: { $0.name == "id" })?.value
     }
 }
 

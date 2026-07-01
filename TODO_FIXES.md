@@ -15,7 +15,8 @@ And we want client to fill out a survey at some point. And we want to make it ea
 10. Take away the “x” from top-right of quiz because we want them to finish the quiz and match with a trainer. the ywill never see quiz again unless they click rematch.
 11. remove hand-wave emoji
 12. support vs montra team. what did luis ask for. can we just combine and call montra support team.
-13. Fix the coach orientation video links that ucrrently go to google drive
+13. Fix the coach orientation video links that ucrrently go to google drive: ✅ Done
+- Orientation videos now open and play inside the app instead of bouncing out to the browser.
 14. Improve the email for client account verification. currently you have to actually highlight the link. also it goes to spam and the coach one seems not to?
 15. Rematch makes me recreate an account because quiz always ends in create an account. even if you are already signed (still brings you to that screen as if you were not signed in) or click “already have an account. sign in” (this button does nothing, brings up an “please enter email and password” red error.
 

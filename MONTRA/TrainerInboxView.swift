@@ -21,25 +21,16 @@ struct TrainerInboxView: View {
     @State private var chatSending = false
     @State private var chatMessageText = ""
     @State private var chatError: String? = nil
-    @State private var liveNotifications: [MontraNotification] = []
-    @State private var notificationsLoading = false
-    @AppStorage("notif.unreadCount") private var unreadCount = 0
     @AppStorage("trainer.inbox.initialSegment") private var inboxInitialSegment = "requests"
-    @AppStorage("notif.dismissedIds") private var dismissedIdsRaw = ""
     @AppStorage("trainer.contactedRequestIds") private var contactedRequestIdsRaw = ""
 
     enum Segment: String, CaseIterable {
         case requests      = "Requests"
         case messages      = "Messages"
-        case notifications = "Notifications"
     }
 
     private var actionableRequests: [TrainerMatchRequest] {
         matchRequests.filter { $0.status != "declined" }
-    }
-
-    private var dismissedNotificationIds: Set<String> {
-        Set(dismissedIdsRaw.split(separator: ",").map { String($0) }.filter { !$0.isEmpty })
     }
 
     private var contactedRequestIds: Set<String> {
@@ -136,7 +127,6 @@ struct TrainerInboxView: View {
                 switch selectedSegment {
                 case .requests:      requestsContent
                 case .messages:      messagesContent
-                case .notifications: notificationsContent
                 }
 
                 Spacer(minLength: 90)
@@ -148,7 +138,6 @@ struct TrainerInboxView: View {
             applyInboxInitialSegment()
             await fetchMatchRequests()
             await refreshChatThreads()
-            await loadNotifications()
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 8_000_000_000)
                 if Task.isCancelled { break }
@@ -156,7 +145,6 @@ struct TrainerInboxView: View {
                     await loadChatMessages(for: thread)
                 }
                 await fetchMatchRequests()
-                await loadNotifications()
             }
         }
         .sheet(isPresented: $showTrainerMenu) {
@@ -167,8 +155,6 @@ struct TrainerInboxView: View {
             switch segment {
             case "messages":
                 selectedSegment = .messages
-            case "notifications":
-                selectedSegment = .notifications
             default:
                 selectedSegment = .requests
             }
@@ -568,55 +554,10 @@ struct TrainerInboxView: View {
         }
     }
 
-    // MARK: - Notifications
-
-    @ViewBuilder
-    private var notificationsContent: some View {
-        VStack(spacing: 10) {
-            if notificationsLoading && liveNotifications.isEmpty {
-                ProgressView()
-                    .tint(.montraOrange)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 40)
-            } else if liveNotifications.isEmpty {
-                NotificationsEmptyState(
-                    icon: "bell",
-                    title: "You're all caught up",
-                    message: "New client requests and messages will show up here."
-                )
-            } else {
-                ForEach(liveNotifications) { item in
-                    MontraNotificationRow(item: item) {
-                        if item.category == "request" {
-                            dismissNotificationLocally(item.id)
-                            inboxInitialSegment = "requests"
-                            selectedSegment = .requests
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private func loadNotifications() async {
-        guard let user = auth.user,
-              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false) else { return }
-
-        if liveNotifications.isEmpty { notificationsLoading = true }
-        defer { notificationsLoading = false }
-
-        if let items = try? await NotificationsAPI.loadMine(token: tokenResult.token) {
-            liveNotifications = items.filter { !dismissedNotificationIds.contains($0.id) }
-            unreadCount = liveNotifications.filter(\.unread).count
-        }
-    }
-
     private func applyInboxInitialSegment() {
         switch inboxInitialSegment.lowercased() {
         case "messages":
             selectedSegment = .messages
-        case "notifications":
-            selectedSegment = .notifications
         default:
             selectedSegment = .requests
         }
@@ -637,13 +578,6 @@ struct TrainerInboxView: View {
         matchRequests.removeAll { $0.id == candidate.id }
     }
 
-    private func dismissNotificationLocally(_ id: String) {
-        var ids = dismissedNotificationIds
-        ids.insert(id)
-        dismissedIdsRaw = ids.sorted().joined(separator: ",")
-        liveNotifications.removeAll { $0.id == id }
-        unreadCount = liveNotifications.filter(\.unread).count
-    }
 }
 
 // MARK: - Match Request Model
