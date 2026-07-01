@@ -914,6 +914,24 @@
     // ── end ticker ─────────────────────────────────────────────────────────
 
     let heroLocationFilter = '';
+    let lastNoCoachesModalKey = '';
+
+    function openNoCoachesModal(locationName) {
+      const normalizedLocation = String(locationName || '').trim();
+      const displayName = normalizedLocation || 'your area';
+      const key = displayName.toLowerCase();
+      if (key && key === lastNoCoachesModalKey) return;
+      lastNoCoachesModalKey = key;
+
+      const locationNameEl = document.getElementById('no-coaches-location-name');
+      const locationInputEl = document.getElementById('no-coaches-location-input');
+      const modalEl = document.getElementById('no-coaches-modal');
+      if (!modalEl || !locationNameEl || !locationInputEl) return;
+
+      locationNameEl.textContent = displayName;
+      locationInputEl.value = normalizedLocation;
+      modalEl.classList.remove('hidden');
+    }
 
     function applyFilters() {
       const grid = document.getElementById('coach-grid');
@@ -938,10 +956,18 @@
       );
 
       if (!filtered.length) {
+        if (heroLocationFilter) openNoCoachesModal(heroLocationFilter);
         grid.innerHTML = renderEmptyState('No coaches match those filters', 'Try clearing one or more filters.');
         updateTickerFromFilters(0);
         return;
       }
+
+      const availableFiltered = filtered.filter((trainer) => statusMetaForTrainer(trainer).key !== 'currently-unavailable');
+      if (!availableFiltered.length && heroLocationFilter) {
+        openNoCoachesModal(heroLocationFilter);
+      }
+
+      lastNoCoachesModalKey = '';
 
       grid.innerHTML = filtered.map(renderTrainerCard).join('');
       updateFilterCount();
@@ -1139,16 +1165,15 @@
             }
           }
 
-          // Check if we have coaches for this location
-          const locationHasCoaches = !typedLocation || allTrainers.some(t => {
+          // Check if we have available trainers for this location
+          const locationHasAvailableCoaches = !typedLocation || allTrainers.some(t => {
             const trainerLoc = (t.location || '').toLowerCase();
-            return trainerLoc.includes(typedLocation.toLowerCase()) || typedLocation.toLowerCase().includes(trainerLoc.split(',')[0]?.toLowerCase() || '');
+            const locationMatches = trainerLoc.includes(typedLocation.toLowerCase()) || typedLocation.toLowerCase().includes(trainerLoc.split(',')[0]?.toLowerCase() || '');
+            return locationMatches && statusMetaForTrainer(t).key !== 'currently-unavailable';
           });
 
-          if (typedLocation && !locationHasCoaches) {
-            document.getElementById('no-coaches-location-name').textContent = typedLocation;
-            document.getElementById('no-coaches-location-input').value = typedLocation;
-            document.getElementById('no-coaches-modal').classList.remove('hidden');
+          if (typedLocation && !locationHasAvailableCoaches) {
+            openNoCoachesModal(typedLocation);
             return;
           }
 
@@ -1305,14 +1330,14 @@
       <div class="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4">
         <svg class="w-8 h-8 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       </div>
-      <h3 class="text-xl font-bold mb-2">No coaches yet in <span id="no-coaches-location-name">your area</span></h3>
-      <p class="text-gray-500 text-sm mb-6">We're expanding fast. Leave your email and we'll notify you as soon as a coach becomes available near you.</p>
+      <h3 class="text-xl font-bold mb-2">No trainers available yet in <span id="no-coaches-location-name">your area</span></h3>
+      <p class="text-gray-500 text-sm mb-6">Leave your email and we'll let you know as soon as a trainer is available in your area.</p>
       <form id="no-coaches-waitlist-form" class="space-y-3">
         <input type="hidden" id="no-coaches-location-input"/>
         <input type="email" placeholder="Your email address" required class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-brand"/>
-        <button type="submit" class="w-full bg-brand hover:bg-orange-700 text-white py-3 rounded-xl font-bold text-sm transition-colors">Notify Me When Coaches Are Available</button>
+        <button type="submit" class="w-full bg-brand hover:bg-orange-700 text-white py-3 rounded-xl font-bold text-sm transition-colors">Notify Me When Trainers Are Available</button>
       </form>
-      <p class="text-xs text-gray-400 mt-3">No spam. One email when coaches arrive in your area.</p>
+      <p class="text-xs text-gray-400 mt-3">No spam. One email when a trainer becomes available in your area.</p>
     </div>
   </div>
 </body>
