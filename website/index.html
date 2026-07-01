@@ -486,59 +486,6 @@
     </div>
   </section>
 
-  <!-- PROCESS STRIP -->
-  <section class="bg-[#111] border-t border-gray-800 py-6">
-    <div class="max-w-7xl mx-auto px-6 lg:px-8">
-      <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 bg-brand rounded-lg flex items-center justify-center flex-shrink-0">
-            <span class="text-white font-black text-sm">1</span>
-          </div>
-          <div>
-            <p class="text-white font-bold text-sm leading-tight">Find Your Coach</p>
-            <p class="text-gray-500 text-xs">Browse. Compare. Connect.</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 bg-brand rounded-lg flex items-center justify-center flex-shrink-0">
-            <span class="text-white font-black text-sm">2</span>
-          </div>
-          <div>
-            <p class="text-white font-bold text-sm leading-tight">Book Your Session</p>
-            <p class="text-gray-500 text-xs">Simple. Secure. Seamless.</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 bg-brand rounded-lg flex items-center justify-center flex-shrink-0">
-            <span class="text-white font-black text-sm">3</span>
-          </div>
-          <div>
-            <p class="text-white font-bold text-sm leading-tight">Train &amp; Transform</p>
-            <p class="text-gray-500 text-xs">In-Person or Online.</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 bg-brand rounded-lg flex items-center justify-center flex-shrink-0">
-            <span class="text-white font-black text-sm">4</span>
-          </div>
-          <div>
-            <p class="text-white font-bold text-sm leading-tight">Ongoing Support</p>
-            <p class="text-gray-500 text-xs">We're With You.</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 bg-brand rounded-lg flex items-center justify-center flex-shrink-0">
-            <span class="text-white font-black text-sm">5</span>
-          </div>
-          <div>
-            <p class="text-white font-bold text-sm leading-tight">Protected Experience</p>
-            <p class="text-gray-500 text-xs">Your Goals. Our Guarantee.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- FOOTER -->
   <footer class="bg-[#0a0a0a] text-white pt-16 pb-8 border-t border-gray-800">
     <div class="max-w-7xl mx-auto px-6 lg:px-8">
@@ -1183,6 +1130,9 @@
       }
 
       // No coaches modal
+      document.getElementById('no-coaches-close')?.addEventListener('click', () => {
+        document.getElementById('no-coaches-modal')?.classList.add('hidden');
+      });
       document.getElementById('no-coaches-modal')?.addEventListener('click', (e) => {
         if (e.target === document.getElementById('no-coaches-modal')) {
           document.getElementById('no-coaches-modal').classList.add('hidden');
@@ -1326,7 +1276,10 @@
 
   <!-- NO COACHES IN AREA MODAL -->
   <div id="no-coaches-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-8 text-center">
+    <div class="bg-white rounded-2xl max-w-md w-full p-8 text-center relative">
+      <button id="no-coaches-close" type="button" aria-label="Close" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
       <div class="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4">
         <svg class="w-8 h-8 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       </div>
