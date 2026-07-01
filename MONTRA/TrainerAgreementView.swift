@@ -1,12 +1,14 @@
 import SwiftUI
 
 struct TrainerAgreementView: View {
+    var isReplay: Bool = false
     @EnvironmentObject private var auth: AuthManager
+    @Environment(\.dismiss) private var dismiss
     @State private var hasScrolledToBottom = false
     @State private var agreed = false
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .topTrailing) {
             Color.montraBackground.ignoresSafeArea()
 
             VStack(spacing: 0) {
@@ -26,7 +28,9 @@ struct TrainerAgreementView: View {
                         .font(.system(size: 28, weight: .black))
                         .foregroundColor(.montraTextPrimary)
 
-                    Text("Please read the full agreement before continuing. Scroll to the bottom to enable the accept button.")
+                    Text(isReplay
+                        ? "This is the agreement you accepted as a MONTRA coach."
+                        : "Please read the full agreement before continuing. Scroll to the bottom to enable the accept button.")
                         .font(.system(size: 13))
                         .foregroundColor(.montraTextSecondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -51,56 +55,71 @@ struct TrainerAgreementView: View {
                 .background(Color.white.opacity(0.03))
 
                 // Footer
-                VStack(spacing: 12) {
-                    if hasScrolledToBottom {
-                        Button {
-                            agreed.toggle()
-                        } label: {
-                            HStack(spacing: 10) {
-                                ZStack {
-                                    RoundedRectangle(cornerRadius: 5)
-                                        .stroke(agreed ? Color.montraOrange : Color.white.opacity(0.3), lineWidth: 1.5)
-                                        .frame(width: 20, height: 20)
-                                    if agreed {
-                                        Image(systemName: "checkmark")
-                                            .font(.system(size: 11, weight: .bold))
-                                            .foregroundColor(.montraOrange)
+                if !isReplay {
+                    VStack(spacing: 12) {
+                        if hasScrolledToBottom {
+                            Button {
+                                agreed.toggle()
+                            } label: {
+                                HStack(spacing: 10) {
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 5)
+                                            .stroke(agreed ? Color.montraOrange : Color.white.opacity(0.3), lineWidth: 1.5)
+                                            .frame(width: 20, height: 20)
+                                        if agreed {
+                                            Image(systemName: "checkmark")
+                                                .font(.system(size: 11, weight: .bold))
+                                                .foregroundColor(.montraOrange)
+                                        }
                                     }
+                                    Text("I have read and agree to the Independent Coach Provider Agreement")
+                                        .font(.system(size: 13))
+                                        .foregroundColor(.montraTextPrimary)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    Spacer()
                                 }
-                                Text("I have read and agree to the Independent Coach Provider Agreement")
-                                    .font(.system(size: 13))
-                                    .foregroundColor(.montraTextPrimary)
-                                    .fixedSize(horizontal: false, vertical: true)
-                                Spacer()
                             }
+                            .buttonStyle(.plain)
+                        } else {
+                            Text("Scroll to the bottom to continue")
+                                .font(.system(size: 12))
+                                .foregroundColor(.montraTextSecondary)
                         }
-                        .buttonStyle(.plain)
-                    } else {
-                        Text("Scroll to the bottom to continue")
-                            .font(.system(size: 12))
-                            .foregroundColor(.montraTextSecondary)
-                    }
 
-                    Button {
-                        guard agreed else { return }
-                        auth.markAgreementSigned()
-                        Task { await saveAgreementToBackend() }
-                    } label: {
-                        Text(agreed ? "Accept & Continue" : hasScrolledToBottom ? "Check the box above to continue" : "Read the full agreement to continue")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(agreed ? .black : .montraTextSecondary)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 52)
-                            .background(agreed ? Color.montraOrange : Color.white.opacity(0.08))
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
-                            .animation(.easeInOut(duration: 0.2), value: agreed)
+                        Button {
+                            guard agreed else { return }
+                            auth.markAgreementSigned()
+                            Task { await saveAgreementToBackend() }
+                        } label: {
+                            Text(agreed ? "Accept & Continue" : hasScrolledToBottom ? "Check the box above to continue" : "Read the full agreement to continue")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(agreed ? .black : .montraTextSecondary)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 52)
+                                .background(agreed ? Color.montraOrange : Color.white.opacity(0.08))
+                                .clipShape(RoundedRectangle(cornerRadius: 14))
+                                .animation(.easeInOut(duration: 0.2), value: agreed)
+                        }
+                        .disabled(!agreed)
                     }
-                    .disabled(!agreed)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 16)
+                    .padding(.bottom, 48)
+                    .background(Color.montraBackground)
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, 16)
-                .padding(.bottom, 48)
-                .background(Color.montraBackground)
+            }
+
+            if isReplay {
+                Button { dismiss() } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundColor(.montraTextSecondary)
+                        .frame(width: 32, height: 32)
+                        .background(Color.white.opacity(0.08))
+                        .clipShape(Circle())
+                }
+                .padding(.top, 56)
+                .padding(.trailing, 24)
             }
         }
     }

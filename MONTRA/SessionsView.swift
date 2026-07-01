@@ -705,6 +705,7 @@ struct ReviewSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var rating: Int = 5
+    @State private var experience: String = "Great"
     @State private var text: String = ""
     @State private var isSubmitting = false
     @State private var errorMessage: String? = nil
@@ -714,12 +715,24 @@ struct ReviewSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("How was your session with \(trainerName)?")
+                        Text("Session survey: \(trainerName)")
                             .font(.system(size: 20, weight: .black))
                             .foregroundColor(.montraTextPrimary)
-                        Text("Your review is verified — it only appears because you completed a real session.")
+                        Text("Your feedback is verified and tied to a completed session.")
                             .font(.system(size: 13))
                             .foregroundColor(.montraTextSecondary)
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("How did the session go?")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.montraTextSecondary)
+                        Picker("Session experience", selection: $experience) {
+                            Text("Great").tag("Great")
+                            Text("Okay").tag("Okay")
+                            Text("Poor").tag("Poor")
+                        }
+                        .pickerStyle(.segmented)
                     }
 
                     // Star rating
@@ -734,7 +747,7 @@ struct ReviewSheet: View {
                     .frame(maxWidth: .infinity, alignment: .center)
 
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Share a few words (optional)")
+                        Text("Anything else we should know? (optional)")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.montraTextSecondary)
                         TextEditor(text: $text)
@@ -786,7 +799,9 @@ struct ReviewSheet: View {
         errorMessage = nil
         do {
             let token = try await user.getIDTokenResult(forcingRefresh: false).token
-            _ = try await BookingAPI.submitReview(sessionId: session.id, rating: rating, text: text, token: token)
+            let note = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            let payload = note.isEmpty ? "Survey: \(experience)" : "Survey: \(experience)\n\n\(note)"
+            _ = try await BookingAPI.submitReview(sessionId: session.id, rating: rating, text: payload, token: token)
             onReviewed(session.id)
             dismiss()
         } catch let ChatError.server(message) {

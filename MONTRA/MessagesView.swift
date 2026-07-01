@@ -3,8 +3,7 @@ import UIKit
 
 enum ChatTarget: String, CaseIterable, Identifiable {
     case coach = "Coach"
-    case montraTeam = "MONTRA Team"
-    case support = "Support"
+    case support = "MONTRA Support Team"
 
     var id: String { rawValue }
 }
@@ -23,6 +22,7 @@ struct CoachChatSheet: View {
     @State private var loadingMessages = false
     @State private var sendingMessage = false
     @State private var chatError: String? = nil
+    @AppStorage("notif.unreadCount") private var unreadCount = 0
     @AppStorage("dashboardProfileImageData") private var profileImageData: Data = Data()
 
     var body: some View {
@@ -30,7 +30,8 @@ struct CoachChatSheet: View {
             ClientMessagesStyleHeader(
                 title: "Messages",
                 onNotificationTap: { showNotifications = true },
-                onProfileTap: { showProfileSheet = true }
+                onProfileTap: { showProfileSheet = true },
+                notificationBadgeCount: unreadCount
             )
                 .padding(.horizontal, 20)
 
@@ -89,9 +90,7 @@ struct CoachChatSheet: View {
                         Divider().background(Color.montraDivider)
 
                         VStack(alignment: .leading, spacing: 12) {
-                            Text(selectedTarget == .support
-                                 ? "Need a hand? A member of the MONTRA Team can call you back — usually within 10–15 minutes during business hours."
-                                 : "Want to talk it through? Request a call and a member of the MONTRA Team will reach out — usually within 10–15 minutes during business hours.")
+                               Text("Need a hand? A member of the MONTRA Support Team can call you back — usually within 10–15 minutes during business hours.")
                                 .font(.system(size: 13))
                                 .foregroundColor(.montraTextSecondary)
 
@@ -172,6 +171,7 @@ struct CoachChatSheet: View {
         }
         .task {
             await refreshThreads()
+            await loadUnreadNotificationCount()
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 8_000_000_000)
                 if Task.isCancelled { break }
@@ -180,6 +180,7 @@ struct CoachChatSheet: View {
                 } else {
                     await refreshThreads()
                 }
+                await loadUnreadNotificationCount()
             }
         }
     }
@@ -287,7 +288,7 @@ struct CoachChatSheet: View {
 
     @ViewBuilder
     private func messageBubble(_ message: ChatMessage) -> some View {
-        let isMine = message.senderUid == auth.user?.uid
+        let isMine = isCurrentUserMessage(message)
         HStack {
             if isMine { Spacer(minLength: 24) }
             VStack(alignment: .leading, spacing: 4) {
@@ -303,6 +304,19 @@ struct CoachChatSheet: View {
             .clipShape(RoundedRectangle(cornerRadius: 14))
             if !isMine { Spacer(minLength: 24) }
         }
+    }
+
+    private func isCurrentUserMessage(_ message: ChatMessage) -> Bool {
+        let role = message.senderRole.lowercased()
+        if role == "client" { return true }
+        if role == "trainer" { return false }
+
+        if let currentUid = auth.user?.uid, !currentUid.isEmpty, message.senderUid == currentUid {
+            return true
+        }
+
+        // Fallback for legacy/partially-migrated messages that can have empty senderUid.
+        return false
     }
 
     private func refreshThreads() async {
@@ -364,14 +378,19 @@ struct CoachChatSheet: View {
         }
     }
 
+    private func loadUnreadNotificationCount() async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
+              let notifications = try? await NotificationsAPI.loadMine(token: tokenResult.token) else { return }
+        unreadCount = notifications.filter(\.unread).count
+    }
+
     private var headerTitle: String {
         switch selectedTarget {
         case .coach:
             return "Chat with Your Coach"
-        case .montraTeam:
-            return "Chat with MONTRA Team"
         case .support:
-            return "Chat with Support"
+            return "Chat with MONTRA Support Team"
         }
     }
 
@@ -379,17 +398,14 @@ struct CoachChatSheet: View {
         switch selectedTarget {
         case .coach:
             return "Training questions, schedule changes, and workout feedback."
-        case .montraTeam:
-            return "Insights, accountability, and personalized support."
         case .support:
-            return "Technical help and issue reporting."
+            return "Technical help, account help, and issue reporting."
         }
     }
 
     private func targetIcon(for target: ChatTarget) -> String {
         switch target {
         case .coach: return "bubble.left"
-        case .montraTeam: return "sparkles"
         case .support: return "headphones"
         }
     }
@@ -403,8 +419,6 @@ struct CoachChatSheet: View {
                 .frame(width: 42, height: 42)
                 .overlay(Text("A").font(.system(size: 16, weight: .black)).foregroundColor(.montraOrange))
                 .overlay(Circle().stroke(Color.montraOrange.opacity(0.85), lineWidth: 1))
-        case .montraTeam:
-            MontraAIBotAvatar(size: 42)
         case .support:
             Circle()
                 .fill(Color.white.opacity(0.08))

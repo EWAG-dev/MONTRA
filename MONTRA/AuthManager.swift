@@ -137,9 +137,38 @@ final class AuthManager: ObservableObject {
         }
         // Reload first to reduce stale-session errors when immediately resending.
         try? await user.reload()
-        if !user.isEmailVerified {
-            try await user.sendEmailVerification()
+        if user.isEmailVerified {
+            return
         }
+
+        if let endpoint = MontraAPIConfig.url(for: "/api/auth/send-verification-email") {
+            do {
+                let token = try await user.getIDToken()
+                var request = URLRequest(url: endpoint)
+                request.httpMethod = "POST"
+                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                request.httpBody = Data("{}".utf8)
+
+                let (data, response) = try await URLSession.shared.data(for: request)
+                if let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) {
+                    return
+                }
+
+                let backendError = String(data: data, encoding: .utf8) ?? "Unknown backend error"
+                throw NSError(
+                    domain: "AuthManager",
+                    code: -10,
+                    userInfo: [NSLocalizedDescriptionKey: "Backend verification email error: \(backendError)"]
+                )
+            } catch {
+                // Keep a Firebase fallback so verification still works if backend email service is unavailable.
+                try await user.sendEmailVerification()
+                return
+            }
+        }
+
+        try await user.sendEmailVerification()
     }
 
     func refreshEmailVerificationStatus() async -> Bool {
@@ -212,7 +241,8 @@ final class AuthManager: ObservableObject {
             "quiz.requestedTrainerName",
             "quiz.matchChecklistShown",
             "dashboardProfileImageData",
-            "onboarding.completed"
+            "onboarding.completed",
+            "notif.unreadCount"
         ]
         for key in keys {
             UserDefaults.standard.removeObject(forKey: key)

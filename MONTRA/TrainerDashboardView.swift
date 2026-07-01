@@ -12,12 +12,23 @@ struct TrainerDashboardView: View {
     @State private var activeClientCount = 0
     @State private var pendingRequestCount = 0
     @State private var hasLoadedMatches = false
+    @State private var completionTarget: BookedSession?
+    @State private var completionSummary = ""
+    @State private var completionExercises = ""
+    @State private var completingSession = false
 
     private func loadSessions() async {
         guard let user = auth.user,
               let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
               let sessions = try? await BookingAPI.loadTrainerSessions(token: tokenResult.token) else { return }
         bookedSessions = sessions
+    }
+
+    private func complete(_ session: BookedSession, notes: String?) async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false) else { return }
+        _ = try? await BookingAPI.completeTrainerSession(id: session.id, notes: notes, token: tokenResult.token)
+        await loadSessions()
     }
 
     private var scheduledSessionsByDate: [(BookedSession, Date)] {
@@ -30,19 +41,23 @@ struct TrainerDashboardView: View {
             .sorted { $0.1 < $1.1 }
     }
 
-    private var todaySessions: [TrainerClientSession] {
+    private var todaySessions: [(BookedSession, TrainerClientSession)] {
         let cal = Calendar.current
         return scheduledSessionsByDate
             .filter { cal.isDateInToday($0.1) }
-            .compactMap { BookingAPI.asTrainerClientSession($0.0) }
+            .compactMap { booked in
+                BookingAPI.asTrainerClientSession(booked.0).map { (booked.0, $0) }
+            }
     }
 
-    private var upcomingSessions: [TrainerClientSession] {
+    private var upcomingSessions: [(BookedSession, TrainerClientSession)] {
         let now = Date()
         let cal = Calendar.current
         return scheduledSessionsByDate
             .filter { $0.1 >= now && !cal.isDateInToday($0.1) }
-            .compactMap { BookingAPI.asTrainerClientSession($0.0) }
+            .compactMap { booked in
+                BookingAPI.asTrainerClientSession(booked.0).map { (booked.0, $0) }
+            }
     }
 
     private func loadMatchCounts() async {
@@ -104,8 +119,18 @@ struct TrainerDashboardView: View {
                             .foregroundColor(.montraTextSecondary)
                             .padding(.vertical, 8)
                     } else {
-                        ForEach(Array(todaySessions.enumerated()), id: \.element.id) { index, session in
-                            TrainerSessionRow(session: session)
+                        ForEach(Array(todaySessions.enumerated()), id: \.element.1.id) { index, pair in
+                            let (booked, session) = pair
+                            TrainerSessionRow(
+                                session: session,
+                                onComplete: booked.canMarkComplete
+                                    ? {
+                                        completionTarget = booked
+                                        completionSummary = ""
+                                        completionExercises = ""
+                                    }
+                                    : nil
+                            )
                             if index < todaySessions.count - 1 {
                                 Divider().background(Color.montraDivider)
                             }
@@ -119,7 +144,8 @@ struct TrainerDashboardView: View {
                 VStack(alignment: .leading, spacing: 14) {
                     SectionHeader(title: "UPCOMING")
 
-                    ForEach(Array(upcomingSessions.enumerated()), id: \.element.id) { index, session in
+                    ForEach(Array(upcomingSessions.enumerated()), id: \.element.1.id) { index, pair in
+                        let (_, session) = pair
                         TrainerSessionRow(session: session)
                         if index < upcomingSessions.count - 1 {
                             Divider().background(Color.montraDivider)
@@ -157,6 +183,31 @@ struct TrainerDashboardView: View {
         .sheet(isPresented: $showSchedules) {
             ClientSchedulesView()
         }
+        .sheet(item: $completionTarget) { session in
+            TrainerSessionCompletionSheet(
+                session: session,
+                summary: $completionSummary,
+                exercises: $completionExercises,
+                isSubmitting: completingSession,
+                onSubmit: {
+                    let summary = completionSummary.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let exercises = completionExercises.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let notes = [
+                        summary.isEmpty ? nil : "Workout Summary:\n\(summary)",
+                        exercises.isEmpty ? nil : "Exercises Completed:\n\(exercises)"
+                    ]
+                    .compactMap { $0 }
+                    .joined(separator: "\n\n")
+
+                    completingSession = true
+                    Task {
+                        await complete(session, notes: notes.isEmpty ? nil : notes)
+                        completingSession = false
+                        completionTarget = nil
+                    }
+                }
+            )
+        }
     }
 }
 
@@ -165,6 +216,7 @@ struct TrainerSessionRow: View {
     var showsDuration: Bool = false
     var onCancel: (() -> Void)? = nil
     var onComplete: (() -> Void)? = nil
+    var onReport: (() -> Void)? = nil
 
     private var statusLabel: String {
         switch session.status {
@@ -239,6 +291,19 @@ struct TrainerSessionRow: View {
                     }
                     .buttonStyle(.plain)
                 }
+
+                if let onReport {
+                    Button(action: onReport) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "exclamationmark.bubble")
+                                .font(.system(size: 11, weight: .semibold))
+                            Text("Report")
+                                .font(.system(size: 11, weight: .semibold))
+                        }
+                        .foregroundColor(.montraTextSecondary)
+                    }
+                    .buttonStyle(.plain)
+                }
             }
         }
         .padding(.vertical, 4)
@@ -266,6 +331,80 @@ struct TrainerActionButton: View {
             .padding(.vertical, 14)
             .montraCard(radius: 12)
         }
+    }
+}
+
+private struct TrainerSessionCompletionSheet: View {
+    let session: BookedSession
+    @Binding var summary: String
+    @Binding var exercises: String
+    let isSubmitting: Bool
+    let onSubmit: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Log workout and mark complete")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(.montraTextPrimary)
+
+                Text("\(session.clientName) • \(session.durationMin) min")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.montraTextSecondary)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Session summary")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.montraTextSecondary)
+                    TextEditor(text: $summary)
+                        .frame(minHeight: 90)
+                        .padding(8)
+                        .background(Color.white.opacity(0.06))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Exercises completed")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.montraTextSecondary)
+                    TextEditor(text: $exercises)
+                        .frame(minHeight: 120)
+                        .padding(8)
+                        .background(Color.white.opacity(0.06))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+
+                Button(action: onSubmit) {
+                    HStack {
+                        if isSubmitting {
+                            ProgressView().tint(.black)
+                        }
+                        Text(isSubmitting ? "Saving…" : "Save & Mark Complete")
+                            .font(.system(size: 16, weight: .bold))
+                    }
+                    .foregroundColor(.black)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                    .background(Color.montraOrange)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .disabled(isSubmitting)
+
+                Spacer()
+            }
+            .padding(20)
+            .background(Color.montraBackground)
+            .navigationTitle("Complete Session")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+            }
+        }
+        .presentationDetents([.large])
     }
 }
 

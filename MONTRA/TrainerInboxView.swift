@@ -23,6 +23,10 @@ struct TrainerInboxView: View {
     @State private var chatError: String? = nil
     @State private var liveNotifications: [MontraNotification] = []
     @State private var notificationsLoading = false
+    @AppStorage("notif.unreadCount") private var unreadCount = 0
+    @AppStorage("trainer.inbox.initialSegment") private var inboxInitialSegment = "requests"
+    @AppStorage("notif.dismissedIds") private var dismissedIdsRaw = ""
+    @AppStorage("trainer.contactedRequestIds") private var contactedRequestIdsRaw = ""
 
     enum Segment: String, CaseIterable {
         case requests      = "Requests"
@@ -32,6 +36,22 @@ struct TrainerInboxView: View {
 
     private var actionableRequests: [TrainerMatchRequest] {
         matchRequests.filter { $0.status != "declined" }
+    }
+
+    private var dismissedNotificationIds: Set<String> {
+        Set(dismissedIdsRaw.split(separator: ",").map { String($0) }.filter { !$0.isEmpty })
+    }
+
+    private var contactedRequestIds: Set<String> {
+        Set(contactedRequestIdsRaw.split(separator: ",").map { String($0) }.filter { !$0.isEmpty })
+    }
+
+    private var visibleRequests: [TrainerMatchRequest] {
+        matchRequests.filter { request in
+            if request.status == "pending" { return true }
+            if request.status == "accepted" { return !contactedRequestIds.contains(request.id) }
+            return false
+        }
     }
 
     var body: some View {
@@ -125,6 +145,7 @@ struct TrainerInboxView: View {
         }
         .background(Color.montraBackground)
         .task {
+            applyInboxInitialSegment()
             await fetchMatchRequests()
             await refreshChatThreads()
             await loadNotifications()
@@ -141,6 +162,17 @@ struct TrainerInboxView: View {
         .sheet(isPresented: $showTrainerMenu) {
             ProfileMenuSheet(isClient: false)
         }
+        .onReceive(NotificationCenter.default.publisher(for: .montraOpenTrainerInbox)) { note in
+            let segment = (note.userInfo?["segment"] as? String)?.lowercased() ?? "requests"
+            switch segment {
+            case "messages":
+                selectedSegment = .messages
+            case "notifications":
+                selectedSegment = .notifications
+            default:
+                selectedSegment = .requests
+            }
+        }
     }
 
     // MARK: - Requests (live)
@@ -149,7 +181,7 @@ struct TrainerInboxView: View {
     private var requestsContent: some View {
         if requestsLoading {
             HStack { Spacer(); ProgressView().tint(.montraOrange); Spacer() }.padding(.top, 24)
-        } else if matchRequests.isEmpty {
+        } else if visibleRequests.isEmpty {
             VStack(spacing: 12) {
                 Image(systemName: "tray")
                     .font(.system(size: 32))
@@ -162,7 +194,7 @@ struct TrainerInboxView: View {
             .padding(.top, 40)
         } else {
             VStack(spacing: 10) {
-                ForEach(matchRequests) { req in
+                ForEach(visibleRequests) { req in
                     MatchRequestCard(
                         request: req,
                         actionInFlight: activeRequestActionId == req.id,
@@ -342,27 +374,32 @@ struct TrainerInboxView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.top, 32)
             } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 10) {
-                        ForEach(chatThreads) { thread in
-                            Button {
-                                selectedThread = thread
-                                Task { await loadChatMessages(for: thread) }
-                            } label: {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(thread.clientName.isEmpty ? "New Client" : thread.clientName)
-                                        .font(.system(size: 13, weight: .semibold))
-                                        .foregroundColor(selectedThread?.id == thread.id ? .black : .montraTextPrimary)
-                                    Text(thread.lastMessage.isEmpty ? "Say hello" : thread.lastMessage)
-                                        .font(.system(size: 11))
-                                        .foregroundColor(selectedThread?.id == thread.id ? .black.opacity(0.75) : .montraTextSecondary)
-                                        .lineLimit(1)
+                if chatThreads.count > 1 {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 10) {
+                            ForEach(chatThreads) { thread in
+                                Button {
+                                    selectedThread = thread
+                                    Task { await loadChatMessages(for: thread) }
+                                } label: {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(thread.clientName.isEmpty ? "New Client" : thread.clientName)
+                                            .font(.system(size: 13, weight: .semibold))
+                                            .foregroundColor(.montraTextPrimary)
+                                    }
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 10)
+                                    .frame(width: 150, alignment: .leading)
+                                    .background(Color.white.opacity(0.05))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(
+                                                selectedThread?.id == thread.id ? Color.montraOrange : Color.montraCardBorder,
+                                                lineWidth: selectedThread?.id == thread.id ? 1.2 : 0.8
+                                            )
+                                    )
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
                                 }
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 10)
-                                .frame(width: 180, alignment: .leading)
-                                .background(selectedThread?.id == thread.id ? Color.montraOrange : Color.white.opacity(0.05))
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
                             }
                         }
                     }
@@ -393,12 +430,19 @@ struct TrainerInboxView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            HStack(spacing: 10) {
-                TextField(selectedThread == nil ? "Open a request to start chat" : "Write a message...", text: $chatMessageText)
+            Spacer(minLength: 0)
+
+            HStack(alignment: .bottom, spacing: 10) {
+                TextField(
+                    selectedThread == nil ? "Open a request to start chat" : "Write a message...",
+                    text: $chatMessageText,
+                    axis: .vertical
+                )
                     .textFieldStyle(.plain)
                     .foregroundColor(.montraTextPrimary)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 12)
+                    .lineLimit(1...5)
                     .montraCard(radius: 12)
 
                 Button {
@@ -430,17 +474,15 @@ struct TrainerInboxView: View {
                 .disabled(chatSending || chatMessageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || selectedThread == nil)
             }
         }
+        .frame(minHeight: UIScreen.main.bounds.height * 0.64, alignment: .top)
     }
 
     @ViewBuilder
     private func chatBubble(_ message: ChatMessage) -> some View {
-        let isMine = message.senderUid == auth.user?.uid
+        let isMine = isCurrentUserMessage(message)
         HStack {
             if isMine { Spacer(minLength: 24) }
-            VStack(alignment: .leading, spacing: 4) {
-                Text(message.senderName)
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(isMine ? .black.opacity(0.75) : .montraTextSecondary)
+            VStack(alignment: .leading, spacing: 0) {
                 Text(message.text)
                     .font(.system(size: 14))
                     .foregroundColor(isMine ? .black : .montraTextPrimary)
@@ -450,6 +492,19 @@ struct TrainerInboxView: View {
             .clipShape(RoundedRectangle(cornerRadius: 14))
             if !isMine { Spacer(minLength: 24) }
         }
+    }
+
+    private func isCurrentUserMessage(_ message: ChatMessage) -> Bool {
+        let role = message.senderRole.lowercased()
+        if role == "trainer" { return true }
+        if role == "client" { return false }
+
+        if let currentUid = auth.user?.uid, !currentUid.isEmpty, message.senderUid == currentUid {
+            return true
+        }
+
+        // Fallback for legacy/partially-migrated messages that can have empty senderUid.
+        return false
     }
 
     private func refreshChatThreads() async {
@@ -505,7 +560,9 @@ struct TrainerInboxView: View {
             chatMessages.append(message)
             chatMessageText = ""
             chatError = nil
+            markRequestContacted(for: thread)
             await refreshChatThreads()
+            await fetchMatchRequests()
         } catch {
             chatError = error.localizedDescription
         }
@@ -529,7 +586,13 @@ struct TrainerInboxView: View {
                 )
             } else {
                 ForEach(liveNotifications) { item in
-                    MontraNotificationRow(item: item)
+                    MontraNotificationRow(item: item) {
+                        if item.category == "request" {
+                            dismissNotificationLocally(item.id)
+                            inboxInitialSegment = "requests"
+                            selectedSegment = .requests
+                        }
+                    }
                 }
             }
         }
@@ -543,8 +606,43 @@ struct TrainerInboxView: View {
         defer { notificationsLoading = false }
 
         if let items = try? await NotificationsAPI.loadMine(token: tokenResult.token) {
-            liveNotifications = items
+            liveNotifications = items.filter { !dismissedNotificationIds.contains($0.id) }
+            unreadCount = liveNotifications.filter(\.unread).count
         }
+    }
+
+    private func applyInboxInitialSegment() {
+        switch inboxInitialSegment.lowercased() {
+        case "messages":
+            selectedSegment = .messages
+        case "notifications":
+            selectedSegment = .notifications
+        default:
+            selectedSegment = .requests
+        }
+    }
+
+    private func markRequestContacted(for thread: ChatThread) {
+        let candidate = matchRequests.first {
+            $0.status == "accepted" && (
+                ($0.conversationId ?? "") == thread.id ||
+                $0.clientUid == thread.clientUid
+            )
+        }
+
+        guard let candidate else { return }
+        var ids = contactedRequestIds
+        ids.insert(candidate.id)
+        contactedRequestIdsRaw = ids.sorted().joined(separator: ",")
+        matchRequests.removeAll { $0.id == candidate.id }
+    }
+
+    private func dismissNotificationLocally(_ id: String) {
+        var ids = dismissedNotificationIds
+        ids.insert(id)
+        dismissedIdsRaw = ids.sorted().joined(separator: ",")
+        liveNotifications.removeAll { $0.id == id }
+        unreadCount = liveNotifications.filter(\.unread).count
     }
 }
 
@@ -637,17 +735,6 @@ struct MatchRequestCard: View {
         .montraCard(radius: 14)
         .overlay(alignment: .bottomTrailing) {
             HStack(spacing: 8) {
-                Button(action: onMessage) {
-                    Text("Message")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(.montraTextPrimary)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(Color.white.opacity(0.08))
-                        .clipShape(Capsule())
-                }
-                .disabled(actionInFlight)
-
                 if request.status == "pending" {
                     Button(action: onDecline) {
                         Text("Decline")
@@ -676,6 +763,17 @@ struct MatchRequestCard: View {
                                 .background(Color.montraOrange)
                                 .clipShape(Capsule())
                         }
+                    }
+                    .disabled(actionInFlight)
+                } else if request.status == "accepted" {
+                    Button(action: onMessage) {
+                        Text("Message")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(.montraTextPrimary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(Color.white.opacity(0.08))
+                            .clipShape(Capsule())
                     }
                     .disabled(actionInFlight)
                 }

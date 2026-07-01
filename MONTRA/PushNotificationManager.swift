@@ -113,4 +113,5 @@ class PushNotificationManager: NSObject, ObservableObject, UNUserNotificationCen
 
 extension Notification.Name {
     static let montraPushTapped = Notification.Name("montraPushTapped")
+    static let montraOpenTrainerInbox = Notification.Name("montraOpenTrainerInbox")
 }

@@ -25,6 +25,7 @@ struct DashboardView: View {
     @AppStorage("onboarding.completed") private var onboardingCompleted: Bool = true
     @AppStorage("quiz.requestedTrainer") private var requestedTrainerId: String = ""
     @AppStorage("quiz.requestedTrainerName") private var requestedTrainerName: String = ""
+    @AppStorage("notif.unreadCount") private var unreadCount = 0
 
     private var timeGreeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
@@ -56,7 +57,12 @@ struct DashboardView: View {
 
                     HStack(spacing: 14) {
                         // Notifications (next to profile photo)
-                        NotificationBellButton(action: { showNotifications = true }, size: 38)
+                        NotificationBellButton(
+                            action: { showNotifications = true },
+                            showsBadge: unreadCount > 0,
+                            badgeCount: unreadCount,
+                            size: 38
+                        )
 
                         Button { showProfileSheet = true } label: {
                             ZStack {
@@ -88,7 +94,7 @@ struct DashboardView: View {
 
                 // ── Greeting ─────────────────────────────────────────
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("\(timeGreeting), \(firstName.isEmpty ? "there" : firstName)! 👋")
+                    Text("\(timeGreeting), \(firstName.isEmpty ? "there" : firstName)!")
                         .font(.system(size: 20, weight: .bold))
                         .foregroundColor(.montraTextPrimary)
                     Text("Ready to crush your goals today?")
@@ -322,6 +328,9 @@ struct DashboardView: View {
             .padding(.horizontal, 20)
         }
         .background(Color.montraBackground)
+        .task {
+            await loadUnreadNotificationCount()
+        }
         .sheet(isPresented: $showIntroBooking) {
             IntroBookingView(preselectedTrainer: nil)
         }
@@ -351,6 +360,13 @@ struct DashboardView: View {
             await loadImpactCredits()
         }
         } // NavigationStack
+    }
+
+    private func loadUnreadNotificationCount() async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
+              let notifications = try? await NotificationsAPI.loadMine(token: tokenResult.token) else { return }
+        unreadCount = notifications.filter(\.unread).count
     }
 
     private var statDivider: some View {

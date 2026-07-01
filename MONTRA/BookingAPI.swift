@@ -121,6 +121,24 @@ enum BookingAPI {
         try await completeSession(path: "/api/trainers/sessions/\(id)/complete", notes: notes, token: token)
     }
 
+    static func reportTrainerSessionIssue(id: String, reason: String, detail: String?, token: String) async throws {
+        guard let url = MontraAPIConfig.url(for: "/api/trainers/sessions/\(id)/report") else {
+            throw ChatError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.httpBody = try JSONSerialization.data(withJSONObject: [
+            "reason": reason.trimmingCharacters(in: .whitespacesAndNewlines),
+            "detail": detail?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        ])
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try validate(response: response, data: data)
+    }
+
     static func completeClientSession(id: String, notes: String? = nil, token: String) async throws -> BookedSession {
         try await completeSession(path: "/api/client/sessions/\(id)/complete", notes: notes, token: token)
     }

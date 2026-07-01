@@ -88,3 +88,60 @@ MessagesView MONTRA Team / Support tabs currently show mailto. Needs decision: r
 
 ### Coach Profile Derived Placeholders
 `GET /api/trainers/:id/insights` has `derived: true` values (responsiveness %, Top X% match, Top Client Results). Replace with real data before using in marketing copy.
+
+---
+
+## Copilot Requests (Needed From You)
+
+### A. Replace Trainer Orientation Video URLs ⬜
+Current orientation links in iOS are still Google Drive links. I need the final destination URLs for each video so I can patch [MONTRA/TrainerOrientationView.swift](MONTRA/TrainerOrientationView.swift).
+
+Please provide 5 links mapped to these titles:
+1) Welcome to MONTRA
+2) MONTRA Standards & Code of Conduct
+3) Client Request & Session Flow
+4) Safety, Liability & Scope of Practice
+5) Communication & Professionalism
+
+### B. Email Deliverability + Verification Email Branding ⬜
+Code is now updated to send a branded MONTRA verification email with a button from the backend (`/api/auth/send-verification-email`) and iOS now uses a simple "I've verified my account" check + resend flow.
+
+To complete deliverability (spam reduction + brand consistency), I still need these manual settings completed in Resend/domain DNS:
+1) Verify sending domain and enable SPF/DKIM/DMARC alignment
+2) Final From address selected: MONTRA <noreply@montrafit.com> ✅
+3) Confirm whether we should use a custom verification landing page URL (if yes, set `CLIENT_VERIFY_CONTINUE_URL` in Railway)
+
+Once done, I will finalize wording + From identity and mark this item complete.
+
+#### Deliverability hardening runbook (10-20 min)
+1) In Resend, open Domains and add/verify montrafit.com (or the exact domain used by noreply@montrafit.com).
+2) In your DNS provider, add every Resend-provided record exactly as shown (usually 1 SPF TXT and 2 DKIM CNAME records).
+3) Wait for DNS propagation, then click Verify in Resend until domain status is Verified.
+4) Add a DMARC TXT record for `_dmarc.montrafit.com`:
+	- Start policy (safe rollout): `v=DMARC1; p=none; adkim=s; aspf=s; rua=mailto:dmarc@montrafit.com; fo=1; pct=100`
+	- After a few days of clean reports, tighten to quarantine/reject.
+5) Ensure there is only one active SPF policy for the root domain (single TXT starting with `v=spf1`).
+	- If SPF already exists for another sender, merge includes instead of creating a second SPF TXT.
+6) In Resend, set default sender to `MONTRA <noreply@montrafit.com>` and keep using this identity consistently.
+7) Send test emails to Gmail, Outlook, and iCloud from the app flow and confirm:
+	- Message arrives in Inbox (not Spam/Junk)
+	- Header authentication shows SPF=pass, DKIM=pass, DMARC=pass
+8) Optional but recommended:
+	- Add `List-Unsubscribe` header support for marketing mail only (not required for transactional verification email)
+	- Keep plain-text fallback body alongside HTML
+
+### C. Product Decision: Session Dispute Policy ⬜
+For the "trainer says complete but client says no-show" flow, I need your policy decision before I lock backend logic:
+1) Should completion require trainer + client confirmation, or allow trainer completion with client dispute window?
+2) Dispute window length (e.g. 24h, 48h)
+3) Default outcome if no client response
+
+I can then implement the exact workflow and status transitions.
+
+### D. Product Decision: 3-Strike Enforcement Rules ⬜
+I need explicit strike rules before coding account shutdown behavior:
+1) What events count as strikes (no-show, cancellations, complaints, etc.)
+2) Strike expiration window (never, rolling 90 days, etc.)
+3) Enforcement actions at strike 1/2/3
+
+After you confirm, I will implement backend enforcement + in-app warning UX.

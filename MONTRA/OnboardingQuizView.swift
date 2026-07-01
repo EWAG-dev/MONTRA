@@ -125,7 +125,6 @@ struct OnboardingQuizView: View {
     @State private var verificationLoading = false
     @State private var verificationError: String? = nil
     @State private var verificationMessage: String? = nil
-    @State private var verificationLinkOrCode = ""
     @State private var requestSubmissionError: String? = nil
     @State private var showClientTerms = false
     @State private var walkthroughPage = 0
@@ -175,18 +174,6 @@ struct OnboardingQuizView: View {
                                     .font(.system(size: 11, weight: .black))
                                     .kerning(1.2)
                                     .foregroundColor(.montraTextSecondary)
-                            }
-
-                            if canCloseQuiz {
-                                Button(action: closeQuiz) {
-                                    Image(systemName: "xmark")
-                                        .font(.system(size: 13, weight: .bold))
-                                        .foregroundColor(.montraTextSecondary)
-                                        .frame(width: 28, height: 28)
-                                        .background(Color.white.opacity(0.06))
-                                        .clipShape(Circle())
-                                }
-                                .accessibilityLabel("Close quiz")
                             }
                         }
                     }
@@ -805,9 +792,10 @@ struct OnboardingQuizView: View {
                 .disabled(accountLoading)
 
                 Button {
-                    Task { await signInForResults() }
+                    preAuthOnboardingActive = false
+                    step = 1
                 } label: {
-                    Text("Already have an account? Sign in")
+                    Text("Already have an account? Go to login")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.montraTextSecondary)
                         .frame(maxWidth: .infinity)
@@ -843,40 +831,9 @@ struct OnboardingQuizView: View {
                     .font(.system(size: 30, weight: .black))
                     .foregroundColor(.montraTextPrimary)
 
-                Text("Before selecting a coach, verify your email address. We sent a verification link to \(auth.user?.email ?? accountEmail).")
+                Text("Before selecting a coach, verify your email address. We sent a verification email to \(auth.user?.email ?? accountEmail).")
                     .font(.system(size: 14))
                     .foregroundColor(.montraTextSecondary)
-
-                MontraInputField(
-                    placeholder: "Paste verification link or code",
-                    text: $verificationLinkOrCode,
-                    keyboardType: .URL,
-                    isSecure: false
-                )
-
-                Button {
-                    Task { await applyPastedVerification() }
-                } label: {
-                    Text("Verify with pasted link/code")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.montraTextSecondary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
-                }
-                .disabled(verificationLoading || verificationLinkOrCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-
-                Button {
-                    if let pasted = UIPasteboard.general.string {
-                        verificationLinkOrCode = pasted
-                    }
-                } label: {
-                    Text("Paste from clipboard")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.montraTextSecondary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 6)
-                }
-                .disabled(verificationLoading)
 
                 if let verificationMessage {
                     Text(verificationMessage)
@@ -897,7 +854,7 @@ struct OnboardingQuizView: View {
                         if verificationLoading {
                             ProgressView().tint(.black)
                         } else {
-                            Text("I've verified my email")
+                            Text("I've verified my account")
                                 .font(.system(size: 16, weight: .bold))
                                 .foregroundColor(.black)
                         }
@@ -985,10 +942,47 @@ struct OnboardingQuizView: View {
     }
 
     private var appWalkthroughStep: some View {
-        let pages: [(title: String, subtitle: String)] = [
-            ("Dashboard", "Track your sessions, notifications, and important updates in one place."),
-            ("Sessions & Messages", "Book sessions and stay connected with your trainer."),
-            ("Progress", "Review workouts, nutrition guidance, and milestone wins.")
+        let pages: [(icon: String, title: String, subtitle: String, bullets: [String])] = [
+            (
+                "house.fill",
+                "Dashboard",
+                "Everything important in one place the moment you open MONTRA.",
+                [
+                    "See your upcoming sessions and reminders",
+                    "Open notifications and profile settings quickly",
+                    "Start a rematch any time if your fit changes"
+                ]
+            ),
+            (
+                "calendar.badge.clock",
+                "Sessions & Messages",
+                "Coordinate training details with your coach without switching apps.",
+                [
+                    "Book and manage session times",
+                    "Message your coach directly from the app",
+                    "Get updates when your coach confirms changes"
+                ]
+            ),
+            (
+                "chart.line.uptrend.xyaxis",
+                "Progress",
+                "Your work turns into measurable outcomes every week.",
+                [
+                    "Track completed sessions and trends",
+                    "Log body stats and milestone progress",
+                    "Review coach-prepared session previews"
+                ]
+            ),
+            (
+                "person.2.fill",
+                "Support Team",
+                "Need help? MONTRA Support Team is built in.",
+                [
+                    "Request a callback from support",
+                    "Get technical and account help faster",
+                    "Stay focused on training, not troubleshooting"
+                ]
+            )
         ]
 
         return VStack(alignment: .leading, spacing: 20) {
@@ -999,9 +993,34 @@ struct OnboardingQuizView: View {
             Text(pages[walkthroughPage].title)
                 .font(.system(size: 24, weight: .bold))
                 .foregroundColor(.montraTextPrimary)
+            HStack(spacing: 10) {
+                Image(systemName: pages[walkthroughPage].icon)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.montraOrange)
+                Text("What you'll do here")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.montraTextSecondary)
+            }
             Text(pages[walkthroughPage].subtitle)
                 .font(.system(size: 15, weight: .medium))
                 .foregroundColor(.montraTextSecondary)
+
+            VStack(alignment: .leading, spacing: 10) {
+                ForEach(pages[walkthroughPage].bullets, id: \.self) { bullet in
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.montraOrange)
+                            .padding(.top, 3)
+                        Text(bullet)
+                            .font(.system(size: 14))
+                            .foregroundColor(.montraTextPrimary)
+                    }
+                }
+            }
+            .padding(14)
+            .background(Color.white.opacity(0.05))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
 
             HStack(spacing: 8) {
                 ForEach(0..<pages.count, id: \.self) { index in
@@ -1055,22 +1074,6 @@ struct OnboardingQuizView: View {
         // Already authenticated users don't need the account-creation gate
         if next == 7 && auth.user != nil { next = 8 }
         withAnimation { step = next }
-    }
-
-    private var canCloseQuiz: Bool {
-        preAuthOnboardingActive || (auth.user != nil && !isCompleted)
-    }
-
-    private func closeQuiz() {
-        if preAuthOnboardingActive {
-            preAuthOnboardingActive = false
-            return
-        }
-
-        if auth.user != nil {
-            isCompleted = true
-            step = 1
-        }
     }
 
     private func fetchTrainers() async {
@@ -1261,7 +1264,7 @@ struct OnboardingQuizView: View {
             }
             do {
                 try await auth.sendEmailVerification()
-                verificationMessage = "Verification email sent. Open your inbox, then come back and tap 'I've verified my email'."
+                verificationMessage = "Verification email sent. Open your inbox, tap the Verify button, then return and tap 'I've verified my account'."
             } catch {
                 verificationError = "Account created, but we couldn't send verification email: \(error.localizedDescription)"
             }
@@ -1297,7 +1300,7 @@ struct OnboardingQuizView: View {
         if verified {
             verificationMessage = "Email verified. You can now select a coach."
         } else {
-            verificationError = "Your email is still unverified. Please click the link in your inbox first."
+            verificationError = "Your email is still unverified. Tap 'Resend verification email' and try again."
         }
     }
 
@@ -1309,39 +1312,9 @@ struct OnboardingQuizView: View {
 
         do {
             try await auth.sendEmailVerification()
-            verificationMessage = "Verification email sent. Check your inbox and spam folder."
+            verificationMessage = "Verification email sent. Check your inbox and spam folder for the MONTRA verify button."
         } catch {
             verificationError = "We couldn't resend the verification email right now: \(error.localizedDescription)"
-        }
-    }
-
-    private func applyPastedVerification() async {
-        verificationError = nil
-        verificationMessage = nil
-        verificationLoading = true
-        defer { verificationLoading = false }
-
-        let value = verificationLinkOrCode.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !value.isEmpty else {
-            verificationError = "Paste a verification link or code first."
-            return
-        }
-
-        do {
-            let verified: Bool
-            if value.contains("oobCode=") || value.contains("http://") || value.contains("https://") {
-                verified = try await auth.applyEmailVerificationLink(value)
-            } else {
-                verified = try await auth.applyEmailVerificationCode(value)
-            }
-
-            if verified {
-                verificationMessage = "Email verified. You can now select a coach."
-            } else {
-                verificationError = "Verification was applied, but your account still appears unverified. Tap 'I've verified my email'."
-            }
-        } catch {
-            verificationError = "Couldn't apply verification link/code: \(error.localizedDescription)"
         }
     }
 

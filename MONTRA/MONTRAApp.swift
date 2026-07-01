@@ -47,6 +47,7 @@ struct RootView: View {
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("onboarding.completed") private var onboardingCompleted = false
     @AppStorage("onboarding.preAuthActive") private var preAuthOnboardingActive = false
+    @AppStorage("quiz.requestedTrainer") private var requestedTrainerId = ""
     @AppStorage("app.liveDataConnected") private var liveDataConnected = false
     @State private var splashDone = false
     @State private var hasRunConnectivityCheck = false
@@ -67,7 +68,7 @@ struct RootView: View {
                 } else {
                     TrainerTabView()
                 }
-            } else if !onboardingCompleted {
+            } else if !onboardingCompleted && requestedTrainerId.isEmpty {
                 OnboardingQuizView()
             } else {
                 ContentView()

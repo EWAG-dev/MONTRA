@@ -62,3 +62,18 @@ targets:
         CODE_SIGNING_REQUIRED: "YES"
         CODE_SIGNING_ALLOWED: "YES"
         DEVELOPMENT_TEAM: X29HP9D526
+
+  MONTRATests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: MONTRATests
+    dependencies:
+      - target: MONTRA
+    settings:
+      base:
+        SWIFT_VERSION: "5.0"
+        IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/MONTRA.app/MONTRA"
+        BUNDLE_LOADER: "$(TEST_HOST)"

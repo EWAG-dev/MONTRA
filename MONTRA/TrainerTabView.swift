@@ -5,6 +5,7 @@ import SwiftUI
 struct TrainerTabView: View {
 
     @EnvironmentObject private var auth: AuthManager
+    @AppStorage("trainer.inbox.initialSegment") private var inboxInitialSegment = "requests"
     @State private var selectedTab: TrainerTab = .dashboard
 
     enum TrainerTab {
@@ -39,11 +40,20 @@ struct TrainerTabView: View {
         .onReceive(NotificationCenter.default.publisher(for: .montraPushTapped)) { note in
             let category = note.userInfo?["category"] as? String ?? ""
             switch category {
-            case "request": selectedTab = .inbox
-            case "message": selectedTab = .inbox
+            case "request":
+                inboxInitialSegment = "requests"
+                selectedTab = .inbox
+            case "message":
+                inboxInitialSegment = "messages"
+                selectedTab = .inbox
             case "session": selectedTab = .sessions
             default:        selectedTab = .dashboard
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .montraOpenTrainerInbox)) { note in
+            let segment = (note.userInfo?["segment"] as? String)?.lowercased() ?? "requests"
+            inboxInitialSegment = segment
+            selectedTab = .inbox
         }
     }
 }

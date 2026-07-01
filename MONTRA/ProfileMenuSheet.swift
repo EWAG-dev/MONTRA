@@ -11,6 +11,8 @@ struct ProfileMenuSheet: View {
     @AppStorage("dashboardProfileImageData") private var clientProfileImageData: Data = Data()
     @AppStorage("trainerProfileImageData") private var trainerProfileImageData: Data = Data()
     @AppStorage("quiz.firstName") private var quizFirstName: String = ""
+    @AppStorage("referral.points") private var referralPoints = 0
+    @AppStorage("referral.lastAwardAt") private var lastReferralAwardAt = ""
     @AppStorage("onboarding.completed") private var onboardingCompleted = false
     @AppStorage("quiz.step")            private var quizStep = 1
     @State private var showPersonalInfo      = false
@@ -20,6 +22,7 @@ struct ProfileMenuSheet: View {
     @State private var showReferShareSheet   = false
     @State private var showDeleteConfirm     = false
     @State private var deleteError: String?  = nil
+    @State private var showTrainerAgreement = false
     @State private var showTrainerOrientation = false
     @State private var showMyPlan            = false
     @State private var comingSoonFeature: String? = nil
@@ -130,6 +133,11 @@ struct ProfileMenuSheet: View {
                                 .buttonStyle(.plain)
                                 rowDivider
                             } else {
+                                Button { showTrainerAgreement = true } label: {
+                                    ProfileRow(icon: "doc.text.fill", label: "Coach Provider Agreement")
+                                }
+                                .buttonStyle(.plain)
+                                rowDivider
                                 Button { showTrainerOrientation = true } label: {
                                     ProfileRow(icon: "play.rectangle.fill", label: "Trainer Orientation")
                                 }
@@ -155,7 +163,7 @@ struct ProfileMenuSheet: View {
                                 .buttonStyle(.plain)
                                 rowDivider
                                 Button { showReferShareSheet = true } label: {
-                                    ProfileRow(icon: "person.2.fill", label: "Refer a Friend")
+                                    ProfileRow(icon: "person.2.fill", label: "Refer a Friend (\(referralPoints) pts)")
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -225,6 +233,7 @@ struct ProfileMenuSheet: View {
         .sheet(isPresented: $showPersonalInfo)      { PersonalInfoSheet(isClient: isClient).environmentObject(auth) }
         .sheet(isPresented: $showNotificationPrefs) { NotificationPrefsSheet() }
         .sheet(isPresented: $showAppearanceSheet)   { AppearanceSettingsSheet() }
+        .sheet(isPresented: $showTrainerAgreement) { TrainerAgreementView(isReplay: true) }
         .sheet(isPresented: $showTrainerOrientation) { TrainerOrientationView(isReplay: true) }
         .sheet(isPresented: $showMyPlan)            { SubscriptionManagementView().environmentObject(auth) }
         .sheet(isPresented: $showGiftShareSheet) {
@@ -236,6 +245,11 @@ struct ProfileMenuSheet: View {
             ShareSheet(activityItems: [
                 "Train with me on MONTRA. Join here: https://elitehomefitness.com"
             ])
+        }
+        .onChange(of: showReferShareSheet) { _, isShowing in
+            if isShowing {
+                awardReferralPointsIfEligible()
+            }
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
@@ -273,6 +287,16 @@ struct ProfileMenuSheet: View {
         Divider()
             .background(Color.white.opacity(0.06))
             .padding(.leading, 52)
+    }
+
+    private func awardReferralPointsIfEligible() {
+        let now = Date()
+        if let lastDate = ISO8601DateFormatter().date(from: lastReferralAwardAt),
+           Calendar.current.isDate(lastDate, inSameDayAs: now) {
+            return
+        }
+        referralPoints += 100
+        lastReferralAwardAt = ISO8601DateFormatter().string(from: now)
     }
 }
 
@@ -550,8 +574,9 @@ struct PersonalInfoSheet: View {
         let trimmedFirst: String
         let trimmedLast: String
         if isClient {
-            trimmedFirst = storedFirst
-            trimmedLast = storedLast
+            let split = splitDisplayName(auth.userDisplayName)
+            trimmedFirst = storedFirst.isEmpty ? split.first : storedFirst
+            trimmedLast = storedLast.isEmpty ? split.last : storedLast
         } else {
             let split = splitDisplayName(auth.userDisplayName)
             trimmedFirst = split.first
@@ -559,7 +584,7 @@ struct PersonalInfoSheet: View {
         }
         draftFirst = trimmedFirst
         draftLast = trimmedLast
-        draftEmail = storedEmail
+        draftEmail = storedEmail.isEmpty ? (auth.user?.email ?? "") : storedEmail
         draftPhone = storedPhone
     }
 
@@ -766,13 +791,19 @@ struct AppearanceSettingsSheet: View {
                                 .kerning(1)
 
                             HStack(spacing: 12) {
-                                MontraAIBotAvatar(size: 50)
+                                Image("MontraLogoLight")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 50, height: 50)
+                                    .padding(6)
+                                    .background(Color.white.opacity(0.06))
+                                    .clipShape(RoundedRectangle(cornerRadius: 10))
 
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text("MONTRA AI")
+                                    Text("MONTRA Theme")
                                         .font(.system(size: 15, weight: .bold))
                                         .foregroundColor(.montraTextPrimary)
-                                    Text("Light mode uses a clean, high-contrast style inspired by your AI assistant visual.")
+                                    Text("Choose dark, light, or system appearance for your app.")
                                         .font(.system(size: 12))
                                         .foregroundColor(.montraTextSecondary)
                                         .fixedSize(horizontal: false, vertical: true)

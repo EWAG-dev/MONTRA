@@ -121,7 +121,7 @@ async function sendEmail(to, subject, html) {
     console.warn(`[Email skipped — RESEND_API_KEY not set] To: ${to} | Subject: ${subject}`);
     return;
   }
-  const from = process.env.FROM_EMAIL || "MONTRA <noreply@montra.com>";
+  const from = process.env.FROM_EMAIL || "MONTRA <noreply@montrafit.com>";
   console.log(`[Email] Sending to: ${to} | From: ${from} | Subject: ${subject}`);
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -197,6 +197,24 @@ function approvalEmailHtml(name, resetLink) {
   Click below to set your password and complete your trainer profile. Once your profile is live you will start receiving client match requests in the MONTRA app.</p>
   <a href="${resetLink}" style="display:inline-block;background:#FF6820;color:#000;font-size:15px;font-weight:700;padding:16px 32px;border-radius:12px;text-decoration:none;margin:32px 0">Set Password &amp; Complete Profile &rarr;</a>
   <p style="color:#666;font-size:13px;line-height:1.6">After setting your password you will be taken to your trainer profile page. Then download the MONTRA app and sign in with your email and new password.</p>
+  <hr style="border:none;border-top:1px solid #222;margin:40px 0">
+  <p style="color:#555;font-size:11px">MONTRA &middot; Powered by Elite Home Fitness</p>
+</div></body></html>`;
+}
+
+function clientVerificationEmailHtml(name, verifyLink, email) {
+  const safeName = escapeHtml(name || "there");
+  const safeEmail = escapeHtml(email || "your email");
+  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+<div style="max-width:560px;margin:0 auto;padding:48px 24px">
+  <p style="color:#FF6820;font-size:11px;font-weight:700;letter-spacing:2px;margin:0 0 32px">MONTRA</p>
+  <h1 style="color:#fff;font-size:28px;font-weight:900;margin:0 0 12px">Verify your account.</h1>
+  <p style="color:#999;font-size:15px;margin:0 0 32px">One quick step to unlock coach matching in MONTRA.</p>
+  <p style="font-size:15px;line-height:1.7;color:#ccc">Hi ${safeName},<br><br>
+  Tap the button below to verify ${safeEmail}.<br><br>
+  Once verified, return to the MONTRA app and tap <strong>I've verified my account</strong>.</p>
+  <a href="${verifyLink}" style="display:inline-block;background:#FF6820;color:#000;font-size:15px;font-weight:700;padding:16px 32px;border-radius:12px;text-decoration:none;margin:32px 0">Verify My Account &rarr;</a>
+  <p style="color:#666;font-size:13px;line-height:1.6">If the button does not work, copy and paste this link into your browser:<br><br><span style="word-break:break-all">${verifyLink}</span></p>
   <hr style="border:none;border-top:1px solid #222;margin:40px 0">
   <p style="color:#555;font-size:11px">MONTRA &middot; Powered by Elite Home Fitness</p>
 </div></body></html>`;
@@ -408,6 +426,40 @@ app.get("/api/firebase/client-config", (_req, res) => {
     projectId,
     warnings,
   });
+});
+
+app.post("/api/auth/send-verification-email", requireFirebaseAuth, async (req, res) => {
+  try {
+    const email = String(req.user?.email || "").trim();
+    if (!email) {
+      res.status(400).json({ error: "Authenticated user is missing an email" });
+      return;
+    }
+
+    if (req.user?.email_verified) {
+      res.status(200).json({ ok: true, alreadyVerified: true });
+      return;
+    }
+
+    const actionUrl =
+      process.env.CLIENT_VERIFY_CONTINUE_URL ||
+      process.env.WEBSITE_URL ||
+      "https://montra-27532.web.app";
+
+    const verifyLink = await getAuth().generateEmailVerificationLink(email, { url: actionUrl });
+    const name = String(req.user?.name || "").trim();
+
+    await sendEmail(
+      email,
+      "Verify your MONTRA account",
+      clientVerificationEmailHtml(name, verifyLink, email)
+    );
+
+    res.status(200).json({ ok: true });
+  } catch (error) {
+    console.error("[send-verification-email] Failed:", error?.message || error);
+    res.status(500).json({ error: "Failed to send verification email" });
+  }
 });
 
 async function requireFirebaseAuth(req, res, next) {
@@ -1003,6 +1055,65 @@ app.post("/api/trainers/sessions/:id/complete", requireFirebaseAuth, async (req,
   }).catch(() => {});
 
   res.status(200).json({ session });
+});
+
+app.post("/api/trainers/sessions/:id/report", requireFirebaseAuth, async (req, res) => {
+  const trainer = await getTrainerByAccountUid(req.user.uid);
+  const existing = await getBookedSession(req.params.id);
+  if (!existing) {
+    res.status(404).json({ error: "Session not found" });
+    return;
+  }
+
+  if (!trainer || existing.trainerId !== trainer.id) {
+    res.status(403).json({ error: "Not your session" });
+    return;
+  }
+
+  const reason = String(req.body?.reason || "").trim();
+  const detail = String(req.body?.detail || "").trim();
+  if (!reason) {
+    res.status(400).json({ error: "reason is required" });
+    return;
+  }
+
+  const report = {
+    sessionId: existing.id,
+    trainerId: trainer.id,
+    trainerUid: req.user.uid,
+    trainerName: trainer.name || req.user.name || req.user.email || "Trainer",
+    clientUid: existing.clientUid,
+    clientName: existing.clientName || "Client",
+    reason,
+    detail,
+    sessionStatus: existing.status || "",
+    startTime: existing.startTime || "",
+    createdAt: new Date().toISOString(),
+    status: "open",
+  };
+
+  const doc = await getFirestore().collection("sessionReports").add(report);
+
+  // Best-effort notify admins without breaking UX if email provider is missing.
+  const to = (process.env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean);
+  if (to.length) {
+    const html = `<!doctype html><html><body style="font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:#0a0a0a; color:#ddd; padding:20px;">
+      <p style="color:#FF6820; letter-spacing:1px; font-size:12px; font-weight:700;">MONTRA SESSION REPORT</p>
+      <h2 style="color:#fff; margin:0 0 12px;">Trainer reported a session issue</h2>
+      <p><strong>Trainer:</strong> ${escapeHtml(report.trainerName)}</p>
+      <p><strong>Client:</strong> ${escapeHtml(report.clientName)}</p>
+      <p><strong>Reason:</strong> ${escapeHtml(report.reason)}</p>
+      <p><strong>Detail:</strong> ${escapeHtml(report.detail || "(none)")}</p>
+      <p><strong>Session ID:</strong> ${escapeHtml(report.sessionId)}</p>
+      <p><strong>Report ID:</strong> ${escapeHtml(doc.id)}</p>
+    </body></html>`;
+    sendEmail(to, "MONTRA trainer session issue report", html).catch(() => {});
+  }
+
+  res.status(201).json({ report: { id: doc.id, ...report } });
 });
 
 // Trainer pushes a session preview to the client before the session
@@ -1850,7 +1961,7 @@ app.post("/api/conversations/:conversationId/messages", requireFirebaseAuth, asy
     return;
   }
 
-  const senderRole = trainer && trainer.id === conversation.trainerId ? "trainer" : "client";
+  const senderRole = req.user.uid === conversation.clientUid ? "client" : "trainer";
   const senderName =
     senderRole === "trainer"
       ? trainer?.name || req.user.name || req.user.email || "Trainer"

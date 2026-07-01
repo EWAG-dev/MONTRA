@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "autotap": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["/Users/aarwitz/repos/AutoTap/mcp-server/src/index.js"]
+    }
+  }
+}

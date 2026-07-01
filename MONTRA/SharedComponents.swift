@@ -15,6 +15,7 @@ struct SectionHeader: View {
 struct NotificationBellButton: View {
     var action: (() -> Void)? = nil
     var showsBadge: Bool = true
+    var badgeCount: Int? = nil
     var size: CGFloat = 34
 
     private var cornerRadius: CGFloat {
@@ -38,10 +39,21 @@ struct NotificationBellButton: View {
                     )
 
                 if showsBadge {
-                    Circle()
-                        .fill(Color.montraOrange)
-                        .frame(width: 8, height: 8)
-                        .offset(x: 1, y: 1)
+                    if let badgeCount, badgeCount > 0 {
+                        Text(badgeCount > 99 ? "99+" : String(badgeCount))
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundColor(.black)
+                            .padding(.horizontal, badgeCount > 9 ? 5 : 0)
+                            .frame(minWidth: 15, minHeight: 15)
+                            .background(Color.montraOrange)
+                            .clipShape(Capsule())
+                            .offset(x: 3, y: -3)
+                    } else {
+                        Circle()
+                            .fill(Color.montraOrange)
+                            .frame(width: 8, height: 8)
+                            .offset(x: 1, y: 1)
+                    }
                 }
             }
         }
@@ -53,11 +65,16 @@ struct ClientMessagesStyleHeader: View {
     let title: String
     var onNotificationTap: (() -> Void)? = nil
     var onProfileTap: (() -> Void)? = nil
+    var notificationBadgeCount: Int = 0
     @AppStorage("dashboardProfileImageData") private var profileImageData: Data = Data()
 
     var body: some View {
         HStack(spacing: 8) {
-            NotificationBellButton(action: onNotificationTap)
+            NotificationBellButton(
+                action: onNotificationTap,
+                showsBadge: notificationBadgeCount > 0,
+                badgeCount: notificationBadgeCount
+            )
 
             Spacer()
 
@@ -98,6 +115,10 @@ struct ClientMessagesStyleHeader: View {
 }
 
 struct TrainerCompactTopBar: View {
+    @EnvironmentObject private var auth: AuthManager
+    @AppStorage("notif.unreadCount") private var unreadCount = 0
+    @State private var showNotifications = false
+
     let title: String
     let onMenuTap: () -> Void
     var trailingIcon: String? = nil
@@ -124,22 +145,49 @@ struct TrainerCompactTopBar: View {
 
             Spacer()
 
-            if let trailingIcon, let onTrailingTap {
-                Button(action: onTrailingTap) {
-                    Image(systemName: trailingIcon)
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.montraOrange)
-                        .frame(width: 34, height: 34)
-                        .background(Color.white.opacity(0.06))
-                        .clipShape(RoundedRectangle(cornerRadius: 9))
+            HStack(spacing: 8) {
+                NotificationBellButton(
+                    action: {
+                        showNotifications = true
+                    },
+                    showsBadge: unreadCount > 0,
+                    badgeCount: unreadCount
+                )
+
+                if let trailingIcon, let onTrailingTap {
+                    Button(action: onTrailingTap) {
+                        Image(systemName: trailingIcon)
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.montraOrange)
+                            .frame(width: 34, height: 34)
+                            .background(Color.white.opacity(0.06))
+                            .clipShape(RoundedRectangle(cornerRadius: 9))
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
-            } else {
-                Color.clear
-                    .frame(width: 34, height: 34)
             }
         }
         .padding(.top, 2)
+        .sheet(isPresented: $showNotifications) {
+            NotificationsView()
+        }
+        .task {
+            await loadUnreadNotificationCount()
+        }
+        .onChange(of: showNotifications) { _, isShowing in
+            if !isShowing {
+                Task {
+                    await loadUnreadNotificationCount()
+                }
+            }
+        }
+    }
+
+    private func loadUnreadNotificationCount() async {
+        guard let user = auth.user,
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
+              let notifications = try? await NotificationsAPI.loadMine(token: tokenResult.token) else { return }
+        unreadCount = notifications.filter(\.unread).count
     }
 }
 
