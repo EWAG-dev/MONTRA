@@ -18,11 +18,57 @@ And we want client to fill out a survey at some point. And we want to make it ea
 13. Fix the coach orientation video links that ucrrently go to google drive: ✅ Done
 - Orientation videos now open and play inside the app instead of bouncing out to the browser.
 14. Improve the email for client account verification. currently you have to actually highlight the link. also it goes to spam and the coach one seems not to?
+
+Verification deliverability runbook (current progress: Step 1 and Step 2 complete, currently on Step 3)
+1. ✅ Railway variables set
+- `RESEND_API_KEY`
+- `FROM_EMAIL=MONTRA <noreply@montrafit.com>`
+- `WEBSITE_URL` set to current live site URL
+- Optional but recommended: `CLIENT_VERIFY_CONTINUE_URL` set to final verify landing URL
+
+2. ✅ Resend domain verified
+- Sending domain is verified in Resend and ready for authenticated sending.
+
+3. DNS alignment in GoDaddy (in progress)
+- Add all SPF and DKIM records shown by Resend exactly as provided.
+- Ensure only one SPF TXT exists at root. If one already exists, merge includes into a single `v=spf1 ... ~all` record.
+- Add DMARC TXT for host `_dmarc` with value:
+`v=DMARC1; p=none; adkim=s; aspf=s; rua=mailto:dmarc@montrafit.com; fo=1; pct=100`
+- Save changes and wait for DNS propagation.
+
+4. Provider-side verification
+- In Resend, confirm domain status remains Verified after DNS settles.
+- Confirm SPF and DKIM both show pass/healthy in the domain panel.
+
+5. End-to-end app flow test
+- From iOS onboarding, tap resend verification email.
+- Open the received email and tap Verify My Account.
+- Return to app and tap I've verified my account.
+- Confirm onboarding proceeds without verification error.
+
+6. Inbox placement + auth checks
+- Test Gmail, Outlook, and iCloud inboxes.
+- Confirm delivery lands in Inbox (not spam/junk).
+- In message headers, confirm: SPF=pass, DKIM=pass, DMARC=pass.
+
+7. Tighten DMARC after stable delivery
+- After a few days of clean reports, change DMARC policy from `p=none` to `p=quarantine`, then optionally `p=reject`.
+
+Definition of Done for item 14
+- Verification email CTA works end-to-end in app.
+- Sender auth passes (SPF/DKIM/DMARC) for major providers.
+- Inbox placement is acceptable for Gmail, Outlook, iCloud.
+- DMARC monitoring policy is active and scheduled for tightening.
 15. Rematch makes me recreate an account because quiz always ends in create an account. even if you are already signed (still brings you to that screen as if you were not signed in) or click “already have an account. sign in” (this button does nothing, brings up an “please enter email and password” red error.
 
 ---
 
 ## Copilot Status Commentary (July 1, 2026)
+
+Overall snapshot:
+- ✅ Complete: 11
+- 🟡 Partial: 3
+- ⬜ Todo: 1
 
 1. Chat bubble role bug: ✅ Complete
 - Backend sender-role resolution updated to derive role from conversation ownership.
@@ -62,12 +108,14 @@ And we want client to fill out a survey at some point. And we want to make it ea
 12. Support vs MONTRA Team naming: ✅ Complete
 - Unified as MONTRA Support Team in app messaging UI.
 
-13. Orientation links still on Google Drive: ⬜ Todo
-- Waiting on final replacement URLs from you (tracked in HUMAN_TASKS.md).
+13. Orientation links still on Google Drive: ✅ Complete
+- All orientation videos are now Firebase Hosting URLs and play in-app via native full-screen player.
+- 6-video sequence is mapped and live under `/orientation/*`.
 
 14. Improve client verification email quality/deliverability: 🟡 Partial
 - Verification UX is now improved: branded button email + simplified in-app "I've verified my account" flow are implemented.
-- Remaining work is deliverability configuration (SPF/DKIM/DMARC + sender domain alignment) tracked in HUMAN_TASKS.md.
+- Railway variables and Resend domain verification are complete.
+- Current step is DNS alignment and final inbox/auth verification (SPF/DKIM/DMARC passes on Gmail, Outlook, iCloud).
 
 15. Rematch/account recreation/sign-in dead-end: ✅ Complete
 - Existing-account action now routes back to login instead of dead-end inline sign-in behavior.

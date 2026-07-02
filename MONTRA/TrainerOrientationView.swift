@@ -15,14 +15,19 @@ struct TrainerOrientationView: View {
             "https://montra-27532.web.app/orientation/1.MONTRA_Coach_Academy_Onboarding.mp4"
         ),
         (
-            "MONTRA Standards & Code of Conduct",
+            "MONTRA Code of Conduct",
             "The professional standards, prohibited conduct rules, and values every MONTRA coach is held to.",
             "https://montra-27532.web.app/orientation/2.Building_Trust.mp4"
         ),
         (
-            "Client Request & Session Flow",
+            "Booking an Intro Session",
             "How to review match requests, accept clients, schedule sessions, and log session records correctly.",
             "https://montra-27532.web.app/orientation/3.The_Perfect_Intro_Session.mp4"
+        ),
+        (
+            "The MONTRA Difference: Focus on Coaching, Not Selling",
+            "How MONTRA coaches deliver a distinct premium experience by leading sessions with coaching-first standards.",
+            "https://montra-27532.web.app/orientation/4.The_MONTRA_Difference_Focus%20on%20Coaching.mp4"
         ),
         (
             "Safety, Liability & Scope of Practice",
@@ -33,12 +38,7 @@ struct TrainerOrientationView: View {
             "Communication & Professionalism",
             "Response time expectations, messaging clients, handling rescheduling, and representing the MONTRA brand.",
             "https://montra-27532.web.app/orientation/6.Communication_Accountability.mp4"
-        ),
-        (
-            "The MONTRA Difference: Coaching Mindset & Client Experience",
-            "How MONTRA coaches deliver a distinct premium experience by leading sessions with coaching-first standards.",
-            "https://montra-27532.web.app/orientation/4.The_MONTRA_Difference_Focus%20on%20Coaching.mp4"
-        ),
+        )
     ]
 
     private var allWatched: Bool { watched.count == videos.count }
