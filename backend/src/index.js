@@ -9,6 +9,8 @@ import {
   deleteTrainer,
   evaluateTrainerApplication,
   getTrainerByAccountUid,
+  getTrainerByCheckrCandidateId,
+  getTrainerByEmail,
   getTrainer,
   getTrainerBySlug,
   listTrainers,
@@ -19,6 +21,7 @@ import {
   upsertTrainerForAccount,
   updateTrainer,
   setTrainerVerification,
+  setTrainerCheckrData,
 } from "./trainerStore.js";
 import {
   createMatchRequest,
@@ -74,6 +77,15 @@ import { computeMatch, normalizePrefs } from "./matchScore.js";
 import { createLead, listLeads, updateLeadStatus, deleteLeadsForPhone } from "./leadStore.js";
 import { addToWaitlist, getWaitlistForLocation, markNotified } from "./coachWaitlistStore.js";
 import { createIntroSessionIntent, createProgramSubscription, cancelSubscription, constructWebhookEvent, getPublishableKey } from "./stripeStore.js";
+import {
+  candidateIdFromCheckrEvent,
+  getCheckrReport,
+  isCheckrEnabled,
+  maybeStartCheckrForTrainer,
+  normalizeCheckrDecision,
+  reportIdFromCheckrEvent,
+  verifyCheckrWebhookSignature,
+} from "./checkr.js";
 
 // Safety net: Express 4 doesn't forward errors from async route handlers, so a
 // single rejecting request would otherwise become an unhandled rejection and crash
@@ -104,6 +116,88 @@ const defaultOrigins = [
   "http://127.0.0.1:5173",
 ];
 const corsOrigins = [...new Set([...defaultOrigins, ...allowedOrigins])];
+
+app.post("/api/checkr/webhook", express.raw({ type: "application/json", limit: "2mb" }), async (req, res) => {
+  if (!isCheckrEnabled()) {
+    res.status(503).json({ error: "Checkr integration is not configured" });
+    return;
+  }
+
+  const rawBody = Buffer.isBuffer(req.body) ? req.body.toString("utf8") : "";
+  const signature = req.headers["x-checkr-signature"];
+  const signatureHeader = Array.isArray(signature) ? signature[0] : signature;
+  if (!verifyCheckrWebhookSignature(rawBody, signatureHeader)) {
+    res.status(401).json({ error: "Invalid Checkr webhook signature" });
+    return;
+  }
+
+  let event;
+  try {
+    event = JSON.parse(rawBody || "{}");
+  } catch {
+    res.status(400).json({ error: "Invalid JSON payload" });
+    return;
+  }
+
+  const eventType = String(event?.type || "");
+  const reportId = reportIdFromCheckrEvent(event);
+
+  let report = event?.data?.object || {};
+  if (reportId) {
+    try {
+      report = (await getCheckrReport(reportId)) || report;
+    } catch (error) {
+      console.error("[checkr-webhook] Failed to fetch Checkr report:", error?.message || error);
+    }
+  }
+
+  let candidateId = candidateIdFromCheckrEvent(event);
+  if (!candidateId && report?.candidate_id) {
+    candidateId = String(report.candidate_id);
+  }
+
+  let trainer = null;
+  if (candidateId) {
+    trainer = await getTrainerByCheckrCandidateId(candidateId);
+  }
+
+  const candidateEmail = String(report?.candidate?.email || "").trim().toLowerCase();
+  if (!trainer && candidateEmail) {
+    trainer = await getTrainerByEmail(candidateEmail);
+  }
+
+  if (!trainer) {
+    res.status(202).json({ ok: true, ignored: true, reason: "trainer_not_found" });
+    return;
+  }
+
+  const decision = normalizeCheckrDecision(eventType, report);
+  trainer =
+    (await setTrainerCheckrData(trainer.id, {
+      checkrCandidateId: candidateId || trainer.checkrCandidateId || "",
+      checkrReportId: String(report?.id || reportId || trainer.checkrReportId || ""),
+      checkrStatus: decision.checkrStatus,
+      checkrLastEventType: eventType,
+      checkrLastEventAt: new Date().toISOString(),
+    })) || trainer;
+
+  if (typeof decision.cleared === "boolean") {
+    trainer = (await setTrainerVerification(trainer.id, { backgroundCheckCleared: decision.cleared })) || trainer;
+  }
+
+  if (trainer.status !== "approved") {
+    const evaluation = evaluateTrainerApplication(trainer);
+    if (canAutoApproveTrainer(trainer, evaluation)) {
+      trainer = await approveTrainer(trainer.id);
+      await finalizeTrainerApproval(trainer, "checkr-webhook-auto-approve");
+      notifyWaitlistForTrainerAvailability(trainer, "checkr-webhook-auto-approve").catch((error) => {
+        console.error("[checkr-webhook-auto-approve] Waitlist notification failed:", error?.message || error);
+      });
+    }
+  }
+
+  res.status(200).json({ ok: true, trainerId: trainer.id, checkrStatus: decision.checkrStatus, cleared: decision.cleared });
+});
 
 app.use(express.json({ limit: "5mb" }));
 app.use(
@@ -634,6 +728,21 @@ app.post("/api/trainers/apply", requireFirebaseAuth, async (req, res) => {
     };
 
     let trainer = await upsertTrainerForAccount(req.user.uid, application);
+
+    try {
+      const screening = await maybeStartCheckrForTrainer(trainer);
+      if (screening?.candidateId || screening?.invitationId || screening?.checkrStatus) {
+        trainer =
+          (await setTrainerCheckrData(trainer.id, {
+            checkrCandidateId: screening.candidateId || trainer.checkrCandidateId || "",
+            checkrInvitationId: screening.invitationId || trainer.checkrInvitationId || "",
+            checkrStatus: screening.checkrStatus || trainer.checkrStatus || "",
+          })) || trainer;
+      }
+    } catch (checkrError) {
+      console.error("[trainers-apply] Checkr setup failed:", checkrError?.message || checkrError);
+    }
+
     const evaluation = evaluateTrainerApplication(trainer);
 
     if (canAutoApproveTrainer(trainer, evaluation)) {
@@ -885,6 +994,20 @@ app.post("/api/trainers/provision", async (req, res) => {
       backgroundCheckConsent: Boolean(backgroundCheckConsent),
       policyAgreement: Boolean(policyAgreement),
     });
+
+    try {
+      const screening = await maybeStartCheckrForTrainer(trainer);
+      if (screening?.candidateId || screening?.invitationId || screening?.checkrStatus) {
+        trainer =
+          (await setTrainerCheckrData(trainer.id, {
+            checkrCandidateId: screening.candidateId || trainer.checkrCandidateId || "",
+            checkrInvitationId: screening.invitationId || trainer.checkrInvitationId || "",
+            checkrStatus: screening.checkrStatus || trainer.checkrStatus || "",
+          })) || trainer;
+      }
+    } catch (checkrError) {
+      console.error("[trainers-provision] Checkr setup failed:", checkrError?.message || checkrError);
+    }
 
     // Best-effort confirmation so applicants know submission succeeded.
     try {
@@ -2138,11 +2261,18 @@ app.get("/api/admin/trainer-applications", requireFirebaseAuth, requireAdmin, as
 });
 
 app.post("/api/admin/trainers/:id/approve", requireFirebaseAuth, requireAdmin, async (req, res) => {
-  const trainer = await approveTrainer(req.params.id);
+  let trainer = await getTrainer(req.params.id);
   if (!trainer) {
     res.status(404).json({ error: "Trainer not found" });
     return;
   }
+
+  if (trainer.backgroundCheckCleared !== true) {
+    res.status(409).json({ error: "Trainer cannot be approved until Checkr background check is cleared" });
+    return;
+  }
+
+  trainer = await approveTrainer(req.params.id);
 
   await finalizeTrainerApproval(trainer, "admin-approve-trainer");
   notifyWaitlistForTrainerAvailability(trainer, "admin-approve-trainer").catch((error) => {

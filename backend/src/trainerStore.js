@@ -59,6 +59,10 @@ function normalizeStatus(value) {
   return ["pending", "approved", "rejected"].includes(normalized) ? normalized : "pending";
 }
 
+function normalizeCheckrStatus(value) {
+  return normalizeString(value).toLowerCase();
+}
+
 // SEO-friendly slug. "Luis Mendonca" + ["Boston, MA"] -> "luis-mendonca-boston".
 function slugify(value) {
   return String(value || "")
@@ -109,6 +113,12 @@ function normalizeTrainerPayload(input, existingTrainer = null) {
   const idVerified = Boolean(existingTrainer?.idVerified ?? false);
   const backgroundCheckCleared = Boolean(existingTrainer?.backgroundCheckCleared ?? false);
   const montraCertified = Boolean(existingTrainer?.montraCertified ?? false);
+  const checkrCandidateId = normalizeString(existingTrainer?.checkrCandidateId);
+  const checkrInvitationId = normalizeString(existingTrainer?.checkrInvitationId);
+  const checkrReportId = normalizeString(existingTrainer?.checkrReportId);
+  const checkrStatus = normalizeCheckrStatus(existingTrainer?.checkrStatus);
+  const checkrLastEventType = normalizeString(existingTrainer?.checkrLastEventType);
+  const checkrLastEventAt = normalizeString(existingTrainer?.checkrLastEventAt);
   const education = normalizeString(input.education ?? existingTrainer?.education);
   const references = normalizeList(input.references ?? existingTrainer?.references ?? []);
 
@@ -154,6 +164,12 @@ function normalizeTrainerPayload(input, existingTrainer = null) {
     idVerified,
     backgroundCheckCleared,
     montraCertified,
+    checkrCandidateId,
+    checkrInvitationId,
+    checkrReportId,
+    checkrStatus,
+    checkrLastEventType,
+    checkrLastEventAt,
     education,
     references,
   };
@@ -191,6 +207,12 @@ function serializeTrainer(doc) {
     idVerified: data.idVerified === true,
     backgroundCheckCleared: data.backgroundCheckCleared === true,
     montraCertified: data.montraCertified === true,
+    checkrCandidateId: data.checkrCandidateId || "",
+    checkrInvitationId: data.checkrInvitationId || "",
+    checkrReportId: data.checkrReportId || "",
+    checkrStatus: normalizeCheckrStatus(data.checkrStatus),
+    checkrLastEventType: data.checkrLastEventType || "",
+    checkrLastEventAt: data.checkrLastEventAt || "",
     education: data.education || "",
     references: Array.isArray(data.references) ? data.references : [],
     orientationCompleted: data.orientationCompleted === true,
@@ -467,6 +489,20 @@ export async function getTrainerByAccountUid(accountUid) {
   return trainers.find((trainer) => trainer.accountUid === accountUid) || null;
 }
 
+export async function getTrainerByEmail(email) {
+  const target = normalizeString(email).toLowerCase();
+  if (!target) return null;
+  const trainers = await listTrainers({ includeInactive: true });
+  return trainers.find((trainer) => normalizeString(trainer.email).toLowerCase() === target) || null;
+}
+
+export async function getTrainerByCheckrCandidateId(candidateId) {
+  const target = normalizeString(candidateId);
+  if (!target) return null;
+  const trainers = await listTrainers({ includeInactive: true });
+  return trainers.find((trainer) => normalizeString(trainer.checkrCandidateId) === target) || null;
+}
+
 // Resolves a /coaches/<slug> URL to a trainer. First match wins on collisions
 // (rare; same name + city). Returns the trainer regardless of status — the public
 // profile page is responsible for only rendering approved/active coaches.
@@ -540,6 +576,28 @@ export async function setTrainerVerification(id, flags) {
   const updates = {};
   for (const key of VERIFICATION_FIELDS) {
     if (typeof flags?.[key] === "boolean") updates[key] = flags[key];
+  }
+  if (Object.keys(updates).length === 0) return existing;
+  updates.updatedAt = new Date().toISOString();
+  await trainersCollection().doc(id).set(updates, { merge: true });
+  return getTrainer(id);
+}
+
+const CHECKR_FIELDS = [
+  "checkrCandidateId",
+  "checkrInvitationId",
+  "checkrReportId",
+  "checkrStatus",
+  "checkrLastEventType",
+  "checkrLastEventAt",
+];
+
+export async function setTrainerCheckrData(id, payload) {
+  const existing = await getTrainer(id);
+  if (!existing) return null;
+  const updates = {};
+  for (const key of CHECKR_FIELDS) {
+    if (typeof payload?.[key] === "string") updates[key] = payload[key].trim();
   }
   if (Object.keys(updates).length === 0) return existing;
   updates.updatedAt = new Date().toISOString();
