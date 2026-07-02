@@ -203,7 +203,7 @@ function serializeTrainer(doc) {
     hasInsurance: data.hasInsurance === true,
     introVideoUrl: data.introVideoUrl || "",
     backgroundCheckConsent: data.backgroundCheckConsent === true,
-    policyAgreement: data.policyAgreement === true,
+    policyAgreement: data.policyAgreement === true || data.agreementSigned === true,
     idVerified: data.idVerified === true,
     backgroundCheckCleared: data.backgroundCheckCleared === true,
     montraCertified: data.montraCertified === true,
@@ -217,7 +217,7 @@ function serializeTrainer(doc) {
     references: Array.isArray(data.references) ? data.references : [],
     orientationCompleted: data.orientationCompleted === true,
     orientationCompletedAt: data.orientationCompletedAt || null,
-    agreementSigned: data.agreementSigned === true,
+    agreementSigned: data.agreementSigned === true || data.policyAgreement === true,
     agreementSignedAt: data.agreementSignedAt || null,
     slug: trainerSlug(data.name, data.locations),
     createdAt: data.createdAt || null,
@@ -660,7 +660,11 @@ export async function markAgreementSigned(accountUid) {
   const trainer = await getTrainerByAccountUid(accountUid);
   if (!trainer) return null;
   await trainersCollection().doc(trainer.id).set(
-    { agreementSigned: true, agreementSignedAt: new Date().toISOString() },
+    {
+      policyAgreement: true,
+      agreementSigned: true,
+      agreementSignedAt: new Date().toISOString(),
+    },
     { merge: true }
   );
   return getTrainer(trainer.id);

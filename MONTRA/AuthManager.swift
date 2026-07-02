@@ -82,6 +82,16 @@ final class AuthManager: ObservableObject {
     // Fetches the trainer profile and updates gate flags. Failures are silent
     // (flags stay false → gates show, which is the safe fallback).
     private func syncTrainerGates(user: FirebaseAuth.User, token: String) async {
+        let defaults = UserDefaults.standard
+        let uid = user.uid
+
+        // Seed from the device cache first so a transient profile fetch failure
+        // does not force a previously-completed trainer back through the gates.
+        trainerAgreementSigned = defaults.bool(forKey: "trainer.agreementSigned.\(uid)")
+            || defaults.bool(forKey: "trainer.agreementSigned")
+        trainerOrientationCompleted = defaults.bool(forKey: "trainer.orientationCompleted.\(uid)")
+            || defaults.bool(forKey: "trainer.orientationCompleted")
+
         guard let url = MontraAPIConfig.url(for: "/api/trainers/my-profile") else { return }
         var req = URLRequest(url: url)
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -89,6 +99,7 @@ final class AuthManager: ObservableObject {
         struct Response: Decodable {
             struct Trainer: Decodable {
                 let agreementSigned: Bool?
+                let policyAgreement: Bool?
                 let orientationCompleted: Bool?
                 let photoDataUrl: String?
             }
@@ -99,20 +110,19 @@ final class AuthManager: ObservableObject {
               let http = resp as? HTTPURLResponse, (200...299).contains(http.statusCode),
               let payload = try? JSONDecoder().decode(Response.self, from: data) else { return }
 
-        trainerAgreementSigned = payload.trainer.agreementSigned == true
+        trainerAgreementSigned = payload.trainer.agreementSigned == true || payload.trainer.policyAgreement == true
         trainerOrientationCompleted = payload.trainer.orientationCompleted == true
-          UserDefaults.standard.set(decodedImageData(from: payload.trainer.photoDataUrl), forKey: "trainerProfileImageData")
+        defaults.set(decodedImageData(from: payload.trainer.photoDataUrl), forKey: "trainerProfileImageData")
 
         // Mirror to UserDefaults so TrainerAgreementView / TrainerOrientationView
         // can read the values via their existing @AppStorage bindings.
-        let uid = user.uid
         if trainerAgreementSigned {
-            UserDefaults.standard.set(true, forKey: "trainer.agreementSigned")
-            UserDefaults.standard.set(true, forKey: "trainer.agreementSigned.\(uid)")
+            defaults.set(true, forKey: "trainer.agreementSigned")
+            defaults.set(true, forKey: "trainer.agreementSigned.\(uid)")
         }
         if trainerOrientationCompleted {
-            UserDefaults.standard.set(true, forKey: "trainer.orientationCompleted")
-            UserDefaults.standard.set(true, forKey: "trainer.orientationCompleted.\(uid)")
+            defaults.set(true, forKey: "trainer.orientationCompleted")
+            defaults.set(true, forKey: "trainer.orientationCompleted.\(uid)")
         }
     }
 
