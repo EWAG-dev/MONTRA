@@ -24,6 +24,8 @@
 	<false/>
 	<key>MONTRA_API_BASE_URL</key>
 	<string>https://montra-production.up.railway.app</string>
+	<key>NSCameraUsageDescription</key>
+	<string>MONTRA uses the camera so you can take profile photos and share workout check-ins with your trainer.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

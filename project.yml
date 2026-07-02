@@ -38,6 +38,7 @@ targets:
         UIRequiresFullScreen: true
         ITSAppUsesNonExemptEncryption: false
         MONTRA_API_BASE_URL: https://montra-production.up.railway.app
+        NSCameraUsageDescription: MONTRA uses the camera so you can take profile photos and share workout check-ins with your trainer.
         UIBackgroundModes: [remote-notification]
     entitlements:
       path: MONTRA/MONTRA.entitlements
