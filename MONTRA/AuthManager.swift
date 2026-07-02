@@ -36,6 +36,7 @@ final class AuthManager: ObservableObject {
          stateHandle = Auth.auth().addStateDidChangeListener { [weak self] _, firebaseUser in
              Task { @MainActor [weak self] in
                  guard let self else { return }
+                 self.isCheckingAuth = true
                  self.user = firebaseUser
                  self.userDisplayName = firebaseUser?.displayName ?? ""
                  if let firebaseUser {
@@ -69,6 +70,8 @@ final class AuthManager: ObservableObject {
                 // This guarantees the splash never exits until we know whether to show
                 // the agreement / orientation screens.
                 await syncTrainerGates(user: user, token: result.token)
+            } else {
+                await syncClientState(user: user, token: result.token)
             }
         } catch {
             userRole = .user
@@ -98,7 +101,7 @@ final class AuthManager: ObservableObject {
 
         trainerAgreementSigned = payload.trainer.agreementSigned == true
         trainerOrientationCompleted = payload.trainer.orientationCompleted == true
-    UserDefaults.standard.set(decodedImageData(from: payload.trainer.photoDataUrl), forKey: "trainerProfileImageData")
+          UserDefaults.standard.set(decodedImageData(from: payload.trainer.photoDataUrl), forKey: "trainerProfileImageData")
 
         // Mirror to UserDefaults so TrainerAgreementView / TrainerOrientationView
         // can read the values via their existing @AppStorage bindings.
@@ -110,6 +113,67 @@ final class AuthManager: ObservableObject {
         if trainerOrientationCompleted {
             UserDefaults.standard.set(true, forKey: "trainer.orientationCompleted")
             UserDefaults.standard.set(true, forKey: "trainer.orientationCompleted.\(uid)")
+        }
+    }
+
+    private func syncClientState(user: FirebaseAuth.User, token: String) async {
+        let defaults = UserDefaults.standard
+        if defaults.bool(forKey: "client.rematchRequested") {
+            defaults.set(false, forKey: "onboarding.preAuthActive")
+            defaults.set(false, forKey: "onboarding.completed")
+            defaults.removeObject(forKey: "quiz.requestedTrainer")
+            defaults.removeObject(forKey: "quiz.requestedTrainerName")
+            return
+        }
+
+        guard let url = MontraAPIConfig.url(for: "/api/client/requests") else { return }
+
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        struct Response: Decodable {
+            struct ClientRequest: Decodable {
+                struct ClientProfile: Decodable {
+                    let firstName: String?
+                }
+
+                let trainerId: String?
+                let trainerName: String?
+                let status: String?
+                let clientProfile: ClientProfile?
+            }
+
+            let requests: [ClientRequest]
+        }
+
+        guard let (data, resp) = try? await URLSession.shared.data(for: request),
+              let http = resp as? HTTPURLResponse, (200...299).contains(http.statusCode),
+              let payload = try? JSONDecoder().decode(Response.self, from: data) else { return }
+
+        let activeRequests = payload.requests.filter {
+            ($0.status ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased() != "declined"
+        }
+        let currentRequest = activeRequests.first {
+            ($0.status ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == "accepted"
+        } ?? activeRequests.first
+
+        defaults.set(false, forKey: "onboarding.preAuthActive")
+        defaults.set(!activeRequests.isEmpty, forKey: "onboarding.completed")
+
+        let firstName = currentRequest?.clientProfile?.firstName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !firstName.isEmpty {
+            defaults.set(firstName, forKey: "quiz.firstName")
+        }
+
+        let trainerId = currentRequest?.trainerId?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let trainerName = currentRequest?.trainerName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        if trainerId.isEmpty {
+            defaults.removeObject(forKey: "quiz.requestedTrainer")
+            defaults.removeObject(forKey: "quiz.requestedTrainerName")
+        } else {
+            defaults.set(trainerId, forKey: "quiz.requestedTrainer")
+            defaults.set(trainerName, forKey: "quiz.requestedTrainerName")
         }
     }
 
@@ -250,6 +314,7 @@ final class AuthManager: ObservableObject {
             "quiz.requestedTrainer",
             "quiz.requestedTrainerName",
             "quiz.matchChecklistShown",
+            "client.rematchRequested",
             "dashboardProfileImageData",
             "trainerProfileImageData",
             "onboarding.completed",

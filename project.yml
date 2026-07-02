@@ -24,7 +24,8 @@ targets:
       path: MONTRA/Info.plist
       properties:
         CFBundleDisplayName: MONTRA
-        CFBundleVersion: "4"
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         UILaunchScreen:
           UIColorName: MontraLaunchBackground
         UISupportedInterfaceOrientations:
@@ -51,6 +52,8 @@ targets:
         product: StripePaymentSheet
     settings:
       base:
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "5"
         PRODUCT_BUNDLE_IDENTIFIER: com.elitehomefitness.montra
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES:

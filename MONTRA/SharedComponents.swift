@@ -70,45 +70,46 @@ struct ClientMessagesStyleHeader: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            NotificationBellButton(
-                action: onNotificationTap,
-                showsBadge: notificationBadgeCount > 0,
-                badgeCount: notificationBadgeCount
-            )
-
             Spacer()
 
+            HStack(spacing: 8) {
+                NotificationBellButton(
+                    action: onNotificationTap,
+                    showsBadge: notificationBadgeCount > 0,
+                    badgeCount: notificationBadgeCount
+                )
+
+                Button {
+                    onProfileTap?()
+                } label: {
+                    ZStack {
+                        if let uiImage = UIImage(data: profileImageData), !profileImageData.isEmpty {
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 34, height: 34)
+                                .clipShape(Circle())
+                        } else {
+                            Circle()
+                                .fill(Color.montraSurface)
+                                .frame(width: 34, height: 34)
+                                .overlay(
+                                    Image(systemName: "person.fill")
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundColor(.montraOrange)
+                                )
+                        }
+                    }
+                }
+                .buttonStyle(.plain)
+                .overlay(Circle().stroke(Color.montraOrange.opacity(0.8), lineWidth: 1))
+            }
+        }
+        .overlay(alignment: .center) {
             Text(title)
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundColor(.montraTextPrimary)
                 .kerning(0.2)
-
-            Spacer()
-
-            Button {
-                onProfileTap?()
-            } label: {
-                ZStack {
-                    if let uiImage = UIImage(data: profileImageData), !profileImageData.isEmpty {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 34, height: 34)
-                            .clipShape(Circle())
-                    } else {
-                        Circle()
-                            .fill(Color.montraSurface)
-                            .frame(width: 34, height: 34)
-                            .overlay(
-                                Image(systemName: "person.fill")
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundColor(.montraOrange)
-                            )
-                    }
-                }
-            }
-            .buttonStyle(.plain)
-            .overlay(Circle().stroke(Color.montraOrange.opacity(0.8), lineWidth: 1))
         }
         .padding(.top, 0)
     }

@@ -23,6 +23,7 @@ struct DashboardView: View {
     @State private var consistencyPercentTarget: String = "90"
     @AppStorage("quiz.firstName") private var firstName: String = ""
     @AppStorage("onboarding.completed") private var onboardingCompleted: Bool = true
+    @AppStorage("client.rematchRequested") private var rematchRequested: Bool = false
     @AppStorage("quiz.requestedTrainer") private var requestedTrainerId: String = ""
     @AppStorage("quiz.requestedTrainerName") private var requestedTrainerName: String = ""
     @AppStorage("notif.unreadCount") private var unreadCount = 0
@@ -126,6 +127,7 @@ struct DashboardView: View {
                     }
 
                     Button {
+                        rematchRequested = true
                         requestedTrainerId = ""
                         requestedTrainerName = ""
                         UserDefaults.standard.set(1, forKey: "quiz.step")

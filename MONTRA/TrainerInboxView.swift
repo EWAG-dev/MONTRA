@@ -11,6 +11,8 @@ struct TrainerInboxView: View {
     @AppStorage("trainerProfileImageData") private var trainerProfileImageData: Data = Data()
     @State private var matchRequests: [TrainerMatchRequest] = []
     @State private var requestsLoading = false
+    @State private var requestsFetchInFlight = false
+    @State private var hasLoadedRequests = false
     @State private var requestActionError: String? = nil
     @State private var activeRequestActionId: String? = nil
     @State private var chatThreads: [ChatThread] = []
@@ -133,18 +135,39 @@ struct TrainerInboxView: View {
             }
             .padding(.horizontal, 20)
         }
+        .refreshable {
+            await fetchMatchRequests(showLoadingUI: false)
+            if selectedSegment == .messages {
+                await refreshChatThreads(showLoadingUI: false)
+            }
+        }
         .background(Color.montraBackground)
         .task {
             applyInboxInitialSegment()
-            await fetchMatchRequests()
-            await refreshChatThreads()
+            await fetchMatchRequests(showLoadingUI: true)
+            await refreshChatThreads(showLoadingUI: true)
+
+            var pollCount = 0
             while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 8_000_000_000)
+                try? await Task.sleep(nanoseconds: 12_000_000_000)
                 if Task.isCancelled { break }
-                if let thread = selectedThread {
-                    await loadChatMessages(for: thread)
+
+                pollCount += 1
+
+                // Keep the active conversation fresh, but avoid list-wide loading flashes.
+                if selectedSegment == .messages, let thread = selectedThread {
+                    await loadChatMessages(for: thread, showLoadingUI: false)
                 }
-                await fetchMatchRequests()
+
+                // Poll requests less aggressively and always silently.
+                if selectedSegment == .requests || pollCount % 2 == 0 {
+                    await fetchMatchRequests(showLoadingUI: false)
+                }
+
+                // Refresh threads occasionally while on Messages.
+                if selectedSegment == .messages, pollCount % 3 == 0 {
+                    await refreshChatThreads(showLoadingUI: false)
+                }
             }
         }
         .sheet(isPresented: $showTrainerMenu) {
@@ -165,7 +188,7 @@ struct TrainerInboxView: View {
 
     @ViewBuilder
     private var requestsContent: some View {
-        if requestsLoading {
+        if requestsLoading && !hasLoadedRequests {
             HStack { Spacer(); ProgressView().tint(.montraOrange); Spacer() }.padding(.top, 24)
         } else if visibleRequests.isEmpty {
             VStack(spacing: 12) {
@@ -213,7 +236,7 @@ struct TrainerInboxView: View {
         chatError = nil
 
         if chatThreads.isEmpty {
-            await refreshChatThreads()
+            await refreshChatThreads(showLoadingUI: true)
         }
 
         let expectedConversationId: String
@@ -225,20 +248,20 @@ struct TrainerInboxView: View {
 
         if let thread = chatThreads.first(where: { $0.id == expectedConversationId }) {
             selectedThread = thread
-            await loadChatMessages(for: thread)
+            await loadChatMessages(for: thread, showLoadingUI: true)
             return
         }
 
         if let fallback = chatThreads.first(where: { $0.clientUid == request.clientUid }) ?? chatThreads.first {
             selectedThread = fallback
-            await loadChatMessages(for: fallback)
+            await loadChatMessages(for: fallback, showLoadingUI: true)
             return
         }
 
         if let ensuredConversation = await ensureConversationForRequest(request.id) {
             selectedThread = ensuredConversation
-            await loadChatMessages(for: ensuredConversation)
-            await refreshChatThreads()
+            await loadChatMessages(for: ensuredConversation, showLoadingUI: true)
+            await refreshChatThreads(showLoadingUI: false)
             return
         }
 
@@ -269,17 +292,27 @@ struct TrainerInboxView: View {
         }
     }
 
-    private func fetchMatchRequests() async {
+    private func fetchMatchRequests(showLoadingUI: Bool) async {
+        guard !requestsFetchInFlight else { return }
         guard let user = auth.user,
-              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: true),
+              let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false),
               let url = MontraAPIConfig.url(for: "/api/trainers/my-matches") else { return }
-        requestsLoading = true
-        defer { requestsLoading = false }
+
+        requestsFetchInFlight = true
+        if showLoadingUI && !hasLoadedRequests {
+            requestsLoading = true
+        }
+        defer {
+            requestsFetchInFlight = false
+            requestsLoading = false
+        }
+
         var req = URLRequest(url: url)
         req.setValue("Bearer \(tokenResult.token)", forHTTPHeaderField: "Authorization")
         guard let (data, _) = try? await URLSession.shared.data(for: req) else { return }
         struct Response: Decodable { let matches: [TrainerMatchRequest] }
         if let response = try? JSONDecoder().decode(Response.self, from: data) {
+            hasLoadedRequests = true
             matchRequests = response.matches
         }
     }
@@ -311,7 +344,7 @@ struct TrainerInboxView: View {
             }
 
             requestActionError = nil
-            await fetchMatchRequests()
+            await fetchMatchRequests(showLoadingUI: false)
         } catch {
             requestActionError = error.localizedDescription
         }
@@ -366,7 +399,7 @@ struct TrainerInboxView: View {
                             ForEach(chatThreads) { thread in
                                 Button {
                                     selectedThread = thread
-                                    Task { await loadChatMessages(for: thread) }
+                                    Task { await loadChatMessages(for: thread, showLoadingUI: true) }
                                 } label: {
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(thread.clientName.isEmpty ? "New Client" : thread.clientName)
@@ -446,9 +479,6 @@ struct TrainerInboxView: View {
                             Image(systemName: "paperplane.fill")
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundColor(.black)
-                            Text("Send")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundColor(.black)
                         }
                     }
                     .padding(.horizontal, 14)
@@ -493,11 +523,11 @@ struct TrainerInboxView: View {
         return false
     }
 
-    private func refreshChatThreads() async {
+    private func refreshChatThreads(showLoadingUI: Bool) async {
         guard let user = auth.user,
               let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false) else { return }
 
-        if chatThreads.isEmpty { chatLoadingThreads = true }
+        if showLoadingUI && chatThreads.isEmpty { chatLoadingThreads = true }
         defer { chatLoadingThreads = false }
 
         do {
@@ -507,18 +537,18 @@ struct TrainerInboxView: View {
                 selectedThread = threads.first
             }
             if let selectedThread {
-                await loadChatMessages(for: selectedThread)
+                await loadChatMessages(for: selectedThread, showLoadingUI: showLoadingUI)
             }
         } catch {
             chatError = error.localizedDescription
         }
     }
 
-    private func loadChatMessages(for thread: ChatThread) async {
+    private func loadChatMessages(for thread: ChatThread, showLoadingUI: Bool) async {
         guard let user = auth.user,
               let tokenResult = try? await user.getIDTokenResult(forcingRefresh: false) else { return }
 
-        if chatMessages.isEmpty { chatLoadingMessages = true }
+        if showLoadingUI && chatMessages.isEmpty { chatLoadingMessages = true }
         defer { chatLoadingMessages = false }
 
         do {
@@ -547,8 +577,8 @@ struct TrainerInboxView: View {
             chatMessageText = ""
             chatError = nil
             markRequestContacted(for: thread)
-            await refreshChatThreads()
-            await fetchMatchRequests()
+            await refreshChatThreads(showLoadingUI: false)
+            await fetchMatchRequests(showLoadingUI: false)
         } catch {
             chatError = error.localizedDescription
         }

@@ -76,6 +76,7 @@ struct OnboardingQuizView: View {
 
     @AppStorage("onboarding.completed")      private var isCompleted = false
     @AppStorage("onboarding.preAuthActive")  private var preAuthOnboardingActive = false
+    @AppStorage("client.rematchRequested")   private var rematchRequested = false
     @AppStorage("quiz.goal")                 private var savedGoal = ""
     @AppStorage("quiz.experience")           private var savedExperience = ""
     @AppStorage("quiz.location")             private var savedLocation = ""
@@ -696,6 +697,7 @@ struct OnboardingQuizView: View {
                                     requestSubmissionError = errorMessage
                                     return
                                 }
+                                rematchRequested = false
                                 requestedTrainerId = t.id
                                 requestedTrainerName = t.name
                                 advance(by: 1)

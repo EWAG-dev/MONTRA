@@ -6,6 +6,7 @@ struct LoginView: View {
     @Environment(\.colorScheme) private var colorScheme
     @AppStorage("onboarding.completed") private var onboardingCompleted = false
     @AppStorage("onboarding.preAuthActive") private var preAuthOnboardingActive = false
+    @AppStorage("client.rematchRequested") private var rematchRequested = false
 
     @State private var email = ""
     @State private var password = ""
@@ -117,6 +118,7 @@ struct LoginView: View {
 
                         Button {
                             resetQuizDraft()
+                            rematchRequested = false
                             onboardingCompleted = false
                             preAuthOnboardingActive = true
                         } label: {
@@ -222,7 +224,8 @@ struct LoginView: View {
             "quiz.firstName",
             "quiz.requestedTrainer",
             "quiz.requestedTrainerName",
-            "quiz.matchChecklistShown"
+            "quiz.matchChecklistShown",
+            "client.rematchRequested"
         ]
 
         for key in keys {

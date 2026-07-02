@@ -34,6 +34,7 @@ struct CoachChatSheet: View {
                 notificationBadgeCount: unreadCount
             )
                 .padding(.horizontal, 20)
+                .padding(.top, 4)
 
             VStack(spacing: 16) {
                 HStack(spacing: 8) {
@@ -233,27 +234,23 @@ struct CoachChatSheet: View {
                 .frame(maxWidth: .infinity)
                 .montraFrostedCard(radius: 12)
             } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 10) {
-                        ForEach(threads) { thread in
-                            Button {
-                                selectedThread = thread
-                                Task { await loadMessages(for: thread) }
-                            } label: {
-                                VStack(alignment: .leading, spacing: 4) {
+                if threads.count > 1 {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 10) {
+                            ForEach(threads) { thread in
+                                Button {
+                                    selectedThread = thread
+                                    Task { await loadMessages(for: thread) }
+                                } label: {
                                     Text(thread.trainerName.isEmpty ? "Coach" : thread.trainerName)
                                         .font(.system(size: 13, weight: .semibold))
                                         .foregroundColor(selectedThread?.id == thread.id ? .black : .montraTextPrimary)
-                                    Text(thread.lastMessage.isEmpty ? "Say hello" : thread.lastMessage)
-                                        .font(.system(size: 11))
-                                        .foregroundColor(selectedThread?.id == thread.id ? .black.opacity(0.75) : .montraTextSecondary)
-                                        .lineLimit(1)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 10)
+                                        .frame(width: 180, alignment: .leading)
+                                        .background(selectedThread?.id == thread.id ? Color.montraOrange : Color.montraFrostedSurface)
+                                        .clipShape(RoundedRectangle(cornerRadius: 12))
                                 }
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 10)
-                                .frame(width: 180, alignment: .leading)
-                                .background(selectedThread?.id == thread.id ? Color.montraOrange : Color.montraFrostedSurface)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
                             }
                         }
                     }
@@ -291,10 +288,7 @@ struct CoachChatSheet: View {
         let isMine = isCurrentUserMessage(message)
         HStack {
             if isMine { Spacer(minLength: 24) }
-            VStack(alignment: .leading, spacing: 4) {
-                Text(message.senderName)
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(isMine ? .black.opacity(0.75) : .montraTextSecondary)
+            VStack(alignment: .leading, spacing: 0) {
                 Text(message.text)
                     .font(.system(size: 14))
                     .foregroundColor(isMine ? .black : .montraTextPrimary)
