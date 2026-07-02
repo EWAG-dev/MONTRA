@@ -44,10 +44,10 @@ And we want client to fill out a survey at some point. And we want to make it ea
 - Trainer can mark complete with workout notes from app.
 - Client review flow now includes survey-style experience input.
 - Trainer can file session issue reports (backend + app sheet).
-- Full dispute lifecycle policy/state machine still pending product decision.
+- Dispute policy is now defined in HUMAN_TASKS.md; backend state machine implementation is next.
 
 7. 3 strikes and shutdown warning: ⬜ Todo
-- Blocked pending explicit strike policy rules (captured in HUMAN_TASKS.md).
+- Policy rules are now defined in HUMAN_TASKS.md; backend/app enforcement implementation is next.
 
 8. Notifications close + dynamic badge/count: ✅ Complete
 - Close action added; dot now reflects unread count and hides at zero.

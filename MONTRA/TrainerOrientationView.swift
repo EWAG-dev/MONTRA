@@ -12,27 +12,32 @@ struct TrainerOrientationView: View {
         (
             "Welcome to MONTRA",
             "An overview of the platform, how client matching works, and what your journey as a MONTRA coach looks like.",
-            "https://drive.google.com/file/d/1Vt_2LoNYNNXzv0E6S_JxS9sBR1nVhLaC/view"
+            "https://montra-27532.web.app/orientation/1.MONTRA_Coach_Academy_Onboarding.mp4"
         ),
         (
             "MONTRA Standards & Code of Conduct",
             "The professional standards, prohibited conduct rules, and values every MONTRA coach is held to.",
-            "https://drive.google.com/file/d/1esOaU6tWSSNPqLmDt35g-3PIymFCN_tS/view"
+            "https://montra-27532.web.app/orientation/2.Building_Trust.mp4"
         ),
         (
             "Client Request & Session Flow",
             "How to review match requests, accept clients, schedule sessions, and log session records correctly.",
-            "https://drive.google.com/file/d/1T62RymHKQP3d1RJk3w9_QzJ6bWrSJZIy/view"
+            "https://montra-27532.web.app/orientation/3.The_Perfect_Intro_Session.mp4"
         ),
         (
             "Safety, Liability & Scope of Practice",
             "Injury protocols, client screening, CPR/AED cert, insurance requirements, and staying within your scope.",
-            "https://drive.google.com/file/d/1kVX3kzmFOS7CQ6pE0Xw77oJbuEFgGwnD/view"
+            "https://montra-27532.web.app/orientation/5.Professiona_Appearance.mp4"
         ),
         (
             "Communication & Professionalism",
             "Response time expectations, messaging clients, handling rescheduling, and representing the MONTRA brand.",
-            "https://drive.google.com/file/d/1nRDFo77-BR5jr2u7H1NvqkDVoaKeylQ2/view"
+            "https://montra-27532.web.app/orientation/6.Communication_Accountability.mp4"
+        ),
+        (
+            "The MONTRA Difference: Coaching Mindset & Client Experience",
+            "How MONTRA coaches deliver a distinct premium experience by leading sessions with coaching-first standards.",
+            "https://montra-27532.web.app/orientation/4.The_MONTRA_Difference_Focus%20on%20Coaching.mp4"
         ),
     ]
 
@@ -58,7 +63,7 @@ struct TrainerOrientationView: View {
         .task(id: auth.user?.uid) {
             loadWatchedState()
         }
-        .sheet(item: $activeVideo) { selection in
+        .fullScreenCover(item: $activeVideo) { selection in
             OrientationVideoPlayerSheet(
                 title: selection.title,
                 urlString: selection.url
@@ -431,38 +436,14 @@ private struct OrientationVideoPlayerSheet: View {
     }
 
     private func loadPlayer() {
-        guard let resolvedURL = resolvedVideoURL() else {
+        guard let url = URL(string: urlString) else {
             loadError = "This video link could not be opened in-app."
             return
         }
 
-        let player = AVPlayer(url: resolvedURL)
+        let player = AVPlayer(url: url)
         self.player = player
         player.play()
-    }
-
-    private func resolvedVideoURL() -> URL? {
-        guard let url = URL(string: urlString) else { return nil }
-        guard url.host?.contains("drive.google.com") == true,
-              let fileID = driveFileID(from: url) else {
-            return url
-        }
-
-        return URL(string: "https://drive.google.com/uc?export=download&id=\(fileID)")
-    }
-
-    private func driveFileID(from url: URL) -> String? {
-        let path = url.path
-        if let fileRange = path.range(of: "/file/d/") {
-            let remainder = path[fileRange.upperBound...]
-            if let endIndex = remainder.firstIndex(of: "/") {
-                return String(remainder[..<endIndex])
-            }
-            return String(remainder)
-        }
-
-        let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
-        return components?.queryItems?.first(where: { $0.name == "id" })?.value
     }
 }
 

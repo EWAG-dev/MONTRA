@@ -1,7 +1,7 @@
 # Human Tasks
 
 > Items that require manual action in Xcode, Railway, Firebase, Apple, or Stripe dashboards. Code is ready; these are the remaining setup steps.
-> **Status:** ✅ Done · ⬜ Pending
+> **Status:** ✅ Done · ⬜ Pending · ⏸ Deferred/Not Needed Now
 
 ---
 
@@ -21,7 +21,9 @@ For the webhook, enable events: `payment_intent.succeeded`, `payment_intent.paym
 
 ---
 
-## 2. Railway — Set Twilio Keys (SMS lead alerts) ⬜
+## 2. Railway — Set Twilio Keys (SMS lead alerts) ⏸
+
+Deferred for now per product direction. Revisit when SMS lead alerts are re-enabled.
 
 Same Railway service, once you have a Twilio account:
 
@@ -46,7 +48,9 @@ Xcode will show "Resolving package dependencies" on first open — wait for that
 
 ---
 
-## 4. TestFlight — Archive & Upload ⬜
+## 4. TestFlight — Archive & Upload ✅
+
+Completed (confirmed done).
 
 APNs entitlement is already set to `production` in `project.yml`. In Xcode:
 
@@ -93,15 +97,18 @@ MessagesView MONTRA Team / Support tabs currently show mailto. Needs decision: r
 
 ## Copilot Requests (Needed From You)
 
-### A. Replace Trainer Orientation Video URLs ⬜
-Current orientation links in iOS are still Google Drive links. I need the final destination URLs for each video so I can patch [MONTRA/TrainerOrientationView.swift](MONTRA/TrainerOrientationView.swift).
+### A. Replace Trainer Orientation Video URLs ✅
+Done in code: orientation playback now points at Firebase Hosting paths under `/orientation/*` and no longer uses Google Drive URL conversion. 
 
-Please provide 5 links mapped to these titles:
-1) Welcome to MONTRA
-2) MONTRA Standards & Code of Conduct
-3) Client Request & Session Flow
-4) Safety, Liability & Scope of Practice
-5) Communication & Professionalism
+Current mapping in `MONTRA/TrainerOrientationView.swift`:
+1) Welcome to MONTRA → `/orientation/1.MONTRA_Coach_Academy_Onboarding.mp4`
+2) MONTRA Standards & Code of Conduct → `/orientation/2.Building_Trust.mp4`
+3) Client Request & Session Flow → `/orientation/3.The_Perfect_Intro_Session.mp4`
+4) Safety, Liability & Scope of Practice → `/orientation/5.Professiona_Appearance.mp4`
+5) Communication & Professionalism → `/orientation/6.Communication_Accountability.mp4`
+6) The MONTRA Difference: Coaching Mindset & Client Experience → `/orientation/4.The_MONTRA_Difference_Focus%20on%20Coaching.mp4`
+
+Hosting deployed and links verified live (HTTP 200, `content-type: video/mp4`, `accept-ranges: bytes`).
 
 ### B. Email Deliverability + Verification Email Branding ⬜
 Code is now updated to send a branded MONTRA verification email with a button from the backend (`/api/auth/send-verification-email`) and iOS now uses a simple "I've verified my account" check + resend flow.
@@ -130,18 +137,29 @@ Once done, I will finalize wording + From identity and mark this item complete.
 	- Add `List-Unsubscribe` header support for marketing mail only (not required for transactional verification email)
 	- Keep plain-text fallback body alongside HTML
 
-### C. Product Decision: Session Dispute Policy ⬜
-For the "trainer says complete but client says no-show" flow, I need your policy decision before I lock backend logic:
-1) Should completion require trainer + client confirmation, or allow trainer completion with client dispute window?
-2) Dispute window length (e.g. 24h, 48h)
-3) Default outcome if no client response
+### C. Product Decision: Session Dispute Policy ✅
+Decision locked for implementation:
+1) Completion model: trainer can mark complete; client gets a dispute window.
+2) Dispute window: 48 hours from trainer completion timestamp.
+3) If no client response: auto-accept completion and finalize as completed.
 
-I can then implement the exact workflow and status transitions.
+Implementation notes:
+- Client can file "no-show/dispute" during the 48h window.
+- While disputed, payout/release actions pause until review resolves.
+- If dispute is denied, session returns to completed.
 
-### D. Product Decision: 3-Strike Enforcement Rules ⬜
-I need explicit strike rules before coding account shutdown behavior:
-1) What events count as strikes (no-show, cancellations, complaints, etc.)
-2) Strike expiration window (never, rolling 90 days, etc.)
-3) Enforcement actions at strike 1/2/3
+### D. Product Decision: 3-Strike Enforcement Rules ✅
+Decision locked for implementation:
+1) Strike events:
+- Verified trainer no-show.
+- Trainer cancellation within 12h of session start (unless emergency override by admin).
+- Substantiated serious professionalism/safety complaint.
+2) Strike expiration window: rolling 90 days.
+3) Enforcement:
+- Strike 1: in-app warning + policy reminder acknowledgement required.
+- Strike 2: temporary 7-day suspension from new client assignments.
+- Strike 3: automatic account deactivation and admin review required for appeal/reactivation.
 
-After you confirm, I will implement backend enforcement + in-app warning UX.
+Implementation notes:
+- Severe safety misconduct can bypass strike ladder for immediate admin suspension.
+- All strike writes should be auditable (event type, source, evidence refs, reviewer, timestamp).
