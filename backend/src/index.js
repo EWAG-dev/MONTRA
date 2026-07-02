@@ -315,6 +315,16 @@ function clientRequestAcceptedEmailHtml(clientName, trainerName) {
 </div></body></html>`;
 }
 
+function canAutoApproveTrainer(trainer, evaluation) {
+  if (!autoApproveTrainers) return false;
+  if (!trainer) return false;
+  if (!evaluation) return false;
+  if (evaluation.score < approveThreshold) return false;
+  if (Array.isArray(evaluation.hardFails) && evaluation.hardFails.length > 0) return false;
+  // Checkr-cleared status is required before activation.
+  return trainer.backgroundCheckCleared === true;
+}
+
 function sessionBookedEmailHtml(trainerName, clientName, startTimeDisplay) {
   return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
 <div style="max-width:560px;margin:0 auto;padding:48px 24px">
@@ -626,7 +636,7 @@ app.post("/api/trainers/apply", requireFirebaseAuth, async (req, res) => {
     let trainer = await upsertTrainerForAccount(req.user.uid, application);
     const evaluation = evaluateTrainerApplication(trainer);
 
-    if (autoApproveTrainers && evaluation.score >= approveThreshold) {
+    if (canAutoApproveTrainer(trainer, evaluation)) {
       trainer = await approveTrainer(trainer.id);
     }
 
@@ -887,7 +897,9 @@ app.post("/api/trainers/provision", async (req, res) => {
       console.error("Failed to send application confirmation email:", emailError.message);
     }
 
-    if (autoApproveTrainers) {
+    const evaluation = evaluateTrainerApplication(trainer);
+
+    if (canAutoApproveTrainer(trainer, evaluation)) {
       trainer = await approveTrainer(trainer.id);
       await finalizeTrainerApproval(trainer, "public-provision-auto-approve");
       notifyWaitlistForTrainerAvailability(trainer, "public-provision-auto-approve").catch((error) => {
@@ -899,7 +911,8 @@ app.post("/api/trainers/provision", async (req, res) => {
       ok: true,
       applicationId: trainer.id,
       status: trainer.status,
-      autoApproved: autoApproveTrainers,
+      autoApproved: trainer.status === "approved",
+      hiringEvaluation: evaluation,
     });
   } catch (error) {
     res.status(500).json({ error: error.message || "Failed to submit application" });

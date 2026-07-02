@@ -21,6 +21,21 @@ function normalizeList(value) {
     .filter(Boolean);
 }
 
+function hasRelevantDegree(value) {
+  const normalized = normalizeString(value).toLowerCase();
+  if (!normalized) return false;
+  const keywords = [
+    "sport science",
+    "sports science",
+    "exercise science",
+    "exercise physiology",
+    "kinesiology",
+    "human performance",
+    "athletic training",
+  ];
+  return keywords.some((term) => normalized.includes(term));
+}
+
 function toId(name) {
   return (
     normalizeString(name)
@@ -105,8 +120,8 @@ function normalizeTrainerPayload(input, existingTrainer = null) {
     throw new Error("Trainer bio is required.");
   }
 
-  if (!certification) {
-    throw new Error("Trainer certification is required.");
+  if (!certification && !hasRelevantDegree(education)) {
+    throw new Error("Trainer must have a recognized certification or relevant degree (e.g., Sports/Exercise Science).");
   }
 
   return {
@@ -197,7 +212,7 @@ export function evaluateTrainerApplication(input) {
 
   // ── HARD REQUIREMENTS (auto-hold if missing) ────────────────────────────────
 
-  // Fitness certification — required by policy
+  // Fitness credential — certification OR relevant degree required by policy
   const recognizedCerts = ["nasm", "ace", "nsca", "issa", "acsm", "nesta", "afaa", "nafc", "nfpt", "ncsf"];
   if (trainer.certification) {
     const certLower = trainer.certification.toLowerCase();
@@ -205,8 +220,18 @@ export function evaluateTrainerApplication(input) {
     score += isRecognized ? 25 : 15;
     strengths.push(isRecognized ? `Recognized certification: ${trainer.certification}` : `Certification on file: ${trainer.certification}`);
     if (!isRecognized) concerns.push("Certification not from a widely recognized body (NASM, ACE, NSCA, ISSA, ACSM) — admin should verify");
+  } else if (hasRelevantDegree(trainer.education)) {
+    score += 18;
+    strengths.push(`Relevant degree on file: ${trainer.education}`);
   } else {
-    hardFails.push("No fitness certification — required by MONTRA Eligibility Policy before activation");
+    hardFails.push("No qualifying credential — trainer must have a certification or relevant degree before activation");
+  }
+
+  // Checkr-backed criminal screening must be cleared before approval.
+  if (trainer.backgroundCheckCleared) {
+    strengths.push("Background check cleared");
+  } else {
+    hardFails.push("Background check not cleared — Checkr verification is required before activation");
   }
 
   // CPR / AED — required by policy
